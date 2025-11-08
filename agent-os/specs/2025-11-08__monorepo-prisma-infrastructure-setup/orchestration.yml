@@ -1,0 +1,17 @@
+task_groups:
+  - name: Root TypeScript & Tooling Configuration
+    claude_code_subagent: implementer
+  - name: Environment Configuration
+    claude_code_subagent: implementer
+  - name: "@compilothq/validation Package"
+    claude_code_subagent: implementer
+  - name: "@compilothq/database Package"
+    claude_code_subagent: implementer
+  - name: "@compilothq/ui Package"
+    claude_code_subagent: implementer
+  - name: Next.js App Integration
+    claude_code_subagent: implementer
+  - name: Git Hooks & Linting Automation
+    claude_code_subagent: implementer
+  - name: Final Validation & Documentation
+    claude_code_subagent: implementation-verifier

@@ -1,0 +1,35 @@
+// Prisma Schema for Compilot HQ
+// This schema uses a monolithic structure with organization by comment sections
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Authentication
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================================
+// Data Processing
+// ============================================================================
+
+// Future data processing models will be added here
+
+// ============================================================================
+// Compliance
+// ============================================================================
+
+// Future compliance models will be added here
