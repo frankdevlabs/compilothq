@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { CountryCreateSchema, CountryUpdateSchema } from '../../../src/schemas/reference/country'
+import { describe, expect, it } from 'vitest'
 import { ZodError } from 'zod'
+
+import { CountryCreateSchema, CountryUpdateSchema } from '../../../src/schemas/reference/country'
 
 describe('Country Validation Schemas - Integration Tests', () => {
   describe('CountryCreateSchema', () => {
@@ -61,8 +62,8 @@ describe('Country Validation Schemas - Integration Tests', () => {
         expect(error).toBeInstanceOf(ZodError)
         const zodError = error as ZodError
         expect(zodError.errors).toHaveLength(1)
-        expect(zodError.errors[0].path).toEqual(['name'])
-        expect(zodError.errors[0].message).toBe('Required')
+        expect(zodError.errors[0]?.path).toEqual(['name'])
+        expect(zodError.errors[0]?.message).toBe('Required')
       }
     })
 
@@ -81,8 +82,8 @@ describe('Country Validation Schemas - Integration Tests', () => {
         CountryCreateSchema.parse(invalidData)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0].path).toEqual(['isoCode'])
-        expect(zodError.errors[0].message).toBe('ISO code must be exactly 2 characters')
+        expect(zodError.errors[0]?.path).toEqual(['isoCode'])
+        expect(zodError.errors[0]?.message).toBe('ISO code must be exactly 2 characters')
       }
     })
 
@@ -102,8 +103,8 @@ describe('Country Validation Schemas - Integration Tests', () => {
         CountryCreateSchema.parse(invalidData)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0].path).toEqual(['isoCode3'])
-        expect(zodError.errors[0].message).toBe('ISO 3-letter code must be exactly 3 characters')
+        expect(zodError.errors[0]?.path).toEqual(['isoCode3'])
+        expect(zodError.errors[0]?.message).toBe('ISO 3-letter code must be exactly 3 characters')
       }
     })
 
@@ -122,8 +123,8 @@ describe('Country Validation Schemas - Integration Tests', () => {
         CountryCreateSchema.parse(invalidData)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0].path).toEqual(['gdprStatus'])
-        expect(zodError.errors[0].message).toBe('At least one GDPR status is required')
+        expect(zodError.errors[0]?.path).toEqual(['gdprStatus'])
+        expect(zodError.errors[0]?.message).toBe('At least one GDPR status is required')
       }
     })
 
@@ -142,8 +143,8 @@ describe('Country Validation Schemas - Integration Tests', () => {
         CountryCreateSchema.parse(invalidData)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0].path).toEqual(['gdprStatus', 0])
-        expect(zodError.errors[0].message).toBe(
+        expect(zodError.errors[0]?.path).toEqual(['gdprStatus', 0])
+        expect(zodError.errors[0]?.message).toBe(
           'GDPR status must be one of: EU, EEA, EFTA, Third Country, Adequate'
         )
       }
@@ -260,8 +261,8 @@ describe('Country Validation Schemas - Integration Tests', () => {
         CountryUpdateSchema.parse(invalidUpdate)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0].path).toEqual(['isoCode'])
-        expect(zodError.errors[0].message).toBe('ISO code must be exactly 2 characters')
+        expect(zodError.errors[0]?.path).toEqual(['isoCode'])
+        expect(zodError.errors[0]?.message).toBe('ISO code must be exactly 2 characters')
       }
     })
   })

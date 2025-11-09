@@ -1,22 +1,25 @@
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+// Type assertions needed due to Prisma JSON field type limitations in test data
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+
 import {
-  setupTestDatabase,
-  cleanupTestDatabase,
-  disconnectTestDatabase,
-  CountryFactory,
-} from '../../../src/test-utils'
-import {
-  listCountries,
+  getCountriesByGdprStatus,
   getCountryById,
   getCountryByIsoCode,
-  getCountriesByGdprStatus,
+  listCountries,
 } from '../../../src/dal/countries'
 import { prisma } from '../../../src/index'
+import {
+  cleanupTestDatabase,
+  CountryFactory,
+  disconnectTestDatabase,
+  setupTestDatabase,
+} from '../../../src/test-utils'
 
 describe('Countries DAL - Integration Tests', () => {
-  beforeAll(async () => {
+  beforeAll(() => {
     // Run migrations once before all tests
-    await setupTestDatabase()
+    setupTestDatabase()
   })
 
   beforeEach(async () => {
@@ -40,7 +43,7 @@ describe('Countries DAL - Integration Tests', () => {
       })
 
       const createdCountry = await prisma.country.create({
-        data: countryData,
+        data: countryData as any,
       })
 
       // Act - Retrieve the country by ID
@@ -61,7 +64,7 @@ describe('Countries DAL - Integration Tests', () => {
           name: 'Germany',
           isoCode: 'DE',
           isoCode3: 'DEU',
-        }),
+        }) as any,
       })
 
       await prisma.country.create({
@@ -69,7 +72,7 @@ describe('Countries DAL - Integration Tests', () => {
           name: 'Belgium',
           isoCode: 'BE',
           isoCode3: 'BEL',
-        }),
+        }) as any,
       })
 
       await prisma.country.create({
@@ -77,7 +80,7 @@ describe('Countries DAL - Integration Tests', () => {
           name: 'Austria',
           isoCode: 'AT',
           isoCode3: 'AUT',
-        }),
+        }) as any,
       })
 
       // Act
@@ -85,9 +88,9 @@ describe('Countries DAL - Integration Tests', () => {
 
       // Assert - Should be ordered alphabetically
       expect(result).toHaveLength(3)
-      expect(result[0].name).toBe('Austria')
-      expect(result[1].name).toBe('Belgium')
-      expect(result[2].name).toBe('Germany')
+      expect(result[0]!.name).toBe('Austria')
+      expect(result[1]!.name).toBe('Belgium')
+      expect(result[2]!.name).toBe('Germany')
     })
   })
 
@@ -99,7 +102,7 @@ describe('Countries DAL - Integration Tests', () => {
           name: 'France',
           isoCode: 'FR',
           isoCode3: 'FRA',
-        }),
+        }) as any,
       })
 
       // Act & Assert - Attempt to create another country with same isoCode
@@ -109,7 +112,7 @@ describe('Countries DAL - Integration Tests', () => {
             name: 'Another France',
             isoCode: 'FR', // Duplicate isoCode
             isoCode3: 'XYZ', // Different isoCode3
-          }),
+          }) as any,
         })
       ).rejects.toThrow()
     })
@@ -121,7 +124,7 @@ describe('Countries DAL - Integration Tests', () => {
           name: 'France',
           isoCode: 'FR',
           isoCode3: 'FRA',
-        }),
+        }) as any,
       })
 
       // Act & Assert - Attempt to create another country with same isoCode3
@@ -131,7 +134,7 @@ describe('Countries DAL - Integration Tests', () => {
             name: 'Another France',
             isoCode: 'XX',
             isoCode3: 'FRA', // Duplicate isoCode3
-          }),
+          }) as any,
         })
       ).rejects.toThrow()
     })
@@ -146,7 +149,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'DE',
           isoCode3: 'DEU',
           description: 'Original description',
-        }),
+        }) as any,
       })
 
       // Act - Update the country
@@ -175,7 +178,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'FR',
           isoCode3: 'FRA',
           gdprStatus: ['EU', 'EEA'],
-        }),
+        }) as any,
       })
 
       await prisma.country.create({
@@ -184,7 +187,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'DE',
           isoCode3: 'DEU',
           gdprStatus: ['EU', 'EEA'],
-        }),
+        }) as any,
       })
 
       await prisma.country.create({
@@ -193,7 +196,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'CH',
           isoCode3: 'CHE',
           gdprStatus: ['EFTA', 'Adequate'],
-        }),
+        }) as any,
       })
 
       await prisma.country.create({
@@ -202,7 +205,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'US',
           isoCode3: 'USA',
           gdprStatus: ['Third Country'],
-        }),
+        }) as any,
       })
 
       // Act - Query by EU status
@@ -221,7 +224,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'CH',
           isoCode3: 'CHE',
           gdprStatus: ['EFTA', 'Adequate'],
-        }),
+        }) as any,
       })
 
       await prisma.country.create({
@@ -230,7 +233,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'NO',
           isoCode3: 'NOR',
           gdprStatus: ['EFTA', 'EEA'],
-        }),
+        }) as any,
       })
 
       // Act - Query by EFTA status
@@ -249,7 +252,7 @@ describe('Countries DAL - Integration Tests', () => {
           isoCode: 'US',
           isoCode3: 'USA',
           gdprStatus: ['Third Country'],
-        }),
+        }) as any,
       })
 
       // Act - Query by EU status
@@ -268,7 +271,7 @@ describe('Countries DAL - Integration Tests', () => {
           name: 'Belgium',
           isoCode: 'BE',
           isoCode3: 'BEL',
-        }),
+        }) as any,
       })
 
       // Act

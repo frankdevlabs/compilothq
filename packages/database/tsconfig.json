@@ -3,7 +3,6 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "skipLibCheck": true,
     "module": "CommonJS",
     "moduleResolution": "Node",
@@ -11,6 +10,12 @@
     "verbatimModuleSyntax": false,
     "exactOptionalPropertyTypes": false // Prisma types don't support this yet
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "__tests__/**/*",
+    "vitest.config.mts",
+    "prisma/seed.ts",
+    "prisma/seeds/**/*"
+  ],
   "exclude": ["node_modules", "dist", "prisma/migrations"]
 }

@@ -309,7 +309,7 @@ export async function seedCountries(prisma: PrismaClient) {
     isoCode,
     isoCode3,
     gdprStatus: parseGdprStatus(statusString),
-    description: description || null,
+    description: description ?? null,
     isActive: true,
   }))
 

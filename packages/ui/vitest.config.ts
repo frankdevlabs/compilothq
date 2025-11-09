@@ -1,8 +1,8 @@
-import { defineConfig } from 'vitest/config'
 import path from 'path'
+import { defineProject } from 'vitest/config'
 
 /**
- * Vitest Configuration for @compilothq/ui
+ * Vitest Project Configuration for @compilothq/ui
  *
  * This configuration is for testing:
  * - React components (buttons, cards, inputs, etc.)
@@ -10,8 +10,11 @@ import path from 'path'
  * - Component accessibility and interactions
  *
  * Environment: jsdom (for React and DOM testing)
+ *
+ * Note: Uses defineProject() instead of defineConfig() for workspace projects.
+ * Coverage configuration is handled at the workspace level.
  */
-export default defineConfig({
+export default defineProject({
   test: {
     name: '@compilothq/ui',
     environment: 'jsdom',
@@ -19,20 +22,9 @@ export default defineConfig({
     // Setup file for React Testing Library and jest-dom matchers
     setupFiles: ['./__tests__/setup.ts'],
 
-    // Test file patterns
+    // Test file patterns - specific to this package
     include: ['**/__tests__/**/*.test.{ts,tsx}'],
     exclude: ['**/node_modules/**', '**/dist/**'],
-
-    // Coverage configuration
-    coverage: {
-      provider: 'v8',
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: [
-        '**/*.test.{ts,tsx}',
-        '**/index.ts', // Re-export files
-        'src/lib/utils.ts', // Simple utility functions
-      ],
-    },
 
     // UI tests are typically fast
     testTimeout: 10000,

@@ -206,7 +206,7 @@ export async function seedRecipientCategories(prisma: PrismaClient) {
       'Special circumstances, one-time disclosures, exceptional situations, unique business needs',
       true,
       true,
-      null,
+      undefined,
     ],
   ]
 
@@ -226,7 +226,7 @@ export async function seedRecipientCategories(prisma: PrismaClient) {
       commonReasons,
       requiresDPA,
       requiresImpactAssessment,
-      defaultRole: defaultRole || null,
+      defaultRole,
       isActive: true,
     })
   )

@@ -14,9 +14,10 @@
  * The E2E tests in apps/web cover UI functionality integration.
  */
 
-import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { describe, expect, it, vi } from 'vitest'
+
 import { Button } from '../../../src/components/button'
 
 describe('Button Component - Unit Tests', () => {

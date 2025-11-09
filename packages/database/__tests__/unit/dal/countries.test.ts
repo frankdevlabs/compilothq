@@ -1,11 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Country } from '@prisma/client'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
 import {
-  listCountries,
+  getCountriesByGdprStatus,
   getCountryById,
   getCountryByIsoCode,
-  getCountriesByGdprStatus,
+  listCountries,
 } from '../../../src/dal/countries'
+// Import the mocked prisma instance
+import { prisma } from '../../../src/index'
 
 // Mock the prisma client
 vi.mock('../../../src/index', () => ({
@@ -16,9 +19,6 @@ vi.mock('../../../src/index', () => ({
     },
   },
 }))
-
-// Import the mocked prisma instance
-import { prisma } from '../../../src/index'
 
 describe('Countries DAL - Unit Tests', () => {
   beforeEach(() => {
@@ -208,7 +208,7 @@ describe('Countries DAL - Unit Tests', () => {
 
       // Assert
       expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('France')
+      expect(result[0]!.name).toBe('France')
       expect(prisma.country.findMany).toHaveBeenCalledWith({
         where: { isActive: true },
         orderBy: { name: 'asc' },

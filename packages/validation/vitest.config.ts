@@ -1,8 +1,8 @@
-import { defineConfig } from 'vitest/config'
 import path from 'path'
+import { defineProject } from 'vitest/config'
 
 /**
- * Vitest Configuration for @compilothq/validation
+ * Vitest Project Configuration for @compilothq/validation
  *
  * This configuration is for testing:
  * - Zod validation schemas
@@ -10,25 +10,18 @@ import path from 'path'
  * - Type inference and validation error handling
  *
  * Environment: Node.js (Zod validation is runtime-agnostic)
+ *
+ * Note: Uses defineProject() instead of defineConfig() for workspace projects.
+ * Coverage configuration is handled at the workspace level.
  */
-export default defineConfig({
+export default defineProject({
   test: {
     name: '@compilothq/validation',
     environment: 'node',
 
-    // Test file patterns
+    // Test file patterns - specific to this package
     include: ['**/__tests__/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**'],
-
-    // Coverage configuration
-    coverage: {
-      provider: 'v8',
-      include: ['src/**/*.ts'],
-      exclude: [
-        '**/*.test.ts',
-        '**/index.ts', // Re-export files
-      ],
-    },
 
     // Schema validation tests are fast
     testTimeout: 5000,

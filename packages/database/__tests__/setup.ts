@@ -8,8 +8,9 @@
 
 import { config } from 'dotenv'
 import { resolve } from 'path'
-import { setupTestDatabase, disconnectTestDatabase } from '../src/test-utils/db-helpers'
-import { beforeAll, afterAll } from 'vitest'
+import { afterAll, beforeAll } from 'vitest'
+
+import { disconnectTestDatabase, setupTestDatabase } from '../src/test-utils/db-helpers'
 
 // Load .env.test file from root directory
 // Use override: true to ensure test DATABASE_URL takes precedence
@@ -19,18 +20,18 @@ config({ path: envPath, override: true })
 /**
  * Global setup - runs once before all tests
  */
-beforeAll(async () => {
+beforeAll(() => {
   // Verify DATABASE_URL is set
-  if (!process.env.DATABASE_URL) {
+  if (!process.env['DATABASE_URL']) {
     throw new Error(
       'DATABASE_URL is not set. Ensure .env.test file exists at project root with test database URL.'
     )
   }
 
   // Verify we're using the test database (port 5433)
-  if (!process.env.DATABASE_URL.includes(':5433/')) {
+  if (!process.env['DATABASE_URL'].includes(':5433/')) {
     throw new Error(
-      `Test database must use port 5433. Current URL uses: ${process.env.DATABASE_URL.split('@')[1]?.split('/')[0] || 'unknown port'}`
+      `Test database must use port 5433. Current URL uses: ${process.env['DATABASE_URL'].split('@')[1]?.split('/')[0] ?? 'unknown port'}`
     )
   }
 
@@ -38,7 +39,7 @@ beforeAll(async () => {
 
   try {
     // Run migrations on test database (only once for all tests)
-    await setupTestDatabase()
+    setupTestDatabase()
     console.log('Test database setup complete.\n')
   } catch (error) {
     console.error('Failed to set up test database:', error)

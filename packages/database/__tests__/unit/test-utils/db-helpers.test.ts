@@ -8,19 +8,20 @@
  * - getTestDatabaseClient() returns a valid Prisma client
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
 import {
-  setupTestDatabase,
   cleanupTestDatabase,
-  getTestDatabaseClient,
   disconnectTestDatabase,
+  getTestDatabaseClient,
   seedReferenceData,
+  setupTestDatabase,
 } from '../../../src/test-utils'
 
 describe('Database Test Utilities', () => {
-  beforeAll(async () => {
+  beforeAll(() => {
     // Ensure test database is set up and migrated
-    await setupTestDatabase()
+    setupTestDatabase()
   })
 
   afterAll(async () => {
@@ -46,7 +47,7 @@ describe('Database Test Utilities', () => {
 
     it('should validate DATABASE_URL uses port 5433', () => {
       // Arrange
-      const databaseUrl = process.env.DATABASE_URL
+      const databaseUrl = process.env['DATABASE_URL']
 
       // Assert
       expect(databaseUrl).toBeDefined()
@@ -151,7 +152,7 @@ describe('Database Test Utilities', () => {
 
       // Verify the client can execute queries
       const result = await client.$queryRaw<[{ value: number }]>`SELECT 1 as value`
-      expect(result[0]?.value).toBe(1)
+      expect(result[0].value).toBe(1)
     })
   })
 })

@@ -1,16 +1,17 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { CountryCreateSchema } from '@compilothq/validation'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
+
 import {
+  cleanupTestDatabase,
   CountryFactory,
   createEUCountryFactory,
-  setupTestDatabase,
-  cleanupTestDatabase,
   disconnectTestDatabase,
+  setupTestDatabase,
 } from '../../../../src/test-utils'
-import { CountryCreateSchema } from '@compilothq/validation/schemas/reference/country'
 
 describe('CountryFactory', () => {
-  beforeAll(async () => {
-    await setupTestDatabase()
+  beforeAll(() => {
+    setupTestDatabase()
   })
 
   afterAll(async () => {

@@ -1,8 +1,8 @@
-import { defineConfig } from 'vitest/config'
 import path from 'path'
+import { defineProject } from 'vitest/config'
 
 /**
- * Vitest Configuration for @compilothq/database
+ * Vitest Project Configuration for @compilothq/database
  *
  * This configuration is for testing:
  * - Data Access Layer (DAL) functions
@@ -10,8 +10,11 @@ import path from 'path'
  * - Database utilities and helpers
  *
  * Environment: Node.js (for Prisma and database operations)
+ *
+ * Note: Uses defineProject() instead of defineConfig() for workspace projects.
+ * Coverage configuration is handled at the workspace level.
  */
-export default defineConfig({
+export default defineProject({
   test: {
     name: '@compilothq/database',
     environment: 'node',
@@ -19,22 +22,11 @@ export default defineConfig({
     // Setup file for test environment initialization
     setupFiles: ['./__tests__/setup.ts'],
 
-    // Test file patterns
+    // Test file patterns - specific to this package
     include: ['**/__tests__/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**'],
 
-    // Coverage configuration
-    coverage: {
-      provider: 'v8',
-      include: ['src/**/*.ts'],
-      exclude: [
-        'src/test-utils/**', // Test utilities excluded from coverage
-        '**/*.test.ts',
-        '**/index.ts', // Re-export files typically don't need coverage
-      ],
-    },
-
-    // Database tests may take longer
+    // Database tests may take longer than default
     testTimeout: 15000,
     hookTimeout: 15000,
   },

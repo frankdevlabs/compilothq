@@ -2,8 +2,8 @@ import { PrismaClient } from '../node_modules/.prisma/client'
 import { seedCountries } from './seeds/countries'
 import { seedDataNatures } from './seeds/dataNatures'
 import { seedProcessingActs } from './seeds/processingActs'
-import { seedTransferMechanisms } from './seeds/transferMechanisms'
 import { seedRecipientCategories } from './seeds/recipientCategories'
+import { seedTransferMechanisms } from './seeds/transferMechanisms'
 
 const prisma = new PrismaClient()
 

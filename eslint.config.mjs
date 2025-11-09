@@ -125,4 +125,30 @@ export default [
       'import/no-duplicates': 'error',
     },
   },
+
+  // Test files - allow non-null assertions for pragmatic test patterns
+  {
+    files: ['**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+
+  // Scripts - disable security rules for internal build scripts
+  {
+    files: ['scripts/**/*.js'],
+    rules: {
+      'security/detect-object-injection': 'off',
+    },
+  },
+
+  // Config files - relax strict type-checking for configuration files
+  {
+    files: ['**/*.config.ts', '**/*.config.mts', '**/vitest.workspace.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+    },
+  },
 ]
