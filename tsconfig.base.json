@@ -1,22 +1,39 @@
 {
   "compilerOptions": {
+    // === Strict Mode (includes all strictX flags) ===
     "strict": true,
+
+    // === Additional Type Safety ===
+    "noUncheckedIndexedAccess": true, // Array/object access returns T | undefined
+    "noImplicitReturns": true, // All code paths must return a value
+    "noImplicitOverride": true, // Require explicit 'override' keyword
+    "exactOptionalPropertyTypes": true, // Distinguish undefined from missing properties
+    "noPropertyAccessFromIndexSignature": true, // Use bracket notation for index signatures
+    "allowUnreachableCode": false, // Error on unreachable code
+    "allowUnusedLabels": false, // Error on unused labels
+
+    // === Module & Import Configuration ===
+    "verbatimModuleSyntax": true, // Clearer import/export semantics
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+
+    // === Code Quality ===
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "allowSyntheticDefaultImports": true
+    "forceConsistentCasingInFileNames": true,
+
+    // === Output Configuration ===
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "skipLibCheck": true
   },
   "exclude": ["node_modules", "dist", ".next", "coverage"]
 }
