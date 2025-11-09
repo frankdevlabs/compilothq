@@ -87,6 +87,12 @@ CompiloHQ requires environment configuration for Docker services and the Next.js
 
 CompiloHQ uses Docker Compose to manage infrastructure services (PostgreSQL and Redis). The Next.js app runs locally on your machine.
 
+#### Services Overview
+
+- **postgres** (port 5432): Development database
+- **postgres-test** (port 5433): Test database for running tests in isolation
+- **redis** (port 6379): Session tracking and caching
+
 #### Automated Startup (Recommended)
 
 Just run the development server - Docker services start automatically:
@@ -159,6 +165,94 @@ pnpm --filter @compilothq/ui build
 pnpm --filter @compilothq/validation build
 ```
 
+## Testing
+
+CompiloHQ uses a comprehensive testing infrastructure:
+
+- **Vitest** for unit and integration tests
+- **Playwright** for end-to-end testing
+- **80% minimum code coverage** requirement
+
+For detailed testing documentation, patterns, and examples, see the **[Testing Guide](./docs/testing-guide.md)**.
+
+### Quick Start
+
+```bash
+# Run all tests
+pnpm test
+
+# Run unit tests only
+pnpm test:unit
+
+# Run integration tests only
+pnpm test:integration
+
+# Run E2E tests
+pnpm test:e2e
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Generate coverage report
+pnpm test:coverage
+
+# Open Vitest UI for visual debugging
+pnpm test:ui
+```
+
+### Test Database
+
+Tests run against an isolated PostgreSQL instance on **port 5433** (separate from development on port 5432). The test database is automatically managed by Docker Compose.
+
+**Start test database:**
+
+```bash
+# Test database starts automatically with other services
+pnpm docker:up
+
+# Or start only the test database
+docker compose -f docker/docker-compose.yml up -d postgres-test
+```
+
+**Environment configuration:**
+
+The `.env.test` file is checked into the repository and contains:
+
+```
+DATABASE_URL="postgresql://postgres:postgres@localhost:5433/compilothq_test"
+```
+
+### Test Organization
+
+Tests are co-located with source code in each package:
+
+```
+packages/database/
+  __tests__/
+    unit/              # Unit tests with mocks
+    integration/       # Integration tests with test database
+apps/web/
+  __tests__/
+    unit/              # Component and utility tests
+    e2e/               # Playwright end-to-end tests
+```
+
+### Test Utilities and Factories
+
+The database package provides test utilities and factories for generating valid test data:
+
+```typescript
+import { CountryFactory, setupTestDatabase } from '@compilothq/database/test-utils'
+
+// Generate test data
+const country = new CountryFactory().build({ name: 'France', isoCode: 'FR' })
+
+// Persist to test database
+const created = await new CountryFactory().create({ name: 'Germany' })
+```
+
+For complete documentation on factories, test utilities, and testing patterns, see the **[Testing Guide](./docs/testing-guide.md)**.
+
 ## Available Scripts
 
 ### Development
@@ -190,6 +284,16 @@ All database scripts automatically ensure Docker services are running:
 - `pnpm db:push` - Push schema to database
 - `pnpm db:studio` - Open Prisma Studio
 - `pnpm db:seed` - Seed database
+
+### Testing Scripts
+
+- `pnpm test` - Run all tests
+- `pnpm test:unit` - Run unit tests
+- `pnpm test:integration` - Run integration tests
+- `pnpm test:e2e` - Run E2E tests
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:coverage` - Generate coverage report
+- `pnpm test:ui` - Open Vitest UI
 
 ### Code Quality
 
@@ -258,6 +362,34 @@ cp docker/.env.example docker/.env
 2. Wait for health checks: `pnpm docker:health`
 3. Check network connectivity: `pnpm docker:ps`
 
+### Test Database Issues
+
+**Test database not accessible on port 5433:**
+
+```bash
+# Check if test database is running
+docker ps --filter "name=compilothq-postgres-test"
+
+# Start test database if not running
+docker compose -f docker/docker-compose.yml up -d postgres-test
+
+# Check logs
+docker logs compilothq-postgres-test
+```
+
+**Tests failing with database connection errors:**
+
+1. Ensure test database is running: `docker ps`
+2. Verify `.env.test` has correct DATABASE_URL with port 5433
+3. Check test database health: `docker exec compilothq-postgres-test pg_isready`
+4. Run migrations on test database (if needed): See [Testing Guide](./docs/testing-guide.md#troubleshooting)
+
+**Prisma client errors in tests:**
+
+1. Ensure Prisma client is generated: `pnpm db:generate`
+2. Check that tests import from correct paths (see [Testing Guide](./docs/testing-guide.md))
+3. Verify `@prisma/client` is installed: `pnpm install`
+
 ## Tech Stack
 
 ### Framework & Runtime
@@ -280,6 +412,14 @@ cp docker/.env.example docker/.env
 - **PostgreSQL 17** - Primary database
 - **Zod** - Runtime validation
 
+### Testing
+
+- **Vitest** - Unit and integration testing
+- **Playwright** - End-to-end testing
+- **@testing-library/react** - React component testing
+- **@testing-library/jest-dom** - Custom matchers
+- **jsdom** - DOM simulation for tests
+
 ### Development Tools
 
 - **pnpm** - Package management
@@ -297,8 +437,9 @@ cp docker/.env.example docker/.env
 4. Update UI components in `@compilothq/ui`
 5. Add database models in `@compilothq/database`
 6. Implement feature in `apps/web`
-7. Run tests and type-checking
-8. Commit with conventional commits format
+7. Write tests (unit, integration, E2E as appropriate)
+8. Run tests and type-checking
+9. Commit with conventional commits format
 
 ### Working with Workspace Packages
 
@@ -340,6 +481,19 @@ When making changes to workspace packages during development:
    ```
 
 **Note:** All `db:*` scripts automatically ensure Docker services are running and healthy before executing.
+
+### Testing Workflow
+
+1. Write tests alongside feature implementation
+2. Run tests locally: `pnpm test:watch`
+3. Ensure coverage meets 80% threshold: `pnpm test:coverage`
+4. Run E2E tests before committing: `pnpm test:e2e`
+
+**Test Database Isolation:**
+
+- Development database: `localhost:5432`
+- Test database: `localhost:5433`
+- Tests never touch development data
 
 ## Git Hooks
 

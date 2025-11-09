@@ -1,4 +1,4 @@
-import { PrismaClient } from '.prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 // Prevent multiple Prisma Client instances in development
 // This singleton pattern ensures connection pooling works correctly in serverless environments
@@ -34,4 +34,4 @@ export type {
   TransferMechanism,
   TransferMechanismCategory,
   RecipientCategory,
-} from '.prisma/client'
+} from '@prisma/client'

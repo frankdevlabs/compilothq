@@ -51,6 +51,50 @@ services:
         reservations:
           memory: ${POSTGRES_MEMORY_RESERVATION}
 
+  # PostgreSQL 17.6 - CompiloHQ Test Database
+  # Isolated test database on port 5433 to avoid conflicts with dev database
+  postgres-test:
+    image: postgres:17.6-alpine
+    container_name: compilothq-postgres-test
+    restart: unless-stopped
+
+    environment:
+      # Test database credentials
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: compilothq_test
+
+      # Lighter resource configuration for test database
+      POSTGRES_SHARED_BUFFERS: 128MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 512MB
+      POSTGRES_WORK_MEM: 8MB
+      POSTGRES_MAINTENANCE_WORK_MEM: 64MB
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      # Separate persistent storage for test database
+      - postgres_test_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d compilothq_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    networks:
+      - compilothq-network
+
+    # Resource limits for test database (lighter than dev)
+    deploy:
+      resources:
+        limits:
+          memory: 512MB
+        reservations:
+          memory: 256MB
+
   # Redis 7.4 - Session Tracking & Caching
   redis:
     image: redis:7.4-alpine
@@ -95,6 +139,10 @@ volumes:
   postgres_data:
     driver: local
     name: compilothq-postgres-data
+
+  postgres_test_data:
+    driver: local
+    name: compilothq-postgres-test-data
 
   redis_data:
     driver: local
