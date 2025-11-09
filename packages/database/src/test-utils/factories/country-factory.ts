@@ -1,5 +1,5 @@
-import type { Country } from '@prisma/client'
-import type { PrismaClient } from '@prisma/client'
+import type { Country, PrismaClient } from '@prisma/client'
+
 import { Factory } from './base-factory'
 
 /**
@@ -46,7 +46,7 @@ export class CountryFactory extends Factory<Country, CountryBuildData> {
    */
   protected async persist(data: CountryBuildData): Promise<Country> {
     return this.prisma.country.create({
-      data,
+      data: data as Parameters<typeof this.prisma.country.create>[0]['data'],
     })
   }
 }

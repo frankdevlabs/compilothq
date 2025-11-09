@@ -1,5 +1,5 @@
-import type { DataNature, DataNatureType } from '@prisma/client'
-import type { PrismaClient } from '@prisma/client'
+import type { DataNature, DataNatureType, PrismaClient } from '@prisma/client'
+
 import { Factory } from './base-factory'
 
 /**

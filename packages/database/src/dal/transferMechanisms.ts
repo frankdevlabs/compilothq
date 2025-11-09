@@ -1,5 +1,6 @@
-import { prisma } from '../index'
 import type { TransferMechanism, TransferMechanismCategory } from '@prisma/client'
+
+import { prisma } from '../index'
 
 /**
  * List all transfer mechanisms ordered by name

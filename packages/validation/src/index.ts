@@ -2,13 +2,13 @@
 export * from './schemas'
 
 // Export environment configuration
-export { env, features, config } from './config'
+export { config, env, features } from './config'
 
 // Export domain types
 export type {
-  ProcessingActivity,
+  Control,
   DataProcessor,
   PersonalDataCategory,
+  ProcessingActivity,
   Risk,
-  Control,
 } from './types/models'

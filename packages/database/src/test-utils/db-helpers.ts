@@ -13,15 +13,13 @@ let testPrismaClient: PrismaClient | null = null
  * Uses DATABASE_URL from environment (should be test database on port 5433)
  */
 export function getTestDatabaseClient(): PrismaClient {
-  if (!testPrismaClient) {
-    testPrismaClient = new PrismaClient({
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL,
-        },
+  testPrismaClient ??= new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env['DATABASE_URL'],
       },
-    })
-  }
+    },
+  })
   return testPrismaClient
 }
 
@@ -42,8 +40,8 @@ export async function disconnectTestDatabase(): Promise<void> {
  *
  * @throws Error if DATABASE_URL is not set or migrations fail
  */
-export async function setupTestDatabase(): Promise<void> {
-  const databaseUrl = process.env.DATABASE_URL
+export function setupTestDatabase(): void {
+  const databaseUrl = process.env['DATABASE_URL']
 
   if (!databaseUrl) {
     throw new Error(

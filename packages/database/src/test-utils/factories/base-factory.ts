@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+
 import { getTestDatabaseClient } from '../db-helpers'
 
 /**
@@ -118,7 +119,7 @@ export abstract class Factory<TModel, TBuild = Omit<TModel, 'id' | 'createdAt' |
    * const countries = await CountryFactory.createMany(5)
    */
   async createMany(count: number, overrides?: Partial<TBuild>): Promise<TModel[]> {
-    const promises = Array.from({ length: count }, () => this.create(overrides))
+    const promises = Array.from({ length: count }, async () => this.create(overrides))
     return Promise.all(promises)
   }
 }

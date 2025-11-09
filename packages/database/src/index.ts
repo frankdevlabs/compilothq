@@ -8,11 +8,11 @@ declare global {
   var prisma: PrismaClient | undefined
 }
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient }
+const globalForPrisma = global as unknown as { prisma: PrismaClient | undefined }
 
-export const prisma = globalForPrisma.prisma || new PrismaClient()
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env['NODE_ENV'] !== 'production') {
   globalForPrisma.prisma = prisma
 }
 
@@ -22,8 +22,8 @@ export default prisma
 export * from './dal/countries'
 export * from './dal/dataNatures'
 export * from './dal/processingActs'
-export * from './dal/transferMechanisms'
 export * from './dal/recipientCategories'
+export * from './dal/transferMechanisms'
 
 // Export Prisma types
 export type {
@@ -31,7 +31,7 @@ export type {
   DataNature,
   DataNatureType,
   ProcessingAct,
+  RecipientCategory,
   TransferMechanism,
   TransferMechanismCategory,
-  RecipientCategory,
 } from '@prisma/client'

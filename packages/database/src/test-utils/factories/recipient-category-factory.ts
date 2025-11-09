@@ -1,5 +1,5 @@
-import type { RecipientCategory } from '@prisma/client'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient, RecipientCategory } from '@prisma/client'
+
 import { Factory } from './base-factory'
 
 /**
@@ -55,7 +55,7 @@ export class RecipientCategoryFactory extends Factory<
    */
   protected async persist(data: RecipientCategoryBuildData): Promise<RecipientCategory> {
     return this.prisma.recipientCategory.create({
-      data,
+      data: data as Parameters<typeof this.prisma.recipientCategory.create>[0]['data'],
     })
   }
 }

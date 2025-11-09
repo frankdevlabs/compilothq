@@ -1,5 +1,5 @@
-import type { ProcessingAct } from '@prisma/client'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient, ProcessingAct } from '@prisma/client'
+
 import { Factory } from './base-factory'
 
 /**
@@ -50,7 +50,7 @@ export class ProcessingActFactory extends Factory<ProcessingAct, ProcessingActBu
    */
   protected async persist(data: ProcessingActBuildData): Promise<ProcessingAct> {
     return this.prisma.processingAct.create({
-      data,
+      data: data as Parameters<typeof this.prisma.processingAct.create>[0]['data'],
     })
   }
 }

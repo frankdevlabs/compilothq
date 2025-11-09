@@ -18,37 +18,37 @@ export { Factory } from './base-factory'
 // Country factories
 export {
   CountryFactory,
-  createEUCountryFactory,
-  createEEACountryFactory,
   createAdequateCountryFactory,
+  createEEACountryFactory,
+  createEUCountryFactory,
 } from './country-factory'
 
 // DataNature factories
 export {
-  DataNatureFactory,
-  createSpecialDataNatureFactory,
   createNonSpecialDataNatureFactory,
+  createSpecialDataNatureFactory,
+  DataNatureFactory,
 } from './data-nature-factory'
 
 // ProcessingAct factories
 export {
-  ProcessingActFactory,
   createDPARequiredProcessingActFactory,
   createDPIATriggeredProcessingActFactory,
+  ProcessingActFactory,
 } from './processing-act-factory'
 
 // TransferMechanism factories
 export {
-  TransferMechanismFactory,
   createAdequacyTransferMechanismFactory,
-  createSafeguardTransferMechanismFactory,
   createDerogationTransferMechanismFactory,
+  createSafeguardTransferMechanismFactory,
+  TransferMechanismFactory,
 } from './transfer-mechanism-factory'
 
 // RecipientCategory factories
 export {
-  RecipientCategoryFactory,
   createDPARequiredRecipientCategoryFactory,
   createImpactAssessmentRequiredRecipientCategoryFactory,
   createJointControllerRecipientCategoryFactory,
+  RecipientCategoryFactory,
 } from './recipient-category-factory'

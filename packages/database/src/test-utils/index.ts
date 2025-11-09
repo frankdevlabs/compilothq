@@ -10,10 +10,10 @@
 
 // Database helpers
 export {
-  setupTestDatabase,
   cleanupTestDatabase,
-  getTestDatabaseClient,
   disconnectTestDatabase,
+  getTestDatabaseClient,
+  setupTestDatabase,
 } from './db-helpers'
 
 // Reference data seeding
