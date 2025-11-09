@@ -27,7 +27,7 @@ Define your technical stack below. This serves as a reference for all team membe
 
 ### Deployment & Infrastructure
 
-- **Hosting:** [e.g., Heroku, AWS, Vercel, Railway]
+- **Hosting:** [e.g., Heroku, AWS, Vercel, VPS]
 - **CI/CD:** [e.g., GitHub Actions, CircleCI]
 
 ### Third-Party Services

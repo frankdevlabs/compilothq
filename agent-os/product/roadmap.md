@@ -6,7 +6,9 @@
 
 1. [x] Next.js Application Foundation & Routing Setup — Set up Next.js 16 App Router with directory structure, TypeScript configuration, base layout with navigation, route groups for authenticated vs public pages, Tailwind CSS with shadcn/ui theme, environment variables, and configuration management to provide the application shell for all features. `S`
 
-2. [ ] Monorepo & Prisma Infrastructure Setup — Set up monorepo structure with pnpm workspaces, create packages/database with Prisma schema and client, configure packages/ui for shared components, establish cross-package dependencies, set up Prisma Client exports and singleton pattern, configure migration scripts to work from root and package level, and prepare development tooling. `S`
+2. [x] Monorepo & Prisma Infrastructure Setup — Set up monorepo structure with pnpm workspaces, create packages/database with Prisma schema and client, configure packages/ui for shared components, establish cross-package dependencies, set up Prisma Client exports and singleton pattern, configure migration scripts to work from root and package level, and prepare development tooling. `S`
+
+2b. [x] Package-Based Architecture Migration — Extract existing app logic into reusable packages: specificly migrate UI components and utilities to @compilothq/ui, move database connection and helpers to @compilothq/database, extract validation schemas to @compilothq/validation, update all imports in web app to use packages, configure hot-reloading across packages, and validate development workflow works end-to-end. Validate which other logic can be moved into new packages `M`
 
 **Milestone 1: Foundation Ready** ✓ _Development environment established_
 
@@ -16,7 +18,7 @@
 
 #### Foundation & Reference Data
 
-3. [ ] Foundation Reference Models & Seed Data — Implement core reference data models (Country, DataNature, ProcessingAct, TransferMechanism, RecipientCategories) in Prisma schema, create migrations, test in development environment, and implement comprehensive seed data covering 250+ countries with GDPR classifications, 28 data nature types, 17 processing operations, and 13 recipient categories to provide the foundation for automatic compliance validation and classification throughout the platform. `M`
+3. [x] Foundation Reference Models & Seed Data — Implement core reference data models (Country, DataNature, ProcessingAct, TransferMechanism, RecipientCategories) in Prisma schema, create migrations, test in development environment, and implement comprehensive seed data covering 250+ countries with GDPR classifications, 28 data nature types, 17 processing operations, and 13 recipient categories to provide the foundation for automatic compliance validation and classification throughout the platform. `M`
 
 #### Core Entity Models
 

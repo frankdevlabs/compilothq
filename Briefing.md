@@ -2082,9 +2082,8 @@ Why NOT:
 └─ MySQL: PostgreSQL has better JSON support
 
 Hosting Options:
-├─ Development: Local PostgreSQL or Supabase
-├─ Production Early: Vercel Postgres (Neon)
-└─ Production Scale: Railway, Supabase, or self-hosted
+├─ Development: Docker Compose (PostgreSQL 17 + Redis 7)
+└─ Production: Contabo VPS (self-hosted PostgreSQL 17 + Redis 7)
 ```
 
 **Document Generation**
@@ -2236,13 +2235,12 @@ Production: Vercel
 └─ Scales automatically
 
 Database:
-├─ Start: Vercel Postgres (Neon)
-└─ Scale: Railway, Supabase, or self-hosted
+├─ Development: Docker Compose (PostgreSQL 17 + Redis 7)
+└─ Production: Contabo VPS (self-hosted PostgreSQL 17 + Redis 7)
 
 For Dutch Data Residency:
 ├─ Vercel EU region
-├─ Database in EU
-└─ Or: Self-host in Netherlands (Hetzner, etc.)
+└─ Contabo Nuremberg datacenter (Germany) - meets GDPR requirements
 
 CI/CD:
 ├─ GitHub Actions
@@ -2305,20 +2303,27 @@ const processorSchema = z.object({
 Start Simple:
 
 ```
-Vercel free tier (hobby)
-+ Vercel Postgres (Neon)
-+ Upstash Redis (free tier)
+Development (Local):
+Docker Compose (PostgreSQL 17 + Redis 7)
 = €0/month for development
-```
 
-Scale Up:
+Production Small (0-100 users):
+Vercel free tier
++ Contabo VPS S/M (€5-12/month)
++ Resend free tier
+= €5-12/month for small production
 
-```
+Production Medium (100-1000 users):
 Vercel Pro (€20/month)
-+ Neon paid tier (€10-50/month)
-+ Upstash Redis paid (€10/month)
-+ Resend (€10-20/month)
-= €50-100/month for 100 users
++ Contabo VPS L (€20-25/month)
++ Resend paid (€10-20/month)
+= €50-65/month for medium production
+
+Production Enterprise (1000+ users):
+Vercel Pro (€20/month)
++ Contabo VPS XL or Dedicated (€40-100/month)
++ Resend enterprise (€20-50/month)
+= €80-170/month for enterprise
 ```
 
 Enterprise:

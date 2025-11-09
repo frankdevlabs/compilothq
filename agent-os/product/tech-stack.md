@@ -132,9 +132,8 @@
 
 **Hosting Options**
 
-- Development: Local PostgreSQL or Supabase free tier
-- Production Early: Vercel Postgres (powered by Neon)
-- Production Scale: Railway, Supabase, or self-hosted
+- Development: Docker Compose (PostgreSQL 17 + Redis 7)
+- Production: Contabo VPS with self-hosted PostgreSQL 17 + Redis 7
 
 **Why PostgreSQL**
 
@@ -266,9 +265,9 @@
 
 **Database Hosting**
 
-- Initial: Vercel Postgres (Neon) - integrated and easy
-- Scale: Railway, Supabase, or self-hosted for control
-- Dutch data residency: Self-host in Netherlands (Hetzner) if required
+- Development: Docker Compose (PostgreSQL 17 + Redis 7) - local development
+- Production: Contabo VPS with self-hosted PostgreSQL 17 + Redis 7
+- EU/Dutch data residency: Contabo Nuremberg datacenter (Germany) meets GDPR requirements
 
 **CI/CD: GitHub Actions**
 
@@ -305,9 +304,10 @@
 
 **Scalable & Cost-Effective**
 
-- Development: €0/month (Vercel free tier + Neon free tier + Upstash free tier)
-- Small Production: €50-100/month for 100 users (Vercel Pro + Neon + Redis + Resend)
-- Enterprise: Custom pricing for 1,000+ users with dedicated infrastructure
+- Development: €0/month (Docker Compose locally)
+- Production Small (0-100 users): €10-25/month (Contabo VPS S/M + Vercel free tier + Resend)
+- Production Medium (100-1000 users): €30-50/month (Contabo VPS L + Vercel Pro + Resend)
+- Enterprise (1000+ users): €50-100+/month (Contabo VPS XL or Dedicated Server + premium features)
 
 **Team Knowledge**
 
@@ -320,6 +320,6 @@
 **Dutch/EU Data Residency Compliance**
 
 - Vercel EU region available
-- Database can be hosted in EU (Neon EU, Railway EU, or self-hosted Netherlands)
-- All infrastructure can meet GDPR data residency requirements
+- Database hosted in EU (Contabo Nuremberg datacenter, Germany)
+- All infrastructure meets GDPR data residency requirements
 - Critical for compliance software serving Dutch market

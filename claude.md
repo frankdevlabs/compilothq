@@ -76,7 +76,72 @@
 
 ## Project Structure
 
--tbd
+This is a **pnpm monorepo** with the following organization:
+
+```
+compilothq/
+├── apps/
+│   └── web/                          # Main Next.js 16 application
+│       ├── src/
+│       │   ├── app/                  # Next.js App Router
+│       │   │   ├── (marketing)/      # Marketing pages (features, pricing)
+│       │   │   ├── (public)/         # Public auth pages (login, signup)
+│       │   │   ├── (auth)/           # Protected pages
+│       │   │   │   ├── dashboard/
+│       │   │   │   ├── questionnaires/
+│       │   │   │   ├── activities/
+│       │   │   │   ├── documents/
+│       │   │   │   ├── settings/
+│       │   │   │   └── components/   # Shared auth layout components
+│       │   │   └── api/
+│       │   │       └── trpc/         # tRPC API endpoint
+│       │   ├── components/           # Shared React components
+│       │   │   ├── ui/              # UI components
+│       │   │   └── navigation/      # Navigation components
+│       │   ├── server/              # Server-side code
+│       │   │   └── routers/         # tRPC routers
+│       │   ├── lib/                 # Utility functions
+│       │   │   └── trpc/            # tRPC client setup
+│       │   └── types/               # TypeScript type definitions
+│       ├── public/                  # Static assets
+│       └── package.json
+│
+├── packages/
+│   ├── database/                    # @compilothq/database
+│   │   ├── prisma/
+│   │   │   └── schema.prisma       # Prisma schema definition
+│   │   ├── src/
+│   │   │   └── index.ts            # Database client & DAL exports
+│   │   └── package.json
+│   │
+│   ├── ui/                          # @compilothq/ui
+│   │   ├── src/
+│   │   │   ├── components/         # Shared UI components (shadcn/ui)
+│   │   │   └── lib/                # UI utilities
+│   │   └── package.json
+│   │
+│   └── validation/                  # @compilothq/validation
+│       ├── src/
+│       │   └── schemas/            # Zod validation schemas
+│       └── package.json
+|
+├── .husky/                          # Git hooks
+│
+├── pnpm-workspace.yaml             # Workspace configuration
+├── tsconfig.base.json              # Shared TypeScript config
+├── eslint.config.mjs               # ESLint configuration
+├── .prettierrc                     # Prettier configuration
+└── package.json                    # Root package.json
+
+```
+
+### Key Architectural Decisions
+
+1. **Monorepo Strategy**: Using pnpm workspaces for code sharing and dependency management
+2. **Route Groups**: Next.js route groups `(marketing)`, `(public)`, `(auth)` organize pages without affecting URLs
+3. **Shared Packages**: Common code extracted to `@compilothq/*` packages for reusability
+4. **DAL Pattern**: All database access goes through Data Access Layer functions in `@compilothq/database`
+5. **Type Safety**: End-to-end type safety via tRPC and shared validation schemas
 
 ## Next.js 16 Specific Guidance
 
