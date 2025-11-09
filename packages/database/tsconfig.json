@@ -3,7 +3,10 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "prisma/migrations"]

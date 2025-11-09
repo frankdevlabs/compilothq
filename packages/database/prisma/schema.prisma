@@ -23,6 +23,108 @@ model User {
 }
 
 // ============================================================================
+// Reference Data Models
+// ============================================================================
+
+// Enums for Reference Data
+
+enum DataNatureType {
+  SPECIAL
+  NON_SPECIAL
+}
+
+enum TransferMechanismCategory {
+  ADEQUACY
+  SAFEGUARD
+  DEROGATION
+  NONE
+}
+
+// Country reference model for GDPR compliance tracking
+model Country {
+  id          String   @id @default(cuid())
+  name        String
+  isoCode     String   @unique
+  isoCode3    String?  @unique
+  gdprStatus  Json     // Array of: "EU", "EEA", "EFTA", "Third Country", "Adequate"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+  @@index([isoCode])
+}
+
+// Data nature types for classifying personal data categories
+model DataNature {
+  id          String          @id @default(cuid())
+  name        String
+  description String
+  type        DataNatureType
+  gdprArticle String
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([name])
+  @@index([type])
+}
+
+// Processing operations from GDPR Article 4(2)
+model ProcessingAct {
+  id           String   @id @default(cuid())
+  name         String
+  description  String
+  examples     Json     // Array of example strings
+  requiresDPA  Boolean  @default(false)
+  triggersDPIA Boolean  @default(false)
+  gdprArticle  String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([name])
+}
+
+// Transfer mechanisms for cross-border data transfers
+model TransferMechanism {
+  id                     String                     @id @default(cuid())
+  code                   String                     @unique
+  name                   String
+  description            String
+  typicalUseCase         String
+  gdprArticle            String
+  category               TransferMechanismCategory
+  isDerogation           Boolean
+  requiresAdequacy       Boolean
+  requiresDocumentation  Boolean
+  isActive               Boolean                    @default(true)
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt
+
+  @@index([name])
+  @@index([category])
+}
+
+// Recipient categories for data sharing classification
+model RecipientCategory {
+  id                       String   @id @default(cuid())
+  code                     String   @unique
+  name                     String
+  examples                 Json     // Array of specific recipient type examples
+  commonReasons            String
+  requiresDPA              Boolean  @default(false)
+  requiresImpactAssessment Boolean  @default(false)
+  defaultRole              String?
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@index([name])
+}
+
+// ============================================================================
 // Data Processing
 // ============================================================================
 

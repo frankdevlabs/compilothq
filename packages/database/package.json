@@ -20,12 +20,16 @@
     "studio": "prisma studio",
     "seed": "prisma db seed"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.8.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
     "prisma": "^5.8.0",
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "tsx": "^4.20.6",
+    "typescript": "^5.0.0"
   }
 }

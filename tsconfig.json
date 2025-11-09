@@ -9,5 +9,6 @@
     { "path": "./packages/database" },
     { "path": "./packages/ui" }
   ],
-  "include": []
+  "include": [],
+  "exclude": ["apps/web"]
 }

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '.prisma/client'
 
 // Prevent multiple Prisma Client instances in development
 // This singleton pattern ensures connection pooling works correctly in serverless environments
@@ -17,3 +17,21 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export default prisma
+
+// Export all DAL functions
+export * from './dal/countries'
+export * from './dal/dataNatures'
+export * from './dal/processingActs'
+export * from './dal/transferMechanisms'
+export * from './dal/recipientCategories'
+
+// Export Prisma types
+export type {
+  Country,
+  DataNature,
+  DataNatureType,
+  ProcessingAct,
+  TransferMechanism,
+  TransferMechanismCategory,
+  RecipientCategory,
+} from '.prisma/client'

@@ -1,0 +1,51 @@
+import { PrismaClient } from '../node_modules/.prisma/client'
+import { seedCountries } from './seeds/countries'
+import { seedDataNatures } from './seeds/dataNatures'
+import { seedProcessingActs } from './seeds/processingActs'
+import { seedTransferMechanisms } from './seeds/transferMechanisms'
+import { seedRecipientCategories } from './seeds/recipientCategories'
+
+const prisma = new PrismaClient()
+
+async function main() {
+  console.log('Starting database seeding...\n')
+
+  try {
+    // Seed reference data in sequence
+    const countriesCount = await seedCountries(prisma)
+    const dataNaturesCount = await seedDataNatures(prisma)
+    const processingActsCount = await seedProcessingActs(prisma)
+    const transferMechanismsCount = await seedTransferMechanisms(prisma)
+    const recipientCategoriesCount = await seedRecipientCategories(prisma)
+
+    const totalRecords =
+      countriesCount +
+      dataNaturesCount +
+      processingActsCount +
+      transferMechanismsCount +
+      recipientCategoriesCount
+
+    console.log('\n=== Seeding Summary ===')
+    console.log(`Countries: ${countriesCount}`)
+    console.log(`Data Natures: ${dataNaturesCount}`)
+    console.log(`Processing Acts: ${processingActsCount}`)
+    console.log(`Transfer Mechanisms: ${transferMechanismsCount}`)
+    console.log(`Recipient Categories: ${recipientCategoriesCount}`)
+    console.log(`Total Records: ${totalRecords}`)
+    console.log('======================\n')
+
+    console.log('Database seeding completed successfully!')
+  } catch (error) {
+    console.error('Error during database seeding:', error)
+    throw error
+  }
+}
+
+main()
+  .catch((error) => {
+    console.error('Fatal error:', error)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
