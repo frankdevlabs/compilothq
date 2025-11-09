@@ -14,7 +14,7 @@ Run comprehensive test review, then fix all issues found.
 
 ## Process
 
-First: run 'cd app && npm run test "$ARGUMENTS"'
+First: run 'pnpm run test "$ARGUMENTS"'
 STEP 1: Output results.
 STEP 2: Deep analysis via thinkdeep ('ultrahink on what you see').
 STEP 3: Assess if any failing tests should be fixed or removed.
