@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@compilothq/ui/components",
+    "utils": "@compilothq/ui/lib/utils",
+    "ui": "@compilothq/ui/components",
+    "lib": "@compilothq/ui/lib"
+  },
+  "registries": {}
+}
