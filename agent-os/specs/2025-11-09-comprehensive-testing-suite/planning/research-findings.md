@@ -364,7 +364,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [24.x]
     steps:
       - name: Run unit tests
         run: pnpm test:unit

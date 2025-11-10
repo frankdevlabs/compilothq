@@ -43,7 +43,7 @@ Zod validation schemas for consistent data validation across client and server.
 
 ### Prerequisites
 
-- Node.js 20 LTS
+- Node.js 24.11.0
 - pnpm 8.15.0+
 - Docker Desktop (manages PostgreSQL 17 + Redis infrastructure)
 
@@ -396,7 +396,7 @@ docker logs compilothq-postgres-test
 
 - **Next.js 16** (App Router with Turbopack)
 - **React 19**
-- **Node.js 20 LTS**
+- **Node.js 24.11.0**
 - **TypeScript 5.x** (strict mode)
 
 ### Frontend

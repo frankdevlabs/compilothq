@@ -11,9 +11,9 @@
 - Zero-config deployment on Vercel
 - Already used in compilot project (familiar to development team)
 
-**Node.js 20 LTS**
+**Node.js 24.11.0**
 
-- Stable long-term support release
+- Latest stable version
 - Native TypeScript support
 - Excellent library ecosystem for compliance tooling
 - Reliable for backend services

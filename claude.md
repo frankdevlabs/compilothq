@@ -5,7 +5,7 @@
 ### Framework & Runtime
 
 - Next.js 16 (App Router): https://nextjs.org/blog/next-16
-- Node.js 20 LTS (runtime)
+- Node.js 24.11.0 (runtime)
 - TypeScript 5.x (strict mode)
 
 ### Frontend

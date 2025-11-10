@@ -715,7 +715,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [24.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -778,7 +778,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -832,7 +832,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -914,7 +914,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
           cache: 'pnpm'
 
       - name: Install dependencies

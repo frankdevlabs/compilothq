@@ -1916,8 +1916,8 @@ Next.js 16 = latest update (App Router)
 ├─ Built-in: Image optimization, fonts, SEO
 └─ Deployment: Zero-config on Vercel
 
-Node.js 20 LTS
-├─ Why: Stable, long-term support
+Node.js 24.11.0
+├─ Why: Latest stable version
 ├─ Native TypeScript support
 └─ Excellent library ecosystem
 
