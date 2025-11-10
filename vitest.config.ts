@@ -1,24 +1,36 @@
 import { defineConfig } from 'vitest/config'
 
 /**
- * Vitest Workspace Configuration
+ * Vitest Root Configuration with Projects
  *
- * This workspace configuration defines how Vitest runs across the entire monorepo.
+ * This configuration defines how Vitest runs across the entire monorepo using the projects pattern (Vitest 3.2+).
  * Each project (packages and apps) has its own vitest.config file for environment-specific
  * settings, while this root config provides shared settings and coverage thresholds.
  *
  * Key architectural decisions:
- * - Projects defined in test.projects array (not defineWorkspace)
+ * - Projects defined in test.projects array (replaces deprecated workspace pattern)
  * - Coverage configuration only at root level (Vitest requirement)
- * - Each project config can use defineProject() and extends: true to inherit settings
+ * - Each project config uses defineProject() for proper type safety
+ * - Environment variables loaded from .env.test at module load time with override: true
  *
- * @see https://vitest.dev/guide/workspace.html
+ * @see https://vitest.dev/guide/workspace
  * @see https://vitest.dev/guide/coverage.html#workspace-support
  */
 export default defineConfig({
   test: {
     // Global settings inherited by all projects
     globals: true,
+
+    // Global test exclusions - prevents testing dist/, E2E, and node_modules
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/*.spec.ts', // Playwright E2E test files
+      '**/__tests__/e2e/**', // E2E test directories
+      '**/e2e/**',
+      '**/coverage/**',
+      '**/.next/**',
+    ],
 
     // Projects array - references to individual project configs
     projects: [

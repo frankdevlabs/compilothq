@@ -12,9 +12,20 @@ const envSchema = z.object({
   NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: z.string().transform((val) => val === 'true'),
 })
 
+/**
+ * Parse and validate environment variables
+ * In test mode, we defer validation to allow test setup to load .env.test first
+ */
 const parsed = envSchema.safeParse(process.env)
 
 if (!parsed.success) {
+  // In test mode, provide a more helpful error message
+  if (process.env.NODE_ENV === 'test') {
+    console.error(
+      '\n⚠️  Environment variables not loaded yet. This usually means test setup has not run.\n' +
+        'Ensure your test file imports from this package AFTER setup files have loaded .env.test\n'
+    )
+  }
   console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors)
   throw new Error('Invalid environment variables')
 }

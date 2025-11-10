@@ -29,6 +29,11 @@ export default defineProject({
     // Database tests may take longer than default
     testTimeout: 15000,
     hookTimeout: 15000,
+
+    // Run test files sequentially to avoid database race conditions
+    // All test files share the same test database, so parallel execution
+    // causes truncate operations to interfere with other running tests
+    fileParallelism: false,
   },
 
   resolve: {

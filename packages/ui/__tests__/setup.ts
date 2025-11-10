@@ -2,10 +2,16 @@
  * Test setup for @compilothq/ui
  *
  * This file configures the testing environment for UI components:
- * - Imports @testing-library/jest-dom matchers for better assertions
- * - Sets up jsdom environment for React component testing
+ * - Extends expect with @testing-library/jest-dom matchers via Vitest-specific import
+ * - Sets up DOM cleanup after each test to prevent test pollution
  */
 
 import '@testing-library/jest-dom/vitest'
 
-// Additional global setup can be added here if needed
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+// Cleanup DOM after each test to prevent test pollution
+afterEach(() => {
+  cleanup()
+})

@@ -59,11 +59,12 @@ export function setupTestDatabase(): void {
   }
 
   try {
-    // Run migrations using Prisma CLI
-    // Use --skip-seed to avoid seeding during migration
+    // Run migrations using Prisma CLI directly (not through pnpm)
+    // This ensures DATABASE_URL is properly passed to the Prisma process
     const prismaSchemaPath = path.resolve(__dirname, '../../prisma/schema.prisma')
+    const prismaBinPath = path.resolve(__dirname, '../../node_modules/.bin/prisma')
 
-    execSync('pnpm prisma migrate deploy --schema=' + prismaSchemaPath, {
+    execSync(`"${prismaBinPath}" migrate deploy --schema="${prismaSchemaPath}"`, {
       env: { ...process.env, DATABASE_URL: databaseUrl },
       stdio: 'pipe', // Suppress output unless there's an error
     })

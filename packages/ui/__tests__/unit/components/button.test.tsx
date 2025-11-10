@@ -1,17 +1,9 @@
+// @vitest-environment happy-dom
+
 /**
  * Button Component - Unit Tests
  *
- * NOTE: These tests currently demonstrate the testing pattern but cannot run
- * due to a known compatibility issue between jsdom@27 and Vitest's ESM handling.
- *
- * Issue: jsdom@27 uses CommonJS require() for ES modules which causes errors
- * Solution options:
- * 1. Downgrade to jsdom@24 (stable but older)
- * 2. Use happy-dom instead (better ESM support)
- * 3. Wait for jsdom@28 with better ESM support
- *
- * For now, this file demonstrates the correct testing pattern for React components.
- * The E2E tests in apps/web cover UI functionality integration.
+ * Tests React component rendering, interactions, and accessibility using happy-dom.
  */
 
 import { render, screen } from '@testing-library/react'

@@ -9,18 +9,24 @@ import { defineProject } from 'vitest/config'
  * - UI utilities and helpers
  * - Component accessibility and interactions
  *
- * Environment: jsdom (for React and DOM testing)
+ * Environment: happy-dom (for React and DOM testing)
  *
  * Note: Uses defineProject() instead of defineConfig() for workspace projects.
  * Coverage configuration is handled at the workspace level.
+ * Test setup (jest-dom matchers, cleanup) is in __tests__/setup.ts
  */
 export default defineProject({
   test: {
     name: '@compilothq/ui',
-    environment: 'jsdom',
+    environment: 'happy-dom',
+    globals: true,
+
+    // Use threads pool for component testing
+    pool: 'threads',
+    isolate: false,
 
     // Setup file for React Testing Library and jest-dom matchers
-    setupFiles: ['./__tests__/setup.ts'],
+    setupFiles: [path.join(__dirname, '__tests__/setup.ts')],
 
     // Test file patterns - specific to this package
     include: ['**/__tests__/**/*.test.{ts,tsx}'],
