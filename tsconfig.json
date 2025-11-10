@@ -9,6 +9,6 @@
     { "path": "./packages/database" },
     { "path": "./packages/ui" }
   ],
-  "include": ["vitest.workspace.ts"],
+  "include": ["vitest.config.ts"],
   "exclude": ["apps/web"]
 }
