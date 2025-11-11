@@ -64,7 +64,6 @@ export default defineConfig({
         '**/*.config.{ts,js,mjs,mts}',
         '**/vitest.config.ts',
         '**/vitest.config.mts',
-        '**/vitest.workspace.ts',
 
         // Build output and dependencies
         '**/node_modules/**',

@@ -13,7 +13,7 @@
  * Safe to run multiple times - will skip if services are already healthy.
  */
 
-const { execSync, spawn } = require('child_process');
+const { execSync } = require('child_process');
 const { existsSync } = require('fs');
 const { resolve, join } = require('path');
 const { checkDocker, getDockerComposeCommand } = require('./check-docker');
@@ -39,10 +39,6 @@ function error(message) {
 
 function success(message) {
   log(`✓ ${message}`, 'green');
-}
-
-function info(message) {
-  log(`ℹ ${message}`, 'cyan');
 }
 
 function dim(message) {

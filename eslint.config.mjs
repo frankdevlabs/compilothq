@@ -1,6 +1,8 @@
 import js from '@eslint/js'
 import typescriptEslint from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
+// @ts-expect-error - eslint-plugin-security@3.0.1 does not provide TypeScript definitions
+// ESLint v9+ flat configs are often written in .mjs to avoid type complexity
 import security from 'eslint-plugin-security'
 import importPlugin from 'eslint-plugin-import'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
@@ -144,7 +146,7 @@ export default [
 
   // Config files - relax strict type-checking for configuration files
   {
-    files: ['**/*.config.ts', '**/*.config.mts', '**/vitest.workspace.ts'],
+    files: ['**/*.config.ts', '**/*.config.mts', '**/vitest.config.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',

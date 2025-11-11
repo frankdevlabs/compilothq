@@ -138,7 +138,7 @@ function printStatusTable(services) {
 /**
  * Check network status
  */
-function checkNetwork(composeCmd) {
+function checkNetwork() {
   try {
     const output = execSync(
       'docker network ls --format json',
@@ -222,7 +222,7 @@ function checkHealth() {
 
   // Check network and volumes
   log('📡 Infrastructure Status\n', 'blue');
-  checkNetwork(composeCmd);
+  checkNetwork();
   checkVolumes();
   log('');
 

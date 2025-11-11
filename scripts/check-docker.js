@@ -35,10 +35,6 @@ function success(message) {
   log(`✓ ${message}`, 'green');
 }
 
-function info(message) {
-  log(`ℹ ${message}`, 'cyan');
-}
-
 /**
  * Execute a command and return true if successful
  */
