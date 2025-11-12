@@ -12,10 +12,10 @@ import { afterAll, beforeAll } from 'vitest'
 
 import { disconnectTestDatabase, setupTestDatabase } from '../src/test-utils/db-helpers'
 
-// Load .env.test file from root directory
-// Use override: true to ensure test DATABASE_URL takes precedence
+// Load .env.test file from root directory as fallback
+// Use override: false to allow CI/shell environment variables to take precedence
 const envPath = resolve(__dirname, '../../../.env.test')
-config({ path: envPath, override: true })
+config({ path: envPath, override: false })
 
 /**
  * Global setup - runs once before all tests
