@@ -1,0 +1,243 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   DESIGN TOKENS - Compilo Color System
+   Based on franksblog.nl aesthetic
+   ============================================ */
+
+:root {
+  /* Light Mode Colors */  /* Cream/off-white background */  /* Dark navy text */
+  --primary: oklch(0.205 0 0);     /* Primary color for UI elements */
+  --accent: oklch(0.97 0 0);      /* Golden yellow accent (consistent across modes) */
+
+  /* Derived Colors for Layering */
+  --surface: #F5F2EB;     /* Slightly darker than background for cards/elevated elements */
+  --border: oklch(0.922 0 0);  /* Subtle borders using primary with opacity */
+
+  /* Text Colors */
+  --text: #09192B;        /* Primary text color */
+  --text-secondary: rgba(9, 25, 43, 0.7);  /* Secondary text with reduced opacity */
+
+  /* Button Colors */
+  --button-bg: #09192B;   /* Button background in light mode */
+  --button-text: #FEFBF4; /* Button text in light mode */
+
+  /* Component-specific Colors (for shadcn/ui compatibility) */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: #FEFBF4;
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /* Chart Colors */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* Dark Mode Colors - Class-based for next-themes */
+.dark {
+  --background: oklch(0.145 0 0);  /* Dark navy background */
+  --foreground: oklch(0.985 0 0);  /* Cream/off-white text */
+  --primary: oklch(0.922 0 0);     /* Primary color inverted */
+  --accent: oklch(0.269 0 0);      /* Accent unchanged (consistent across modes) */
+
+  /* Derived Colors for Layering */
+  --surface: #0F1F35;     /* Slightly lighter than background for cards/elevated elements */
+  --border: oklch(1 0 0 / 10%);  /* Subtle borders using foreground with opacity */
+
+  /* Text Colors */
+  --text: #FEFBF4;        /* Primary text color */
+  --text-secondary: rgba(254, 251, 244, 0.7);  /* Secondary text with reduced opacity */
+
+  /* Button Colors */
+  --button-bg: #D9BF65;   /* Button background in dark mode (accent color) */
+  --button-text: #09192B; /* Button text in dark mode (dark navy) */
+
+  /* Component-specific Colors (for shadcn/ui compatibility) */
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: #FEFBF4;
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+
+  /* Chart Colors - Dark Mode */
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --primary-foreground: oklch(0.205 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ============================================
+   TAILWIND V4 THEME INTEGRATION
+   ============================================ */
+
+@theme inline {
+  /* Color Integration */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+
+  /* Typography - Font Families */
+  --font-heading: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Raleway', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Courier New', monospace;
+  --font-sans: var(--font-raleway);  /* Default to Raleway for body */
+
+  /* Typography - Font Sizes (dashboard-optimized, NOT blog's 17.4rem scale) */
+  --font-size-xs: 0.75rem;    /* 12px - small labels, footnotes */
+  --font-size-sm: 0.875rem;   /* 14px - secondary text */
+  --font-size-base: 1rem;     /* 16px - body text */
+  --font-size-lg: 1.125rem;   /* 18px - emphasized text */
+  --font-size-xl: 1.25rem;    /* 20px - small headings */
+  --font-size-2xl: 1.5rem;    /* 24px - section headings */
+  --font-size-3xl: 1.875rem;  /* 30px - page titles */
+  --font-size-4xl: 2.25rem;   /* 36px - major headings */
+
+  /* Typography - Line Heights */
+  --line-height-tight: 1.25;   /* Dense data displays */
+  --line-height-normal: 1.5;   /* Standard body text */
+  --line-height-relaxed: 1.75; /* Long-form content */
+
+  /* Typography - Font Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* Border Radius - 4px default (minimal aesthetic) */
+  --radius-sm: 2px;
+  --radius: 4px;        /* Default border radius */
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Shadows - Minimal values following franksblog.nl */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+body {
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+
+  /* Smooth transitions for theme switching (300ms) */
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+/* Heading Styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--foreground);
+}
+
+/* Focus Indicators - Visible with accent color */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   CUSTOM ANIMATIONS
+   ============================================ */
+
+/* Green pulse animation for active indicator */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+}
+
+.animate-pulse-green {
+  animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
