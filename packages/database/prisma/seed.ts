@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+
 import { seedCountries } from './seeds/countries'
 import { seedDataNatures } from './seeds/dataNatures'
 import { seedProcessingActs } from './seeds/processingActs'
