@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "lint": {
-      "dependsOn": [],
+      "dependsOn": ["^build"],
       "inputs": [
         "**/*.ts",
         "**/*.tsx",
@@ -17,7 +17,7 @@
       "cache": true
     },
     "lint:fix": {
-      "dependsOn": [],
+      "dependsOn": ["^build"],
       "inputs": [
         "**/*.ts",
         "**/*.tsx",
@@ -66,7 +66,7 @@
       "cache": true
     },
     "typecheck": {
-      "dependsOn": [],
+      "dependsOn": ["^build"],
       "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"],
       "outputs": [],
       "cache": true
