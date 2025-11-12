@@ -1,0 +1,146 @@
+# Docker Compose for CompiloHQ Development Infrastructure (Remote VPS)
+# Deployed on: dev.franksblog.nl (95.111.243.79)
+# Purpose: Remote development database accessible from local machines
+#
+# Services:
+# - PostgreSQL 17.6 on port 5434 (external)
+# - Redis 7.4 on port 6380 (external)
+#
+# Network: compilothq-dev-network (isolated from other apps)
+#
+# Deploy: docker compose -f docker-compose.prod.yml up -d
+# Logs:   docker compose -f docker-compose.prod.yml logs -f
+# Stop:   docker compose -f docker-compose.prod.yml down
+
+version: '3.9'
+
+services:
+  # PostgreSQL 17.6 - CompiloHQ Development Database
+  postgres:
+    image: postgres:17.6-alpine
+    container_name: compilothq-dev-postgres
+    restart: unless-stopped
+
+    environment:
+      # Database credentials (from .env.production)
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+      # Performance tuning for VPS environment
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-256MB}
+      POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-1GB}
+      POSTGRES_WORK_MEM: ${POSTGRES_WORK_MEM:-4MB}
+      POSTGRES_MAINTENANCE_WORK_MEM: ${POSTGRES_MAINTENANCE_WORK_MEM:-64MB}
+      POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-100}
+
+    ports:
+      # External port 5434 to avoid conflict with analytics (5432)
+      - "5434:5432"
+
+    volumes:
+      # Persistent database storage
+      - postgres_dev_data:/var/lib/postgresql/data
+
+      # PostgreSQL configuration for remote access
+      - ./postgres-prod.conf:/etc/postgresql/postgresql.conf:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    networks:
+      - compilothq-dev-network
+
+    # Resource limits for VPS environment
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: ${POSTGRES_MEMORY_LIMIT:-2GB}
+        reservations:
+          cpus: '0.5'
+          memory: ${POSTGRES_MEMORY_RESERVATION:-512MB}
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis 7.4 - Session Storage & Caching
+  redis:
+    image: redis:7.4-alpine
+    container_name: compilothq-dev-redis
+    restart: unless-stopped
+
+    command: >
+      redis-server
+      --maxmemory ${REDIS_MAXMEMORY:-512mb}
+      --maxmemory-policy ${REDIS_MAXMEMORY_POLICY:-allkeys-lru}
+      --appendonly ${REDIS_APPENDONLY:-yes}
+      --appendfsync ${REDIS_APPENDFSYNC:-everysec}
+      --save "900 1 300 10 60 10000"
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+      --bind 0.0.0.0
+      --protected-mode yes
+
+    ports:
+      # External port 6380 to avoid conflict with analytics (6379)
+      - "6380:6379"
+
+    volumes:
+      # Persistent Redis data (AOF + RDB snapshots)
+      - redis_dev_data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+    networks:
+      - compilothq-dev-network
+
+    # Resource limits for VPS environment
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: ${REDIS_MEMORY_LIMIT:-512MB}
+        reservations:
+          cpus: '0.25'
+          memory: ${REDIS_MEMORY_RESERVATION:-128MB}
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+# Named volumes for data persistence
+volumes:
+  postgres_dev_data:
+    driver: local
+    name: compilothq-dev-postgres-data
+
+  redis_dev_data:
+    driver: local
+    name: compilothq-dev-redis-data
+
+# Custom network for service isolation
+# Separate from analytics network (my-analytics-network)
+networks:
+  compilothq-dev-network:
+    driver: bridge
+    name: compilothq-dev-network
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
