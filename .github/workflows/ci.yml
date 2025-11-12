@@ -11,8 +11,10 @@
 # Database: PostgreSQL and Redis services with migrations and seed data
 #
 # Job Dependency Graph:
-# - Lint, Unit Tests, Build run in parallel
-# - E2E Tests run after Build completes
+# - Lint (first)
+# - Unit Tests (after Lint)
+# - Build (after Unit Tests)
+# - E2E Tests (after Build)
 #
 # All checks are blocking - failures prevent merge
 # Target: <10 minutes for clean run, <3 minutes for cached runs
@@ -43,7 +45,7 @@ jobs:
   # ==============================================================================
   # Purpose: Validate code quality with ESLint across all packages
   # Runtime: ~1-2 minutes
-  # Dependencies: None (runs in parallel)
+  # Dependencies: None (runs first)
   # ==============================================================================
   lint:
     name: Lint
@@ -73,12 +75,13 @@ jobs:
   # ==============================================================================
   # Purpose: Run unit tests with database services and generate coverage
   # Runtime: ~3-5 minutes
-  # Dependencies: None (runs in parallel)
+  # Dependencies: Lint job must pass first
   # Services: PostgreSQL 17, Redis 7
   # ==============================================================================
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+    needs: [lint]
 
     # Service containers for tests
     services:
@@ -172,12 +175,13 @@ jobs:
   # ==============================================================================
   # Purpose: Build all packages and verify type safety
   # Runtime: ~2-4 minutes
-  # Dependencies: None (runs in parallel)
+  # Dependencies: Unit Tests job must pass first
   # Outputs: Build artifacts for E2E tests
   # ==============================================================================
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: [unit-tests]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

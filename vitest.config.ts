@@ -43,8 +43,8 @@ export default defineConfig({
       // Validation package - Node.js environment for Zod schema tests
       'packages/validation/vitest.config.ts',
 
-      // Web app - Mixed environment (jsdom for components, node for API)
-      'apps/web/vitest.config.ts',
+      // Web app - Commented out until unit tests are added
+      // 'apps/web/vitest.config.ts',
     ],
 
     // Coverage configuration - MUST be at root level for workspace

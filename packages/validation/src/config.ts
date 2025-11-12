@@ -20,7 +20,7 @@ const parsed = envSchema.safeParse(process.env)
 
 if (!parsed.success) {
   // In test mode, provide a more helpful error message
-  if (process.env.NODE_ENV === 'test') {
+  if (process.env['NODE_ENV'] === 'test') {
     console.error(
       '\n⚠️  Environment variables not loaded yet. This usually means test setup has not run.\n' +
         'Ensure your test file imports from this package AFTER setup files have loaded .env.test\n'
