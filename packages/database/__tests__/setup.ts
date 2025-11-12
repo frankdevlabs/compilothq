@@ -28,10 +28,10 @@ beforeAll(() => {
     )
   }
 
-  // Verify we're using the test database (port 5433)
-  if (!process.env['DATABASE_URL'].includes(':5433/')) {
+  // Verify we're using the test database (ends with compilothq_test)
+  if (!process.env['DATABASE_URL'].includes('compilothq_test')) {
     throw new Error(
-      `Test database must use port 5433. Current URL uses: ${process.env['DATABASE_URL'].split('@')[1]?.split('/')[0] ?? 'unknown port'}`
+      `Test database must be 'compilothq_test'. Current URL uses: ${process.env['DATABASE_URL'].split('/').pop() ?? 'unknown database'}`
     )
   }
 

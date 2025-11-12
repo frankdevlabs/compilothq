@@ -159,6 +159,9 @@ jobs:
       - name: Seed database
         run: pnpm --filter @compilothq/database seed
 
+      - name: Build packages
+        run: pnpm turbo build
+
       - name: Run unit tests with coverage
         run: pnpm test:coverage
 

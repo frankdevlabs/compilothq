@@ -39,7 +39,6 @@ export default defineProject({
   resolve: {
     alias: {
       '@compilothq/database': path.resolve(__dirname, './src'),
-      '.prisma/client': path.resolve(__dirname, './node_modules/.prisma/client'),
     },
   },
 })
