@@ -16,6 +16,21 @@
       "outputs": [],
       "cache": true
     },
+    "lint:fix": {
+      "dependsOn": [],
+      "inputs": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.mjs",
+        "eslint.config.mjs",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": [],
+      "cache": false
+    },
     "test:unit": {
       "dependsOn": ["^build"],
       "inputs": [
@@ -46,22 +61,13 @@
     },
     "test:e2e": {
       "dependsOn": ["build"],
-      "inputs": [
-        "**/*.spec.ts",
-        "**/__tests__/e2e/**",
-        "playwright.config.ts",
-        "package.json"
-      ],
+      "inputs": ["**/*.spec.ts", "**/__tests__/e2e/**", "playwright.config.ts", "package.json"],
       "outputs": ["playwright-report/**", "test-results/**"],
       "cache": true
     },
     "typecheck": {
       "dependsOn": [],
-      "inputs": [
-        "**/*.ts",
-        "**/*.tsx",
-        "tsconfig.json"
-      ],
+      "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"],
       "outputs": [],
       "cache": true
     },
@@ -70,10 +76,5 @@
       "persistent": true
     }
   },
-  "globalEnv": [
-    "NODE_ENV",
-    "CI",
-    "DATABASE_URL",
-    "REDIS_URL"
-  ]
+  "globalEnv": ["NODE_ENV", "CI", "DATABASE_URL", "REDIS_URL"]
 }

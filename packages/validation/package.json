@@ -19,6 +19,7 @@
     "dev": "tsc --project tsconfig.build.json --watch",
     "clean": "rm -rf dist",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "vitest",
     "test:watch": "vitest watch"
   },
