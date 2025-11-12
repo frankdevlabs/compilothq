@@ -15,6 +15,7 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "generate": "prisma generate",
+    "postinstall": "prisma generate",
     "migrate": "prisma migrate dev",
     "push": "prisma db push",
     "studio": "prisma studio",
