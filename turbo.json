@@ -1,0 +1,79 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "lint": {
+      "dependsOn": [],
+      "inputs": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.mjs",
+        "eslint.config.mjs",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "test:unit": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/__tests__/**",
+        "vitest.config.ts",
+        "vitest.config.mts",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": ["coverage/**"],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        "src/**",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": ["dist/**", ".next/**"],
+      "cache": true
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "inputs": [
+        "**/*.spec.ts",
+        "**/__tests__/e2e/**",
+        "playwright.config.ts",
+        "package.json"
+      ],
+      "outputs": ["playwright-report/**", "test-results/**"],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": [],
+      "inputs": [
+        "**/*.ts",
+        "**/*.tsx",
+        "tsconfig.json"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  },
+  "globalEnv": [
+    "NODE_ENV",
+    "CI",
+    "DATABASE_URL",
+    "REDIS_URL"
+  ]
+}
