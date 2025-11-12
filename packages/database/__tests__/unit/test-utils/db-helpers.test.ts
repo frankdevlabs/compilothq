@@ -45,13 +45,13 @@ describe('Database Test Utilities', () => {
       expect(Array.isArray(result)).toBe(true)
     })
 
-    it('should validate DATABASE_URL uses port 5433', () => {
+    it('should validate DATABASE_URL uses compilothq_test database', () => {
       // Arrange
       const databaseUrl = process.env['DATABASE_URL']
 
       // Assert
       expect(databaseUrl).toBeDefined()
-      expect(databaseUrl).toContain(':5433/')
+      expect(databaseUrl).toContain('compilothq_test')
     })
   })
 
