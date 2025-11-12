@@ -1,0 +1,34 @@
+name: 'Setup Node.js and pnpm'
+description: 'Reusable composite action to set up Node.js 24.11.0 and pnpm with caching'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js 24.11.0
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24.11.0'
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8.15.0
+        run_install: false
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
