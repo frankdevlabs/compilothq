@@ -15,6 +15,7 @@ dist/
 .next/
 out/
 build/
+.turbo/
 
 # Logs
 *.log
@@ -35,6 +36,10 @@ test-results/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+*.config.js
+*.config.js.map
+*.config.d.ts
+*.config.d.ts.map
 
 # IDE
 .vscode/
