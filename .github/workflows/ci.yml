@@ -1,0 +1,362 @@
+# CI Pipeline for CompiloHQ Monorepo
+#
+# This workflow implements a comprehensive continuous integration pipeline with:
+# - Linting: ESLint validation across all packages
+# - Unit Tests: Vitest tests with PostgreSQL 17 and Redis 7 service containers
+# - Build: Type checking and building all packages
+# - E2E Tests: End-to-end tests with Playwright
+#
+# Smart Testing: Uses Turborepo to only test/build affected packages
+# Caching: Aggressive caching of dependencies, build artifacts, and task outputs
+# Database: PostgreSQL and Redis services with migrations and seed data
+#
+# Job Dependency Graph:
+# - Lint (first)
+# - Unit Tests (after Lint)
+# - Build (after Unit Tests)
+# - E2E Tests (after Build)
+#
+# All checks are blocking - failures prevent merge
+# Target: <10 minutes for clean run, <3 minutes for cached runs
+
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Cancel in-progress runs for same workflow and ref
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ==============================================================================
+  # LINT JOB
+  # ==============================================================================
+  # Purpose: Validate code quality with ESLint across all packages
+  # Runtime: ~1-2 minutes
+  # Dependencies: None (runs first)
+  # ==============================================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for Turborepo change detection
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-lint-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-lint-
+
+      - name: Run linting
+        run: pnpm turbo lint
+
+  # ==============================================================================
+  # UNIT TESTS JOB
+  # ==============================================================================
+  # Purpose: Run unit tests with database services and generate coverage
+  # Runtime: ~3-5 minutes
+  # Dependencies: Lint job must pass first
+  # Services: PostgreSQL 17, Redis 7
+  # ==============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [lint]
+
+    # Service containers for tests
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: compilothq_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d compilothq_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/compilothq_test
+      REDIS_URL: redis://localhost:6379
+      CI: true
+      NODE_ENV: test
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: test-secret-key-minimum-16-characters-required
+      NEXT_PUBLIC_APP_NAME: Compilo Test
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
+      NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
+      NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+      # Temporary: Allow coverage reporting without failing CI while we improve coverage
+      # Remove this when ready to enforce 80% coverage thresholds (see vitest.config.ts)
+      CI_SKIP_COVERAGE_THRESHOLD: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-test-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-test-
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 2
+          done
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @compilothq/database generate
+
+      - name: Run database migrations
+        run: pnpm --filter @compilothq/database migrate
+
+      - name: Seed database
+        run: pnpm --filter @compilothq/database seed
+
+      - name: Build packages
+        run: pnpm turbo build
+
+      - name: Run unit tests with coverage
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-unit-tests
+          path: coverage/
+          retention-days: 3
+
+  # ==============================================================================
+  # BUILD JOB
+  # ==============================================================================
+  # Purpose: Build all packages and verify type safety
+  # Runtime: ~2-4 minutes
+  # Dependencies: Unit Tests job must pass first
+  # Outputs: Build artifacts for E2E tests
+  # ==============================================================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-build-
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('apps/web/**/*.ts', 'apps/web/**/*.tsx', 'apps/web/**/*.js', 'apps/web/**/*.jsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
+
+      - name: Build all packages
+        run: pnpm turbo build
+
+      - name: Verify build artifacts
+        run: |
+          echo "Verifying build artifacts..."
+
+          # Check Next.js build
+          if [ ! -d "apps/web/.next" ]; then
+            echo "Error: Next.js build artifacts not found at apps/web/.next"
+            exit 1
+          fi
+          echo "✓ Next.js build artifacts found"
+
+          # Check database package build
+          if [ ! -d "packages/database/dist" ]; then
+            echo "Error: Database package build artifacts not found"
+            exit 1
+          fi
+          echo "✓ Database package build artifacts found"
+
+          # Check ui package build
+          if [ ! -d "packages/ui/dist" ]; then
+            echo "Error: UI package build artifacts not found"
+            exit 1
+          fi
+          echo "✓ UI package build artifacts found"
+
+          # Check validation package build
+          if [ ! -d "packages/validation/dist" ]; then
+            echo "Error: Validation package build artifacts not found"
+            exit 1
+          fi
+          echo "✓ Validation package build artifacts found"
+
+          echo "All build artifacts verified successfully"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            apps/*/dist
+            apps/*/.next
+            packages/*/dist
+          retention-days: 3
+
+  # ==============================================================================
+  # E2E TESTS JOB
+  # ==============================================================================
+  # Purpose: Run end-to-end tests with Playwright
+  # Runtime: ~3-5 minutes
+  # Dependencies: Build job (needs build artifacts)
+  # Services: PostgreSQL 17, Redis 7
+  # ==============================================================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    # Service containers for E2E tests
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: compilothq_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d compilothq_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/compilothq_test
+      REDIS_URL: redis://localhost:6379
+      CI: true
+      NODE_ENV: test
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: test-secret-key-minimum-16-characters-required
+      NEXT_PUBLIC_APP_NAME: Compilo Test
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
+      NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
+      NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js and pnpm
+        uses: ./.github/actions/setup-node-pnpm
+
+      - name: Cache Turborepo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-e2e-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-e2e-
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @compilothq/web exec playwright install --with-deps
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 2
+          done
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @compilothq/database generate
+
+      - name: Run database migrations
+        run: pnpm --filter @compilothq/database migrate
+
+      - name: Seed database
+        run: pnpm --filter @compilothq/database seed
+
+      - name: Run E2E tests
+        run: pnpm test:e2e

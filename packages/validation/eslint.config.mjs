@@ -7,7 +7,13 @@ import importPlugin from 'eslint-plugin-import'
 
 export default [
   {
-    ignores: ['node_modules/**', 'dist/**'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      '*.d.ts',
+      '*.js',
+      '*.map',
+    ],
   },
 
   js.configs.recommended,

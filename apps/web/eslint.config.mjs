@@ -1,4 +1,3 @@
-import { defineConfig, globalIgnores } from "eslint/config";
 // @ts-expect-error - eslint-config-next does not provide TypeScript definitions for these subpaths
 // ESLint v9+ flat configs are often written in .mjs to avoid type complexity
 import nextVitals from "eslint-config-next/core-web-vitals";
@@ -7,7 +6,17 @@ import nextTs from "eslint-config-next/typescript";
 import reactHooks from "eslint-plugin-react-hooks";
 import vitest from "eslint-plugin-vitest";
 
-const eslintConfig = defineConfig([
+export default [
+  // Global ignores - must be first
+  {
+    ignores: [
+      ".next/**",
+      "out/**",
+      "build/**",
+      "next-env.d.ts",
+    ],
+  },
+
   ...nextVitals,
   ...nextTs,
 
@@ -41,14 +50,4 @@ const eslintConfig = defineConfig([
       },
     },
   },
-
-  // Override default ignores of eslint-config-next
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
+];

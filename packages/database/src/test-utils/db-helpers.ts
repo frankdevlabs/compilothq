@@ -50,10 +50,10 @@ export function setupTestDatabase(): void {
     )
   }
 
-  // Verify we're using the test database (port 5433), not dev (port 5432)
-  if (!databaseUrl.includes(':5433/')) {
+  // Verify we're using the test database (compilothq_test)
+  if (!databaseUrl.includes('compilothq_test')) {
     throw new Error(
-      `DATABASE_URL must use port 5433 for test database. ` +
+      `DATABASE_URL must use compilothq_test database. ` +
         `Current URL: ${databaseUrl.replace(/:[^:@]+@/, ':***@')}`
     )
   }

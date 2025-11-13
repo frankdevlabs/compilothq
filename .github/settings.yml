@@ -1,0 +1,58 @@
+# Repository Settings for CompiloHQ
+#
+# This file is used by the GitHub Settings App to manage repository configuration as code.
+# Install the app: https://github.com/apps/settings
+#
+# Documentation: https://github.com/probot/settings
+
+repository:
+  name: compilothq
+  description: CompiloHQ - AI-powered compliance questionnaire platform
+  homepage: https://compilo.ai
+  topics:
+    - compliance
+    - questionnaire
+    - ai
+    - next
+    - typescript
+  private: true
+  has_issues: true
+  has_projects: false
+  has_wiki: false
+  has_downloads: true
+  default_branch: main
+  allow_squash_merge: true
+  allow_merge_commit: true
+  allow_rebase_merge: true
+  delete_branch_on_merge: true
+  enable_automated_security_fixes: true
+  enable_vulnerability_alerts: true
+
+# Branch Protection Rules
+branches:
+  - name: main
+    protection:
+      # Require status checks to pass before merging
+      required_status_checks:
+        strict: true  # Require branches to be up to date before merging
+        checks:
+          - context: Lint
+          - context: Unit Tests
+          - context: Build
+          - context: E2E Tests
+
+      # Do NOT require pull request reviews
+      required_pull_request_reviews: null
+
+      # Do NOT enforce restrictions on who can push
+      restrictions: null
+
+      # Additional protection settings
+      enforce_admins: false  # Allow admins to bypass if needed
+      required_linear_history: false
+      allow_force_pushes: false
+      allow_deletions: false
+      block_creations: false
+      required_conversation_resolution: false
+      lock_branch: false
+      allow_fork_syncing: false
