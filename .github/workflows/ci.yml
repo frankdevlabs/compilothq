@@ -336,7 +336,7 @@ jobs:
           name: build-artifacts
 
       - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
+        run: pnpm --filter @compilothq/web exec playwright install --with-deps
 
       - name: Wait for PostgreSQL
         run: |
