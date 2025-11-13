@@ -335,6 +335,9 @@ jobs:
         with:
           name: build-artifacts
 
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
       - name: Wait for PostgreSQL
         run: |
           for i in {1..30}; do
