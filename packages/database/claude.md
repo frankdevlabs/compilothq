@@ -123,12 +123,14 @@ beforeEach(async () => await cleanDatabase())
 
 ## Common Issues
 
-| Issue                                     | Fix                                                        |
-| ----------------------------------------- | ---------------------------------------------------------- |
-| Cannot find module '@compilothq/database' | `pnpm install && pnpm build`                               |
-| Type errors on Prisma types               | `pnpm db:generate`                                         |
-| Too many connections                      | Check singleton usage - never create new instances         |
-| Migration failed: relation exists         | Database out of sync - use `pnpm db:reset` (destroys data) |
+| Issue                                     | Fix                                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| Cannot find module '@compilothq/database' | `pnpm install && pnpm build`                                                        |
+| Type errors on Prisma types               | `pnpm db:generate`                                                                  |
+| Too many connections                      | Check singleton usage - never create new instances                                  |
+| Migration failed: relation exists         | Database out of sync - use `pnpm db:reset` (destroys data)                          |
+| ERR_PNPM_OUTDATED_LOCKFILE in CI          | Regenerate lockfile: `rm pnpm-lock.yaml && pnpm install` then commit                |
+| Lockfile doesn't match package.json       | Clean install: `rm -rf node_modules && pnpm install`, test with `--frozen-lockfile` |
 
 ## Version Management
 
@@ -142,6 +144,50 @@ catalogs:
 ```
 
 Ensures exact versions across all packages, preventing type incompatibilities.
+
+## Lockfile Management
+
+### pnpm Catalogs and Lockfile Synchronization
+
+When using pnpm catalogs (requires pnpm 9.0+), the lockfile must properly reference the `catalog:` protocol. If you change `package.json` to use `catalog:` but don't regenerate the lockfile, CI will fail with:
+
+```
+ERR_PNPM_OUTDATED_LOCKFILE Cannot install with "frozen-lockfile"
+specifiers in lockfile: {"@prisma/client":"5.22.0"}
+don't match specs in package.json: {"@prisma/client":"catalog:"}
+```
+
+### Regenerating Lockfile
+
+When you need to regenerate the lockfile (catalog changes, version updates, etc.):
+
+```bash
+# Clean slate regeneration
+rm pnpm-lock.yaml
+rm -rf node_modules packages/*/node_modules apps/*/node_modules
+pnpm install
+
+# Verify lockfile is synchronized
+pnpm install --frozen-lockfile
+```
+
+**Important:** Always test `pnpm install --frozen-lockfile` locally before pushing - this simulates CI behavior.
+
+### Lockfile in CI/CD
+
+CI pipelines use `pnpm install --frozen-lockfile` which:
+
+- Fails if lockfile doesn't match package.json (prevents surprises)
+- Skips resolution step for faster, deterministic installs
+- Ensures everyone uses identical dependency versions
+
+After regenerating the lockfile, commit it:
+
+```bash
+git add pnpm-lock.yaml
+git commit -m "fix(deps): regenerate lockfile for catalog support"
+git push
+```
 
 ## CI/CD Integration
 
