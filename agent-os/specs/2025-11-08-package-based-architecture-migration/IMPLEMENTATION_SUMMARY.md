@@ -347,6 +347,7 @@ The following manual tests should be performed by the development team:
    - Verify no build errors or warnings
 
 6. **Database Operations**
+
    ```bash
    pnpm db:generate
    pnpm db:studio

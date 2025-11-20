@@ -2,39 +2,49 @@
 
 ## Pitch
 
-Compilo is a component-based compliance platform that helps privacy officers, legal teams, and business stakeholders generate professional GDPR documentation in hours instead of weeks by providing reusable compliance components and intelligent document generation from a single source of truth.
+Compilo delivers OneTrust's sophistication at one-third the cost and one-tenth the implementation time. Stop maintaining the same processor list across 15 different DPIAs—generate professional GDPR documentation in hours instead of weeks from a single source of truth that updates all documents automatically.
+
+**Target:** 500-2,000 employee organizations with 2-5 privacy professionals who need enterprise-grade compliance infrastructure without €100K/year budgets or 6-month implementations.
 
 ## Users
 
 ### Primary Customers
 
-- **Mid-Market Organizations (50-500 employees)**: Companies complex enough to need structured compliance but without enterprise tool budgets
-- **Privacy Professionals**: Privacy officers and DPOs managing multiple processing activities with limited resources
-- **Legal Teams**: Counsel who need to review and approve compliance documentation with confidence in consistency
-- **Business Stakeholders**: Project managers and department heads who need compliance approvals without becoming privacy experts
+- **Mid-to-Large Organizations (500-2,000 employees)**: Companies with dedicated privacy teams (2-5 FTE) who have outgrown manual processes but can't justify OneTrust's complexity or cost
+- **Privacy Professionals**: Privacy officers and DPOs managing 30-150 processing activities with limited resources, preparing for regular supervisory authority audits
+- **Legal Teams**: Senior counsel reviewing 20-30 DPIAs annually who need professional document quality without extensive reformatting
+- **Business Stakeholders**: Department heads and project managers requiring compliance approvals without becoming privacy experts
+- **IT/Security Teams**: IT managers and security officers responsible for system inventory, data discovery, and technical privacy controls
 
 ### User Personas
 
 **Privacy Officer / DPO** (30-50 years old)
 
-- **Role:** Privacy Jurist or Data Protection Officer
-- **Context:** Managing compliance for 100-500 employee organizations with 1-3 privacy professionals
-- **Pain Points:** Maintaining the same processor list in 15 different DPIAs, manual updates across all documents when DPAs expire, spending 2 weeks creating each DPIA from scratch, inability to quickly query compliance data
-- **Goals:** Reduce DPIA creation time from weeks to hours, ensure consistency across all documentation, enable audit readiness, maintain single source of truth for compliance components
+- **Role:** Data Protection Officer or Privacy Manager leading 2-5 person team
+- **Context:** Managing 50-150 processing activities, coordinating between legal, IT, and business stakeholders, preparing for audits
+- **Pain Points:** Maintaining identical processor information across 15 DPIAs manually, spending 3 weeks updating all documentation when a DPA expires, unable to answer auditor queries like "show me all activities processing health data with US transfers," no visibility into business units creating new processing without privacy review
+- **Goals:** Reduce DPIA creation from 2-3 weeks to 4-6 hours, maintain audit-ready documentation continuously, enable self-service for business stakeholders while maintaining oversight, query compliance data instantly
 
 **Legal Counsel** (35-55 years old)
 
-- **Role:** Senior Legal Counsel
-- **Context:** Reviewing privacy documentation with 15+ years legal experience but moderate privacy expertise
-- **Pain Points:** Receiving unstructured information to review, variable document quality, difficulty tracking changes between versions, inability to add inline legal comments
-- **Goals:** Review DPIAs in familiar Word format, ensure professional document quality, capture structured feedback, reduce review time from days to hours
+- **Role:** Senior Legal Counsel reviewing privacy documentation
+- **Context:** 15+ years legal experience, moderate privacy expertise, reviewing 20-30 DPIAs annually
+- **Pain Points:** Receiving unstructured information requiring extensive back-and-forth, variable document quality, difficulty tracking changes between versions, cannot add inline legal comments in same system
+- **Goals:** Review DPIAs in 2-3 hours instead of full day, provide feedback once instead of multiple rounds, confidence in maintained quality over time, work in native Word format
 
 **Project Manager / Business Stakeholder** (30-45 years old)
 
 - **Role:** Department lead managing projects requiring privacy approval
-- **Context:** Moderate technical skills but low compliance knowledge
-- **Pain Points:** Privacy requirements blocking projects for weeks, incomprehensible legal jargon, lack of visibility into approval progress
-- **Goals:** Get compliance approval in days instead of weeks, understand process without becoming privacy expert, self-service capability for standard requests
+- **Context:** Launching marketing campaigns, products, or vendor integrations processing personal data
+- **Pain Points:** Privacy requirements blocking projects 2-3 weeks, incomprehensible legal jargon, no visibility into approval progress, answering same questions for similar projects repeatedly
+- **Goals:** Get compliance approval in 3-5 days instead of 3 weeks, complete intake in 15 minutes without privacy expertise, understand requirements in plain language
+
+**IT Manager / Information Security Officer** (30-50 years old)
+
+- **Role:** IT Manager or Security Lead managing 50-200 business systems
+- **Context:** Responsible for data security, technical privacy controls, and DSAR fulfillment
+- **Pain Points:** No central inventory when privacy asks "what systems process PII?", manual documentation becomes stale immediately, responding to DSARs requires manually querying 30+ databases
+- **Goals:** Automated system inventory, integration with existing CMDB/ITSM tools, DSAR fulfillment automation, API access for custom workflows
 
 ## The Problem
 
@@ -44,61 +54,60 @@ Privacy teams face a fundamental architectural problem: they need to maintain st
 
 Manual approaches using Word and Excel lead to the same processor being copied across 15 DPIAs creating 15 different versions. When a DPA expires, teams must manually update all documents. There's no way to query "which DPIAs use Recruitee?" Inconsistencies proliferate. Creating one DPIA takes 2 weeks. Maintaining compliance at scale becomes impossible.
 
-Enterprise GRC tools like OneTrust and TrustArc cost €50,000+ per year, require 6+ month implementations, are complex and enterprise-focused, generate poor quality documents that legal teams reject, and provide no real component reusability.
+Enterprise GRC tools like OneTrust and TrustArc cost €50,000-150,000 per year, require 6-8 month implementations, overwhelm mid-market teams with enterprise complexity, generate poor quality documents that legal teams reject, and provide limited true component reusability despite marketing claims.
 
-Simple questionnaire tools generate documents without underlying structure. Every DPIA starts from scratch with no relationships between data and no ability to query across documents.
+Simple questionnaire tools (Typeform, Jotform, Notion) generate documents without underlying structure. Every DPIA starts from scratch with no relationships between data and no ability to query across documents.
 
 **Our Solution:** Compilo treats documents as views of structured data, not separate sources of truth. Like modern applications where a database generates multiple views (web, mobile, API, reports), Compilo maintains a compliance graph that generates all documents (DPIA, RoPA, DPAs, privacy statements). When you update the database, all views update automatically.
 
-### Fragmented Compliance Workflow
-
-Current solutions force teams to choose between structure or documents, between consistency or legal-quality output, between technical complexity or business usability.
-
-**Our Solution:** Compilo bridges these gaps with component-based compliance that provides reusability with professional output, structure with flexibility, and business-friendly interfaces with technical rigor.
+This architectural approach provides enterprise-grade data integrity with mid-market pricing and implementation speed.
 
 ## Differentiators
 
-### Component-Based Architecture
+### Single Source of Truth
 
-Unlike manual Word documents that duplicate data everywhere, we provide reusable compliance building blocks (processors, data categories, risks, controls) with explicit relationships and validation rules. Unlike simple questionnaire tools that generate isolated documents, our components enable true audit readiness and instant queries across all compliance data.
+Unlike manual Word documents that duplicate data everywhere, update compliance data once and all documents reflect changes automatically. Define Google Cloud as a processor once—all 15 DPIAs that reference it pull from this single definition. Update the DPA expiry date, all documents update automatically. Query "which DPIAs use processors with expiring DPAs?" and get instant answers.
 
-This results in 70% component reuse across projects and reduction of DPIA creation time from weeks to hours.
+This results in 70% component reuse by the 5th processing activity and reduction of DPIA creation time from 2-3 weeks to 4-6 hours.
 
 ### Professional Document Generation
 
-Unlike enterprise GRC tools that produce rigid, unprofessional output legal teams reject, we generate fully-formatted Word documents that legal counsel can review and approve with confidence. Unlike manual processes with inconsistent quality, our template system ensures professional consistency across all documentation.
+Unlike enterprise GRC tools that produce rigid, template-driven output legal teams reject, we generate fully-formatted Word documents indistinguishable from expert-drafted DPIAs. Legal counsel review in native Microsoft Word format with professional formatting matching regulatory expectations—cover pages, table of contents, proper headings, signature blocks, automatic numbering, and cross-references.
 
-This results in legal teams working in their preferred format while maintaining underlying data integrity through bidirectional sync.
+This results in legal teams working in their preferred format while maintaining underlying data integrity.
 
-### Business-Friendly Data Collection
+### Compliance Guardrails
 
-Unlike compliance tools filled with legal jargon that frustrate business stakeholders, we provide guided questionnaires in plain language with smart branching and context-aware help. Unlike manual processes that require privacy expertise for every question, our system translates business answers into structured compliance components automatically.
+Unlike manual reviews that catch errors late in the process, we validate compliance requirements as teams work with built-in rules: "processor requires valid DPA," "special category data requires Article 9(2) legal basis," "USA transfer requires supplementary measures post-Schrems II," "large-scale processing + special categories = DPIA required." Visual compliance scoring shows percentage complete with prioritized action items.
 
-This results in project managers completing intake in 15 minutes instead of weeks of back-and-forth with privacy teams.
+This results in privacy officers catching 80% of compliance issues before legal review, reducing review cycles from 3 rounds to 1.
 
-### Real-Time Validation Engine
+### Business-Friendly Workflows
 
-Unlike manual reviews that catch errors late in the process, we validate compliance requirements as teams work with built-in rules like "processor requires valid DPA" and "special category data requires explicit legal basis." Unlike tools that only flag issues, we provide actionable fixes and compliance scores.
+Unlike compliance tools filled with legal jargon, we provide guided questionnaires in plain language with smart branching and intelligent pre-fill. "This looks similar to 'Q4 2024 Marketing Campaign'—pre-fill from there?" Component recommendations based on business unit and project type. Duplicate detection preventing accidental recreation.
 
-This results in errors caught immediately with clear remediation paths and prevention of non-compliant documents from being generated.
+This results in project managers completing intake in 15 minutes (down from 2+ hours) while privacy officers review structured outputs instead of gathering information via email.
 
 ## Key Features
 
-### Core Features
+### Available in MVP
 
-- **Compliance Component Library:** Maintain structured, reusable compliance data including processing activities, personal data categories, data processors, data assets, legal bases, retention rules, risks, controls, security measures, and data subject rights implementations with explicit relationships and graph visualization
-- **Guided Questionnaires:** Business-friendly data collection with discovery questionnaires for high-level intake (15-20 minutes), deep-dive questionnaires for detailed justifications (30-60 minutes), conditional logic, auto-risk detection, smart suggestions from existing components, and multi-stakeholder assignment
-- **Document Generation Engine:** Auto-generate professional compliance documents including DPIAs with full regulatory structure, Article 30 RoPAs, data processing agreements, and privacy statements with exports to Word, PDF, and Markdown formats
-- **Validation & Compliance Engine:** Real-time validation with TypeScript-based rules checking processors have valid DPAs, special data has legal basis, third country transfers have safeguards, and large-scale processing has DPIAs with visual compliance scoring
+- **Component Library:** Maintain structured, reusable compliance data including processing activities, data processors (with DPA status, locations, sub-processors), personal data categories with sensitivity classifications, purposes, legal bases with regulatory references, recipients with transfer mechanisms, data assets (Salesforce, PostgreSQL, Google Workspace), risks with likelihood/impact assessment, and security controls with implementation status
+- **Guided Questionnaires:** Business-friendly data collection with discovery questionnaires (15-20 minutes for project capture), detailed assessments (30-45 minutes for DPIA requirements), conditional logic showing only relevant questions, smart suggestions from existing components, progress tracking with estimated time remaining, and multi-stakeholder assignment with email notifications
+- **Automated DPIA Generation:** Generate complete Data Protection Impact Assessments following Article 35 GDPR structure with auto-populated sections from components (processors, data categories, purposes, legal basis), professional formatting with cover page and table of contents, export to Word, PDF, and Markdown formats, and immutable version snapshots preserving component state at generation time
+- **Validation & Compliance Engine:** Real-time validation with TypeScript-based rules checking processor DPA validity, special category data legal basis sufficiency, third country transfer safeguard requirements, and DPIA triggers for high-risk processing, visual compliance scoring showing percentage complete, color-coded status indicators (green/yellow/red), and prioritized action items ranked by regulatory risk
+- **Approval Workflows:** Multi-stage review and approval with role-based routing (Business Owner → Privacy Officer → Legal Counsel → DPO), in-line comments and questions without leaving platform, email and in-app notifications for assignments and updates, activity feeds showing all changes and approvals with complete audit trail
 
-### Collaboration Features
+- **Bidirectional Document Sync:** Legal team edits in Word with changes flowing back to components through change detection, user review dialogs for approving/rejecting edits, component update propagation with conflict resolution when underlying data changed since generation
+- **Advanced Collaboration:** Threaded comments with @mentions triggering notifications, parallel approval workflows for multiple reviewers, real-time updates via email/in-app/Slack, shared activity feeds across organization showing all compliance work
+- **Smart Suggestions:** Component reuse intelligence based on similar projects (business unit, project type, data subjects), pre-fill from past activities ("70% of fields populated from last marketing campaign"), duplicate detection preventing accidental recreation, completion suggestions with time estimates based on organizational patterns
+- **Additional Document Templates:** Auto-generate Article 30 Records of Processing Activities (RoPA) aggregating all processing activities, Data Processing Agreements with controller/processor terms and security requirements, Privacy Statements aggregating processing activities into public-facing disclosures
+- **Risk Assessment Workflows:** Structured risk identification with suggested risks from questionnaire responses, likelihood/impact assessment guidance with regulatory examples, control linking showing which security measures mitigate each risk, residual risk calculation with executive approval requirements for high risks
 
-- **Bidirectional Document Sync:** Legal team edits in Word with changes flowing back to components through change detection, user review dialogs, component updates, and conflict resolution
-- **Workflows & Approval:** Multi-user comments and discussions on components, structured approval workflows with role-based steps, email and in-app notifications, and comprehensive activity feeds
-- **Smart Suggestions:** Component reuse intelligence based on similar projects, pre-fill from past activities, duplicate detection, and completion suggestions with time estimates
+- **Microsoft Word Plugin:** Native Office add-in with component panel sidebar showing linked processors/purposes/risks with filter and search, inline warnings detecting missing required fields with yellow highlights and tooltips, quick actions to add/edit components while reviewing documents, live sync via WebSocket receiving real-time updates from teammates, offline mode with local storage and conflict resolution on reconnection
+- **REST API & GraphQL Layer:** Comprehensive REST API with CRUD endpoints for all entities (activities, vendors, assessments, components), GraphQL schema providing nested relationship queries in single request, OpenAPI/Swagger documentation with interactive explorer and code examples, webhook system for event-driven automation (DPA expiring, assessment due, high risk detected), rate limiting and API key management
+- **Integration Ecosystem:** Pre-built connectors for HR systems (BambooHR, Workday, Personio) syncing employee data and triggering privacy workflows, CRM platforms (Salesforce, HubSpot, Pipedrive) importing customer data and consent records, ISMS tools (Vanta, Drata, Secureframe) bidirectionally syncing risks and controls, GRC platforms (OneTrust, ServiceNow) preventing data duplication, procurement systems (Coupa, SAP Ariba) triggering vendor privacy assessments
+- **Executive Analytics Dashboard:** Compliance health overview with weighted scoring across activities/vendors/assessments, processor inventory with world map visualization showing geographic distribution and DPA status breakdown, data category heat maps showing processing concentration by sensitivity, risk matrices with likelihood/impact grids and trend analysis, scheduled executive reporting with PDF generation and email delivery
+- **Automated Data Discovery:** Integration with identity providers (Okta, Entra ID, Google Workspace) discovering systems via SSO monitoring, ML-powered PII classification scanning databases and applications with 95%+ confidence, shadow IT detection identifying unauthorized systems processing personal data, continuous monitoring with change alerts when new systems appear or data categories change
 
-### Advanced Features
-
-- **Microsoft Word Plugin:** Native Office add-in with component panel sidebar, inline warnings, quick actions, live sync, and offline mode
-- **API & Integrations:** REST API and GraphQL endpoints, webhooks for external notifications, integration connectors for HR systems, CRM, ISMS tools, GRC platforms, and procurement systems
-- **Analytics Dashboard:** Executive compliance health overview, processor inventory and risk analysis, data category heatmaps, risk matrices, and trend analysis over time
+**Pricing:** Premium tier add-on, €10,000-15,000/year additional
