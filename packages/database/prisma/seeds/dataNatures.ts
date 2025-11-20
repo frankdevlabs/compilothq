@@ -1,4 +1,4 @@
-import { DataNatureType, PrismaClient } from '@prisma/client'
+import { DataNatureType, type PrismaClient } from '../../generated/client'
 
 export async function seedDataNatures(prisma: PrismaClient) {
   // Check if data natures already exist
