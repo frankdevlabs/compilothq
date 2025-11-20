@@ -1,6 +1,5 @@
-import type { DataNature, DataNatureType } from '@prisma/client'
-
 import { prisma } from '../index'
+import type { DataNature, DataNatureType } from '.prisma/client'
 
 /**
  * List all data natures ordered by name

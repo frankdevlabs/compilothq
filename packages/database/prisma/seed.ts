@@ -2,9 +2,11 @@ import { PrismaClient } from '@prisma/client'
 
 import { seedCountries } from './seeds/countries'
 import { seedDataNatures } from './seeds/dataNatures'
+import { seedOrganizations } from './seeds/organizations'
 import { seedProcessingActs } from './seeds/processingActs'
 import { seedRecipientCategories } from './seeds/recipientCategories'
 import { seedTransferMechanisms } from './seeds/transferMechanisms'
+import { seedUsers } from './seeds/users'
 
 const prisma = new PrismaClient()
 
@@ -12,19 +14,25 @@ async function main() {
   console.log('Starting database seeding...\n')
 
   try {
-    // Seed reference data in sequence
+    // Seed reference data first
     const countriesCount = await seedCountries(prisma)
     const dataNaturesCount = await seedDataNatures(prisma)
     const processingActsCount = await seedProcessingActs(prisma)
     const transferMechanismsCount = await seedTransferMechanisms(prisma)
     const recipientCategoriesCount = await seedRecipientCategories(prisma)
 
+    // Seed organizations and users (organizations must be seeded before users)
+    const organizationsCount = await seedOrganizations(prisma)
+    const usersCount = await seedUsers(prisma)
+
     const totalRecords =
       countriesCount +
       dataNaturesCount +
       processingActsCount +
       transferMechanismsCount +
-      recipientCategoriesCount
+      recipientCategoriesCount +
+      organizationsCount +
+      usersCount
 
     console.log('\n=== Seeding Summary ===')
     console.log(`Countries: ${countriesCount}`)
@@ -32,6 +40,8 @@ async function main() {
     console.log(`Processing Acts: ${processingActsCount}`)
     console.log(`Transfer Mechanisms: ${transferMechanismsCount}`)
     console.log(`Recipient Categories: ${recipientCategoriesCount}`)
+    console.log(`Organizations: ${organizationsCount}`)
+    console.log(`Users: ${usersCount}`)
     console.log(`Total Records: ${totalRecords}`)
     console.log('======================\n')
 

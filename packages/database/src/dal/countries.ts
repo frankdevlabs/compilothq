@@ -1,6 +1,5 @@
-import type { Country } from '@prisma/client'
-
 import { prisma } from '../index'
+import type { Country } from '.prisma/client'
 
 /**
  * List all countries ordered by name

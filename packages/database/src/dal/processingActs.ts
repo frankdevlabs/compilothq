@@ -1,6 +1,5 @@
-import type { ProcessingAct } from '@prisma/client'
-
 import { prisma } from '../index'
+import type { ProcessingAct } from '.prisma/client'
 
 /**
  * List all processing acts ordered by name
