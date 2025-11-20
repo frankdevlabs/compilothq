@@ -1,4 +1,4 @@
-import { DataNatureType, PrismaClient, TransferMechanismCategory } from '.prisma/client'
+import { DataNatureType, PrismaClient, TransferMechanismCategory } from '../index'
 
 /**
  * Seed minimal reference data for test database

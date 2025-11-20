@@ -1,7 +1,7 @@
 import { execSync } from 'child_process'
 import path from 'path'
 
-import { PrismaClient } from '.prisma/client'
+import { PrismaClient } from '../index'
 
 /**
  * Test database client instance

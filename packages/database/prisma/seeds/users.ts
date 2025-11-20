@@ -1,4 +1,4 @@
-import { PrismaClient, UserPersona } from '../../node_modules/.prisma/client'
+import type { PrismaClient, UserPersona } from '@prisma/client'
 
 /**
  * Seed users for development and testing

@@ -1,6 +1,5 @@
-import { prisma } from '../index'
-import type { Organization, OrganizationStatus } from '.prisma/client'
-import { Prisma } from '.prisma/client'
+import type { Organization, OrganizationStatus } from '../index'
+import { Prisma, prisma } from '../index'
 
 /**
  * Create a new organization

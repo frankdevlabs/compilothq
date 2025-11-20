@@ -6,9 +6,9 @@ import {
   getCountryByIsoCode,
   listCountries,
 } from '../../../src/dal/countries'
+import type { Country } from '../../../src/index'
 // Import the mocked prisma instance
 import { prisma } from '../../../src/index'
-import type { Country } from '.prisma/client'
 
 // Mock the prisma client
 vi.mock('../../../src/index', () => ({

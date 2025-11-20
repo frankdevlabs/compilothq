@@ -9,8 +9,8 @@ import {
   softDeleteOrganization,
   updateOrganization,
 } from '../../../src/dal/organizations'
+import type { Organization } from '../../../src/index'
 import { prisma } from '../../../src/index'
-import type { Organization } from '.prisma/client'
 
 // Mock the prisma client
 vi.mock('../../../src/index', () => ({

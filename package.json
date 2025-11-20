@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "turbo db:generate || true",
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "start": "node scripts/ensure-docker.js && pnpm dev",

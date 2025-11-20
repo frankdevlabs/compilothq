@@ -10,8 +10,8 @@ import {
   listUsersByPersona,
   updateUser,
 } from '../../../src/dal/users'
+import type { User } from '../../../src/index'
 import { prisma } from '../../../src/index'
-import type { User } from '.prisma/client'
 
 // Mock the prisma client
 vi.mock('../../../src/index', () => ({

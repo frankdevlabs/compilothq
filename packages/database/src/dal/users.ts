@@ -1,5 +1,5 @@
+import type { User, UserPersona } from '../index'
 import { prisma } from '../index'
-import type { User, UserPersona } from '.prisma/client'
 
 /**
  * Create a new user

@@ -1,5 +1,5 @@
+import type { PrismaClient, ProcessingAct } from '../../index'
 import { Factory } from './base-factory'
-import type { PrismaClient, ProcessingAct } from '.prisma/client'
 
 /**
  * Type for building ProcessingAct data (excludes auto-generated fields)
