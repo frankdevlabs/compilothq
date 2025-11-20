@@ -1,6 +1,5 @@
-import type { PrismaClient, TransferMechanism, TransferMechanismCategory } from '@prisma/client'
-
 import { Factory } from './base-factory'
+import type { PrismaClient, TransferMechanism, TransferMechanismCategory } from '.prisma/client'
 
 /**
  * Type for building TransferMechanism data (excludes auto-generated fields)

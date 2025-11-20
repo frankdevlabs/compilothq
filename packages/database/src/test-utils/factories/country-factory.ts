@@ -1,6 +1,5 @@
-import type { Country, PrismaClient } from '@prisma/client'
-
 import { Factory } from './base-factory'
+import type { Country, PrismaClient } from '.prisma/client'
 
 /**
  * Type for building Country data (excludes auto-generated fields)

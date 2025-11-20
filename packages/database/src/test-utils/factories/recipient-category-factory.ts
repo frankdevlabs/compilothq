@@ -1,6 +1,5 @@
-import type { PrismaClient, RecipientCategory } from '@prisma/client'
-
 import { Factory } from './base-factory'
+import type { PrismaClient, RecipientCategory } from '.prisma/client'
 
 /**
  * Type for building RecipientCategory data (excludes auto-generated fields)

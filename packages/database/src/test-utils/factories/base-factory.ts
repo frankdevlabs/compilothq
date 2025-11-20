@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client'
-
 import { getTestDatabaseClient } from '../db-helpers'
+import { PrismaClient } from '.prisma/client'
 
 /**
  * Base factory class for generating test data

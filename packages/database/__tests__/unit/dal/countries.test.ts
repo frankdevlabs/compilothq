@@ -1,4 +1,3 @@
-import type { Country } from '@prisma/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -9,6 +8,7 @@ import {
 } from '../../../src/dal/countries'
 // Import the mocked prisma instance
 import { prisma } from '../../../src/index'
+import type { Country } from '.prisma/client'
 
 // Mock the prisma client
 vi.mock('../../../src/index', () => ({
