@@ -14,11 +14,58 @@ datasource db {
 // Authentication
 // ============================================================================
 
+// User persona enum for role-based access control
+enum UserPersona {
+  DPO              // Data Protection Officer - highest authority for GDPR compliance
+  PRIVACY_OFFICER  // Privacy Manager/Officer - day-to-day privacy operations
+  BUSINESS_OWNER   // Business stakeholder/project manager - submits processing activities
+  IT_ADMIN         // IT Manager/System Administrator - technical system management
+  SECURITY_TEAM    // Information Security Officer - security assessments
+  LEGAL_TEAM       // Legal Counsel - legal review and contract assessment
+}
+
+// Organization lifecycle status enum
+enum OrganizationStatus {
+  ACTIVE     // Fully operational organization with all features enabled
+  TRIAL      // Organization in trial period
+  SUSPENDED  // Temporarily disabled organization
+  CANCELLED  // Permanently deactivated organization
+}
+
+// Organization model with soft delete support
+model Organization {
+  id        String              @id @default(cuid())
+  name      String              // Organization display name
+  slug      String              @unique // URL-safe identifier
+  settings  Json?               // Nullable unstructured settings object
+  status    OrganizationStatus  // Lifecycle tracking
+  deletedAt DateTime?           // Soft delete timestamp
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  // Relations
+  users User[]
+
+  @@index([deletedAt])
+}
+
+// User model with NextAuth.js v5 compatibility
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String       @id @default(cuid())
+  name           String       // Required, non-nullable user name
+  email          String       @unique
+  emailVerified  DateTime?    // NextAuth.js email verification timestamp
+  image          String?      // Profile picture URL
+  organizationId String       // Foreign key to Organization
+  primaryPersona UserPersona  @default(BUSINESS_OWNER) // Required role with default
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, primaryPersona])
+  @@index([organizationId, createdAt])
 }
 
 // ============================================================================
