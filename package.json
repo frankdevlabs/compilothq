@@ -21,6 +21,7 @@
     "test:watch": "dotenv -e .env.test -- vitest watch",
     "test:coverage": "dotenv -e .env.test -- vitest run --coverage",
     "test:ui": "dotenv -e .env.test -- vitest --ui",
+    "test:db:reset": "node scripts/reset-test-db.js",
     "predev": "node scripts/ensure-docker.js",
     "docker:check": "node scripts/check-docker.js",
     "docker:up": "node scripts/ensure-docker.js",

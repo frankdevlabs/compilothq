@@ -8,7 +8,11 @@
     "moduleResolution": "Node",
     // Override strict options incompatible with CommonJS + Prisma
     "verbatimModuleSyntax": false,
-    "exactOptionalPropertyTypes": false // Prisma types don't support this yet
+    "exactOptionalPropertyTypes": false, // Prisma types don't support this yet
+    // Path mapping for Prisma generated client
+    "paths": {
+      ".prisma/client": ["./node_modules/.prisma/client"]
+    }
   },
   "include": [
     "src/**/*",
@@ -17,5 +21,10 @@
     "prisma/seed.ts",
     "prisma/seeds/**/*"
   ],
-  "exclude": ["node_modules", "dist", "prisma/migrations"]
+  "exclude": ["node_modules", "dist", "prisma/migrations"],
+  "references": [
+    {
+      "path": "../validation"
+    }
+  ]
 }
