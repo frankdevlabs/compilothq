@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { type PrismaClient } from '../../generated/client'
 
 export async function seedProcessingActs(prisma: PrismaClient) {
   // Check if processing acts already exist

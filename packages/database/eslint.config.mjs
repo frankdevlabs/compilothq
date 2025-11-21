@@ -5,7 +5,7 @@ import security from 'eslint-plugin-security'
 
 export default [
   {
-    ignores: ['node_modules/**', 'dist/**', 'prisma/generated/**'],
+    ignores: ['node_modules/**', 'dist/**', 'generated/**'],
   },
 
   js.configs.recommended,

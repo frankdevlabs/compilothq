@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { type PrismaClient } from '../../generated/client'
 
 /**
  * Parse GDPR status string and expand hierarchically
