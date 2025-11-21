@@ -7,22 +7,10 @@ import {
   listCountries,
 } from '../../../src/dal/countries'
 import type { Country } from '../../../src/index'
-// Import the mocked prisma instance
 import { prisma } from '../../../src/index'
 
-// Mock the prisma client while preserving all other exports
-vi.mock('../../../src/index', async () => {
-  const actual = await vi.importActual<typeof import('../../../src/index')>('../../../src/index')
-  return {
-    ...actual,
-    prisma: {
-      country: {
-        findMany: vi.fn(),
-        findUnique: vi.fn(),
-      },
-    },
-  }
-})
+// Mock the entire module BEFORE imports
+vi.mock('../../../src/index')
 
 describe('Countries DAL - Unit Tests', () => {
   beforeEach(() => {
