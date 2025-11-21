@@ -1,4 +1,4 @@
-import { PrismaClient } from '.prisma/client'
+import { PrismaClient } from '../generated/client'
 
 // Prevent multiple Prisma Client instances in development
 // This singleton pattern ensures connection pooling works correctly in serverless environments
@@ -27,17 +27,17 @@ export * from './dal/recipientCategories'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
 
-// Export Prisma types
+// Re-export all Prisma types, enums, and utilities for convenience
+// This includes both types and runtime values (enums)
+export * from '../generated/client'
+
+// Explicit type exports for documentation (these are also included in export * above)
 export type {
   Country,
   DataNature,
-  DataNatureType,
   Organization,
-  OrganizationStatus,
   ProcessingAct,
   RecipientCategory,
   TransferMechanism,
-  TransferMechanismCategory,
   User,
-  UserPersona,
-} from '.prisma/client'
+} from '../generated/client'

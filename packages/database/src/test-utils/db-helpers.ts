@@ -1,7 +1,7 @@
 import { execSync } from 'child_process'
 import path from 'path'
 
-import { PrismaClient } from '.prisma/client'
+import { PrismaClient } from '../index'
 
 /**
  * Test database client instance
@@ -85,26 +85,21 @@ export async function cleanupTestDatabase(): Promise<void> {
   const client = getTestDatabaseClient()
 
   try {
-    // Get all table names from the schema
-    // We'll truncate in the correct order to respect FK constraints
-    const tables = [
-      // Reference data tables (no FK dependencies)
-      'Country',
-      'DataNature',
-      'ProcessingAct',
-      'TransferMechanism',
-      'RecipientCategory',
-      // User table
-      'User',
-      // Add more tables here as schema grows
-    ]
+    // Get all table names dynamically from the database schema
+    // This prevents issues with missing tables and adapts to schema changes
+    const tables = await client.$queryRaw<Array<{ tablename: string }>>`
+      SELECT tablename FROM pg_tables
+      WHERE schemaname='public'
+      AND tablename NOT LIKE '_prisma%'
+    `
 
-    // Use raw SQL to truncate all tables efficiently
-    // RESTART IDENTITY resets auto-increment sequences
-    // CASCADE deletes dependent rows in other tables
-    await client.$executeRawUnsafe(
-      `TRUNCATE TABLE "${tables.join('", "')}" RESTART IDENTITY CASCADE`
-    )
+    // Truncate all tables with CASCADE to automatically handle FK constraints
+    // RESTART IDENTITY resets auto-increment sequences to 1
+    for (const { tablename } of tables) {
+      await client.$executeRawUnsafe(
+        `TRUNCATE TABLE "public"."${tablename}" RESTART IDENTITY CASCADE;`
+      )
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     throw new Error(`Failed to clean up test database: ${errorMessage}`)

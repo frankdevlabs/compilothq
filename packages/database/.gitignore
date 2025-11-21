@@ -1,0 +1,19 @@
+# Generated Prisma Client
+generated/
+
+# Build outputs
+dist/
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+
+# Testing
+coverage/

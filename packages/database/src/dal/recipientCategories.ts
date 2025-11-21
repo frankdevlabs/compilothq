@@ -1,5 +1,5 @@
+import type { RecipientCategory } from '../index'
 import { prisma } from '../index'
-import type { RecipientCategory } from '.prisma/client'
 
 /**
  * List all recipient categories ordered by name

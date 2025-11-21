@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "dev": "tsc --project tsconfig.build.json --watch",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist *.tsbuildinfo",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest",

@@ -2,12 +2,12 @@
   "name": "@compilothq/database",
   "version": "0.1.0",
   "private": true,
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     }
   },
   "scripts": {
@@ -31,15 +31,16 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.8.0",
-    "@compilothq/validation": "workspace:*"
+    "@compilothq/validation": "workspace:*",
+    "@prisma/client": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "dotenv": "^17.2.3",
-    "prisma": "^5.8.0",
+    "prisma": "catalog:",
     "tsx": "^4.20.6",
     "typescript": "^5.0.0",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "vitest-mock-extended": "^3.1.0"
   }
 }

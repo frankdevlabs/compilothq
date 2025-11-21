@@ -96,10 +96,10 @@ export default defineConfig({
       // Local development still enforces 80% thresholds.
       // Remove CI_SKIP_COVERAGE_THRESHOLD from CI when ready to enforce.
       thresholds: {
-        statements: process.env.CI_SKIP_COVERAGE_THRESHOLD === 'true' ? 0 : 80,
-        branches: process.env.CI_SKIP_COVERAGE_THRESHOLD === 'true' ? 0 : 80,
-        functions: process.env.CI_SKIP_COVERAGE_THRESHOLD === 'true' ? 0 : 80,
-        lines: process.env.CI_SKIP_COVERAGE_THRESHOLD === 'true' ? 0 : 80,
+        statements: process.env['CI_SKIP_COVERAGE_THRESHOLD'] === 'true' ? 0 : 80,
+        branches: process.env['CI_SKIP_COVERAGE_THRESHOLD'] === 'true' ? 0 : 80,
+        functions: process.env['CI_SKIP_COVERAGE_THRESHOLD'] === 'true' ? 0 : 80,
+        lines: process.env['CI_SKIP_COVERAGE_THRESHOLD'] === 'true' ? 0 : 80,
       },
     },
   },
