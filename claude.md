@@ -209,6 +209,10 @@ compilothq/
 - Commit messages: Conventional Commits format
 - All PRs require passing tests + human review
 
+### Linting issues, first try/advice this:
+
+- Press Cmd+Shift+P → type "TypeScript: Restart TS Server" → Enter
+
 ### Agent Usage Guidelines
 
 This project uses specialized Claude Code agents for specific types of work. Understanding when to use each agent ensures optimal code quality and adherence to architectural boundaries.

@@ -113,13 +113,139 @@ DATABASE_URL="postgresql://user:password@localhost:5432/compilothq_test?sslmode=
 
 ## Testing
 
-```typescript
-import { getUserById } from '@compilothq/database'
-import { setupTestDatabase, cleanDatabase } from '@compilothq/database/test-utils'
+### Test Organization
 
-beforeAll(async () => await setupTestDatabase())
-beforeEach(async () => await cleanDatabase())
+Tests are organized by type:
+
 ```
+__tests__/
+├── integration/                    # Integration tests (use real database)
+│   ├── dal/                       # DAL function tests
+│   │   ├── users.integration.test.ts
+│   │   ├── organizations.integration.test.ts
+│   │   └── countries.integration.test.ts
+│   ├── multi-tenancy.test.ts      # Cross-cutting tests
+│   └── seed-data.test.ts          # Relationship tests
+└── unit/                          # Unit tests (mocked/isolated)
+    └── test-utils/                # Test utility tests
+        ├── db-helpers.test.ts
+        └── factories/
+            └── country-factory.test.ts
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run only unit tests (fast, <1s)
+pnpm test:unit
+
+# Run only integration tests (~5s)
+pnpm test:integration
+
+# Watch mode for development
+pnpm test:watch
+```
+
+### Writing Integration Tests
+
+Integration tests use the real test database and test factories:
+
+```typescript
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { getUserById, createUser } from '@compilothq/database'
+import { createTestOrganization, cleanupTestOrganizations } from '@compilothq/database/test-utils'
+
+describe('User Operations', () => {
+  let testOrg: Organization
+
+  beforeAll(async () => {
+    // Create test data using factories
+    const { org } = await createTestOrganization({ slug: 'test-org' })
+    testOrg = org
+  })
+
+  afterAll(async () => {
+    // Clean up test data
+    await cleanupTestOrganizations([testOrg.id])
+  })
+
+  it('should retrieve user by ID from database', async () => {
+    // Arrange - Create test user
+    const user = await createUser({
+      name: 'Test User',
+      email: 'test@example.com',
+      organizationId: testOrg.id,
+    })
+
+    // Act - Call DAL function
+    const result = await getUserById(user.id)
+
+    // Assert - Verify data integrity
+    expect(result).toBeDefined()
+    expect(result?.id).toBe(user.id)
+    expect(result?.email).toBe('test@example.com')
+  })
+})
+```
+
+### Test Factories
+
+Use factories to create consistent test data:
+
+```typescript
+import {
+  createTestOrganization,
+  createTestUser,
+  createTestUsersByPersona,
+} from '@compilothq/database/test-utils'
+
+// Create org with users
+const { org, users } = await createTestOrganization({
+  name: 'Test Company',
+  slug: 'test-company',
+  status: 'ACTIVE',
+  userCount: 5, // Creates 5 users automatically
+})
+
+// Create individual user
+const user = await createTestUser({
+  organizationId: org.id,
+  primaryPersona: 'DPO',
+  email: 'dpo@example.com',
+})
+
+// Create users by persona type
+const usersByPersona = await createTestUsersByPersona(org.id, ['DPO', 'PRIVACY_OFFICER'])
+```
+
+### Test Best Practices
+
+**DO:**
+
+- ✅ Use integration tests for DAL functions (they're database wrappers)
+- ✅ Create test data using factories
+- ✅ Clean up test data in `afterAll`/`afterEach`
+- ✅ Use unique slugs/emails to avoid conflicts: \``test-${Date.now()}`\`
+- ✅ Test actual database behavior (persistence, constraints, etc.)
+
+**DON'T:**
+
+- ❌ Mock Prisma client in integration tests
+- ❌ Share mutable test data across tests
+- ❌ Leave test data in the database
+- ❌ Use hardcoded IDs (use factory-generated IDs)
+
+### Test Database Setup
+
+Tests automatically use a separate test database:
+
+- **Environment:** `.env.test` in package directory (auto-loaded by Vitest)
+- **Database:** `compilothq_test` (port 5433 locally)
+- **Setup:** Migrations run automatically in `beforeAll` hook
+- **Cleanup:** Tables truncated between test files for isolation
 
 ## Common Issues
 
