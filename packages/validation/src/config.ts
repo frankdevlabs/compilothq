@@ -2,11 +2,24 @@ import { z } from 'zod'
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
+
+  // NextAuth.js Configuration
   NEXTAUTH_URL: z.string().url(),
   NEXTAUTH_SECRET: z.string().min(16),
+
+  // OAuth Providers
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+
+  // Email Provider (Resend)
+  RESEND_API_KEY: z.string().optional(),
+
+  // App Configuration
   NEXT_PUBLIC_APP_NAME: z.string(),
   NEXT_PUBLIC_APP_URL: z.string().url(),
   NODE_ENV: z.enum(['development', 'production', 'test']),
+
+  // Feature Flags
   NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: z.string().transform((val) => val === 'true'),
   NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: z.string().transform((val) => val === 'true'),
   NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: z.string().transform((val) => val === 'true'),
@@ -45,6 +58,14 @@ export const config = {
   },
   auth: {
     url: env.NEXTAUTH_URL,
+    secret: env.NEXTAUTH_SECRET,
+    google: {
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    },
+    email: {
+      resendApiKey: env.RESEND_API_KEY,
+    },
   },
   features,
 } as const

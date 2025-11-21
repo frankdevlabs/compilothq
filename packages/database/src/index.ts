@@ -21,11 +21,15 @@ export default prisma
 // Export all DAL functions
 export * from './dal/countries'
 export * from './dal/dataNatures'
+export * from './dal/invitations'
 export * from './dal/organizations'
 export * from './dal/processingActs'
 export * from './dal/recipientCategories'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
+
+// Export utility functions
+export * from './utils/tokens'
 
 // Re-export all Prisma types, enums, and utilities for convenience
 // This includes both types and runtime values (enums)
@@ -33,11 +37,15 @@ export * from '../generated/client'
 
 // Explicit type exports for documentation (these are also included in export * above)
 export type {
+  Account,
   Country,
   DataNature,
+  Invitation,
   Organization,
   ProcessingAct,
   RecipientCategory,
+  Session,
   TransferMechanism,
   User,
+  VerificationToken,
 } from '../generated/client'
