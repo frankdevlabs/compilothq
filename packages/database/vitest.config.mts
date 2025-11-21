@@ -5,9 +5,9 @@ import { defineProject } from 'vitest/config'
 /**
  * Load test environment variables explicitly
  * This must run before defineProject to ensure DATABASE_URL is set correctly
- * Priority: .env.test (test DB) overrides .env/.env.local (dev DB)
+ * Priority: CI/system env vars > .env.test (test DB) > .env/.env.local (dev DB)
  */
-config({ path: path.resolve(__dirname, '.env.test'), override: true })
+config({ path: path.resolve(__dirname, '.env.test'), override: false })
 
 /**
  * Vitest Project Configuration for @compilothq/database
