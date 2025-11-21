@@ -12,17 +12,21 @@ import {
 import type { Organization } from '../../../src/index'
 import { prisma } from '../../../src/index'
 
-// Mock the prisma client
-vi.mock('../../../src/index', () => ({
-  prisma: {
-    organization: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-      update: vi.fn(),
+// Mock the prisma client while preserving all other exports
+vi.mock('../../../src/index', async () => {
+  const actual = await vi.importActual<typeof import('../../../src/index')>('../../../src/index')
+  return {
+    ...actual,
+    prisma: {
+      organization: {
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
+        update: vi.fn(),
+      },
     },
-  },
-}))
+  }
+})
 
 describe('Organizations DAL - Unit Tests', () => {
   beforeEach(() => {

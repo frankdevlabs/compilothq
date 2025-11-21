@@ -13,19 +13,23 @@ import {
 import type { User } from '../../../src/index'
 import { prisma } from '../../../src/index'
 
-// Mock the prisma client
-vi.mock('../../../src/index', () => ({
-  prisma: {
-    user: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      count: vi.fn(),
+// Mock the prisma client while preserving all other exports
+vi.mock('../../../src/index', async () => {
+  const actual = await vi.importActual<typeof import('../../../src/index')>('../../../src/index')
+  return {
+    ...actual,
+    prisma: {
+      user: {
+        create: vi.fn(),
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        count: vi.fn(),
+      },
     },
-  },
-}))
+  }
+})
 
 describe('Users DAL - Unit Tests', () => {
   beforeEach(() => {
