@@ -1,5 +1,13 @@
+import { config } from 'dotenv'
 import path from 'path'
 import { defineProject } from 'vitest/config'
+
+/**
+ * Load test environment variables explicitly
+ * This must run before defineProject to ensure DATABASE_URL is set correctly
+ * Priority: .env.test (test DB) overrides .env/.env.local (dev DB)
+ */
+config({ path: path.resolve(__dirname, '.env.test'), override: true })
 
 /**
  * Vitest Project Configuration for @compilothq/database
@@ -38,7 +46,9 @@ export default defineProject({
 
   resolve: {
     alias: {
+      // Resolve workspace packages for test imports
       '@compilothq/database': path.resolve(__dirname, './src'),
+      '@compilothq/validation': path.resolve(__dirname, '../validation/src'),
     },
   },
 })

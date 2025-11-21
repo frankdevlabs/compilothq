@@ -52,3 +52,20 @@ export {
   createJointControllerRecipientCategoryFactory,
   RecipientCategoryFactory,
 } from './recipient-category-factory'
+
+// Organization factories
+export {
+  cleanupTestOrganizations,
+  createTestOrganization,
+  createTestOrganizations,
+  type OrganizationFactoryOptions,
+} from './organizationFactory'
+
+// User factories
+export {
+  cleanupTestUsers,
+  createTestUser,
+  createTestUsers,
+  createTestUsersByPersona,
+  type UserFactoryOptions,
+} from './userFactory'

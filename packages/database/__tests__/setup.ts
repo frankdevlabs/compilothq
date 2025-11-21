@@ -12,8 +12,19 @@ import { afterAll, beforeAll } from 'vitest'
 
 import { disconnectTestDatabase, setupTestDatabase } from '../src/test-utils/db-helpers'
 
-// Load .env.test file from root directory as fallback
-// Use override: false to allow CI/shell environment variables to take precedence
+/**
+ * Environment Variable Loading Strategy
+ *
+ * Priority (highest to lowest):
+ * 1. Vitest auto-loads: packages/database/.env.test (PRIMARY - created in Phase 1)
+ * 2. CI/Shell environment variables (for pipeline overrides)
+ * 3. Fallback: root .env.test file loaded below
+ *
+ * Why override: false?
+ * - Allows CI/CD to inject DATABASE_URL for pipeline databases
+ * - .env.test in package directory is already loaded by Vitest before this runs
+ * - This acts as a fallback for edge cases or legacy setups
+ */
 const envPath = resolve(__dirname, '../../../.env.test')
 config({ path: envPath, override: false })
 

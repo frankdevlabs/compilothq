@@ -1,20 +1,62 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import type { Organization } from '../../src/index'
 import { prisma } from '../../src/index'
+import { cleanupTestOrganizations, createTestOrganizations } from '../../src/test-utils/factories'
+import { createTestUser } from '../../src/test-utils/factories/userFactory'
 
 /**
- * Seed Data Verification Tests
- * These tests verify that seed data was created correctly
- * Run seed script before running these tests: pnpm seed
+ * Organization-User Relationships Integration Tests
+ *
+ * Self-contained integration tests that verify organization and user relationships
+ * work correctly without depending on external seed data.
+ *
+ * Tests create their own data, verify relationships, and clean up after themselves.
  */
-describe('Seed Data Verification', () => {
+describe('Organization-User Relationships', () => {
+  let testOrgs: Array<{
+    org: Organization
+    users: Array<{ id: string; email: string; name: string }>
+  }>
+  let acme: Organization
+  let beta: Organization
+  let gamma: Organization
+
+  beforeAll(async () => {
+    // Create test organizations with different user counts
+    testOrgs = await createTestOrganizations([
+      { name: 'Test Acme Corp', slug: 'test-acme-corp', status: 'ACTIVE', userCount: 2 },
+      { name: 'Test Beta Inc', slug: 'test-beta-inc', status: 'TRIAL', userCount: 5 },
+      { name: 'Test Gamma LLC', slug: 'test-gamma-llc', status: 'ACTIVE', userCount: 0 }, // Will add users manually for persona test
+    ])
+
+    acme = testOrgs[0]!.org
+    beta = testOrgs[1]!.org
+    gamma = testOrgs[2]!.org
+
+    // Create users for Gamma with specific persona distribution
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'DPO' })
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'PRIVACY_OFFICER' })
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'PRIVACY_OFFICER' })
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'BUSINESS_OWNER' })
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'BUSINESS_OWNER' })
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'BUSINESS_OWNER' })
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'BUSINESS_OWNER' })
+    await createTestUser({ organizationId: gamma.id, primaryPersona: 'BUSINESS_OWNER' })
+  })
+
+  afterAll(async () => {
+    // Clean up test data
+    await cleanupTestOrganizations([acme.id, beta.id, gamma.id])
+  })
+
   describe('Organizations', () => {
-    it('should have 3 organizations seeded', async () => {
+    it('should create and retrieve multiple organizations', async () => {
       // Act
       const organizations = await prisma.organization.findMany({
         where: {
           slug: {
-            in: ['acme-corp', 'beta-inc', 'gamma-llc'],
+            in: ['test-acme-corp', 'test-beta-inc', 'test-gamma-llc'],
           },
         },
       })
@@ -23,101 +65,91 @@ describe('Seed Data Verification', () => {
       expect(organizations).toHaveLength(3)
     })
 
-    it('should have correct organization slugs', async () => {
+    it('should store organization attributes correctly', async () => {
       // Act
-      const acme = await prisma.organization.findUnique({ where: { slug: 'acme-corp' } })
-      const beta = await prisma.organization.findUnique({ where: { slug: 'beta-inc' } })
-      const gamma = await prisma.organization.findUnique({ where: { slug: 'gamma-llc' } })
+      const retrievedAcme = await prisma.organization.findUnique({
+        where: { slug: 'test-acme-corp' },
+      })
+      const retrievedBeta = await prisma.organization.findUnique({
+        where: { slug: 'test-beta-inc' },
+      })
+      const retrievedGamma = await prisma.organization.findUnique({
+        where: { slug: 'test-gamma-llc' },
+      })
 
       // Assert
-      expect(acme).toBeDefined()
-      expect(acme!.name).toBe('Acme Corp')
-      expect(acme!.status).toBe('ACTIVE')
+      expect(retrievedAcme).toBeDefined()
+      expect(retrievedAcme!.name).toBe('Test Acme Corp')
+      expect(retrievedAcme!.status).toBe('ACTIVE')
 
-      expect(beta).toBeDefined()
-      expect(beta!.name).toBe('Beta Inc')
-      expect(beta!.status).toBe('TRIAL')
+      expect(retrievedBeta).toBeDefined()
+      expect(retrievedBeta!.name).toBe('Test Beta Inc')
+      expect(retrievedBeta!.status).toBe('TRIAL')
 
-      expect(gamma).toBeDefined()
-      expect(gamma!.name).toBe('Gamma LLC')
-      expect(gamma!.status).toBe('ACTIVE')
+      expect(retrievedGamma).toBeDefined()
+      expect(retrievedGamma!.name).toBe('Test Gamma LLC')
+      expect(retrievedGamma!.status).toBe('ACTIVE')
     })
   })
 
   describe('Users', () => {
-    it('should have 17 users seeded', async () => {
+    it('should create users belonging to organizations', async () => {
       // Act
       const users = await prisma.user.findMany({
         where: {
-          email: {
-            endsWith: '.example.com',
+          organizationId: {
+            in: [acme.id, beta.id, gamma.id],
           },
         },
       })
 
-      // Assert
-      expect(users.length).toBeGreaterThanOrEqual(17)
+      // Assert - Total users: 2 (acme) + 5 (beta) + 8 (gamma) = 15
+      expect(users.length).toBeGreaterThanOrEqual(15)
     })
 
-    it('should have Acme Corp with 2 users', async () => {
-      // Arrange
-      const acme = await prisma.organization.findUnique({ where: { slug: 'acme-corp' } })
-      expect(acme).toBeDefined()
-
+    it('should associate correct number of users with Acme Corp', async () => {
       // Act
-      const users = await prisma.user.count({
-        where: { organizationId: acme!.id },
+      const userCount = await prisma.user.count({
+        where: { organizationId: acme.id },
       })
 
       // Assert
-      expect(users).toBe(2)
+      expect(userCount).toBe(2)
     })
 
-    it('should have Beta Inc with 5 users', async () => {
-      // Arrange
-      const beta = await prisma.organization.findUnique({ where: { slug: 'beta-inc' } })
-      expect(beta).toBeDefined()
-
+    it('should associate correct number of users with Beta Inc', async () => {
       // Act
-      const users = await prisma.user.count({
-        where: { organizationId: beta!.id },
+      const userCount = await prisma.user.count({
+        where: { organizationId: beta.id },
       })
 
       // Assert
-      expect(users).toBe(5)
+      expect(userCount).toBe(5)
     })
 
-    it('should have Gamma LLC with 10 users', async () => {
-      // Arrange
-      const gamma = await prisma.organization.findUnique({ where: { slug: 'gamma-llc' } })
-      expect(gamma).toBeDefined()
-
+    it('should associate correct number of users with Gamma LLC', async () => {
       // Act
-      const users = await prisma.user.count({
-        where: { organizationId: gamma!.id },
+      const userCount = await prisma.user.count({
+        where: { organizationId: gamma.id },
       })
 
       // Assert
-      expect(users).toBe(10)
+      expect(userCount).toBe(8)
     })
 
-    it('should have correct persona distribution', async () => {
-      // Arrange
-      const gamma = await prisma.organization.findUnique({ where: { slug: 'gamma-llc' } })
-      expect(gamma).toBeDefined()
-
+    it('should maintain correct persona distribution per organization', async () => {
       // Act
       const dpoUsers = await prisma.user.count({
-        where: { organizationId: gamma!.id, primaryPersona: 'DPO' },
+        where: { organizationId: gamma.id, primaryPersona: 'DPO' },
       })
       const privacyOfficers = await prisma.user.count({
-        where: { organizationId: gamma!.id, primaryPersona: 'PRIVACY_OFFICER' },
+        where: { organizationId: gamma.id, primaryPersona: 'PRIVACY_OFFICER' },
       })
       const businessOwners = await prisma.user.count({
-        where: { organizationId: gamma!.id, primaryPersona: 'BUSINESS_OWNER' },
+        where: { organizationId: gamma.id, primaryPersona: 'BUSINESS_OWNER' },
       })
 
-      // Assert - Gamma LLC should have 1 DPO, 2 PRIVACY_OFFICER, 5 BUSINESS_OWNER
+      // Assert - Gamma LLC: 1 DPO, 2 PRIVACY_OFFICER, 5 BUSINESS_OWNER
       expect(dpoUsers).toBe(1)
       expect(privacyOfficers).toBe(2)
       expect(businessOwners).toBe(5)
