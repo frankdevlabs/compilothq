@@ -17,10 +17,10 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
-          <Link href="/features" className="hover:text-accent transition-colors">
+          <Link href="/features" className="hover:text-accent-gold transition-colors">
             Features
           </Link>
-          <Link href="/pricing" className="hover:text-accent transition-colors">
+          <Link href="/pricing" className="hover:text-accent-gold transition-colors">
             Pricing
           </Link>
         </div>
@@ -30,7 +30,7 @@ export function Header() {
           <Button variant="outline" asChild>
             <Link href="/login">Login</Link>
           </Button>
-          <Button className="bg-accent hover:bg-accent/90 text-background" asChild>
+          <Button variant="gold" asChild>
             <Link href="/signup">Sign Up</Link>
           </Button>
         </div>
@@ -47,14 +47,14 @@ export function Header() {
               <Link
                 href="/features"
                 onClick={() => setIsOpen(false)}
-                className="text-lg hover:text-accent transition-colors"
+                className="text-lg hover:text-accent-gold transition-colors"
               >
                 Features
               </Link>
               <Link
                 href="/pricing"
                 onClick={() => setIsOpen(false)}
-                className="text-lg hover:text-accent transition-colors"
+                className="text-lg hover:text-accent-gold transition-colors"
               >
                 Pricing
               </Link>
@@ -64,7 +64,7 @@ export function Header() {
                     Login
                   </Link>
                 </Button>
-                <Button className="bg-accent hover:bg-accent/90 text-background" asChild>
+                <Button variant="gold" asChild>
                   <Link href="/signup" onClick={() => setIsOpen(false)}>
                     Sign Up
                   </Link>

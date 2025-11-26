@@ -51,6 +51,8 @@ next-env.d.ts
 **/vite.config.d.ts
 **/vite.config.d.ts.map
 
+.playwright-mcp/
+
 # IDE
 .vscode/
 .idea/

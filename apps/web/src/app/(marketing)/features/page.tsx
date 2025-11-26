@@ -12,7 +12,7 @@ export default function FeaturesPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
-            <Building2 className="h-12 w-12 text-accent mb-4" />
+            <Building2 className="h-12 w-12 text-primary mb-4" />
             <CardTitle>Reusable Component Library</CardTitle>
           </CardHeader>
           <CardContent>
@@ -25,7 +25,7 @@ export default function FeaturesPage() {
 
         <Card>
           <CardHeader>
-            <ClipboardList className="h-12 w-12 text-accent mb-4" />
+            <ClipboardList className="h-12 w-12 text-primary mb-4" />
             <CardTitle>Guided Questionnaires</CardTitle>
           </CardHeader>
           <CardContent>
@@ -38,7 +38,7 @@ export default function FeaturesPage() {
 
         <Card>
           <CardHeader>
-            <FileText className="h-12 w-12 text-accent mb-4" />
+            <FileText className="h-12 w-12 text-primary mb-4" />
             <CardTitle>Instant Document Generation</CardTitle>
           </CardHeader>
           <CardContent>

@@ -10,8 +10,9 @@
 
 :root {
   /* Light Mode Colors */  /* Cream/off-white background */  /* Dark navy text */
-  --primary: oklch(0.205 0 0);     /* Primary color for UI elements */
-  --accent: oklch(0.97 0 0);      /* Golden yellow accent (consistent across modes) */
+  --primary: oklch(0.145 0 0);     /* Navy #09192B - Primary brand color for CTAs */
+  --accent: oklch(0.786 0.088 81.5);  /* Signature gold #D9BF65 - Interactive accents, hover states */
+  --accent-subtle: oklch(0.97 0 0);   /* Cream - Subtle backgrounds (not for CTAs) */
   --accent-gold: oklch(0.786 0.088 81.5);  /* franksblog.nl signature gold for highlights */
 
   /* Derived Colors for Layering */
@@ -32,7 +33,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary-foreground: oklch(0.145 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --destructive: oklch(0.577 0.245 27.325);
@@ -50,7 +51,7 @@
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent-foreground: oklch(0.145 0 0);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -124,6 +125,7 @@
   --color-primary: var(--primary);
   --color-accent: var(--accent);
   --color-accent-gold: var(--accent-gold);
+  --color-accent-subtle: var(--accent-subtle);
   --color-surface: var(--surface);
   --color-border: var(--border);
 
@@ -153,6 +155,11 @@
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 700;
+
+  /* Spacing Scale - 8px grid system (base unit = 0.25rem = 4px) */
+  /* In Tailwind v4, spacing utilities multiply the base --spacing value by the number */
+  /* So pt-6 = 6 * 0.25rem = 1.5rem = 24px (3 grid units) */
+  --spacing: 0.25rem;
 
   /* Border Radius - 4px default (minimal aesthetic) */
   --radius-sm: 2px;
@@ -242,5 +249,19 @@ h1, h2, h3, h4, h5, h6 {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Temporary fix: Explicitly define padding utilities that aren't being generated */
+@layer utilities {
+  .pt-6 {
+    padding-top: 1.5rem; /* 24px */
+  }
+  .pb-6 {
+    padding-bottom: 1.5rem; /* 24px */
+  }
+  .py-6 {
+    padding-top: 1.5rem; /* 24px */
+    padding-bottom: 1.5rem; /* 24px */
   }
 }
