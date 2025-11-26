@@ -110,7 +110,21 @@ export async function createTestOrganizations(
  * ```
  */
 export async function cleanupTestOrganizations(organizationIds: string[]): Promise<void> {
-  // Delete users first (due to FK constraints)
+  // Delete in correct order due to FK constraints:
+  // 1. Invitations (reference users)
+  // 2. Users (referenced by invitations)
+  // 3. Organizations (referenced by users)
+
+  // Delete invitations first
+  await prisma.invitation.deleteMany({
+    where: {
+      organizationId: {
+        in: organizationIds,
+      },
+    },
+  })
+
+  // Delete users
   await prisma.user.deleteMany({
     where: {
       organizationId: {

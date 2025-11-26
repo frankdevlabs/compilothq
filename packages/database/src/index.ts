@@ -28,8 +28,9 @@ export * from './dal/recipientCategories'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
 
-// Export utility functions
-export * from './utils/tokens'
+// NOTE: Server-only utilities (tokens) are NOT exported from the main index
+// to avoid bundling Node.js modules (crypto) in Edge Runtime (middleware).
+// Import directly from '@compilothq/database/src/utils/tokens' when needed on the server.
 
 // Re-export all Prisma types, enums, and utilities for convenience
 // This includes both types and runtime values (enums)

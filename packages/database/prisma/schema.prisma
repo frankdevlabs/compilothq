@@ -66,13 +66,13 @@ model User {
   email          String       @unique
   emailVerified  DateTime?    // NextAuth.js email verification timestamp
   image          String?      // Profile picture URL
-  organizationId String       // Foreign key to Organization
+  organizationId String?      // Foreign key to Organization (optional during signup)
   primaryPersona UserPersona  @default(BUSINESS_OWNER) // Required role with default
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   // Relations
-  organization    Organization  @relation(fields: [organizationId], references: [id])
+  organization    Organization? @relation(fields: [organizationId], references: [id])
   accounts        Account[]     // OAuth provider accounts
   sessions        Session[]     // Database sessions
   invitationsSent Invitation[]  @relation("InvitationsSent")

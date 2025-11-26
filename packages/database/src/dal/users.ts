@@ -3,11 +3,13 @@ import { prisma } from '../index'
 
 /**
  * Create a new user
+ * Note: organizationId is optional to support OAuth signup flow where users
+ * create their organization after initial authentication
  */
 export async function createUser(data: {
   name: string
   email: string
-  organizationId: string
+  organizationId?: string | null
   primaryPersona?: UserPersona
   emailVerified?: Date | null
   image?: string | null
@@ -16,7 +18,7 @@ export async function createUser(data: {
     data: {
       name: data.name,
       email: data.email,
-      organizationId: data.organizationId,
+      organizationId: data.organizationId ?? null,
       primaryPersona: data.primaryPersona ?? 'BUSINESS_OWNER',
       emailVerified: data.emailVerified ?? null,
       image: data.image ?? null,
@@ -36,10 +38,11 @@ export async function getUserById(id: string): Promise<User | null> {
 /**
  * Get a user by their email address
  * Includes organization data for authentication context
+ * Note: organization may be null for users who haven't completed onboarding
  */
 export async function getUserByEmail(
   email: string
-): Promise<(User & { organization: { id: string; name: string; slug: string } }) | null> {
+): Promise<(User & { organization: { id: string; name: string; slug: string } | null }) | null> {
   return prisma.user.findUnique({
     where: { email },
     include: {
