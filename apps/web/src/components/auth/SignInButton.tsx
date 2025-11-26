@@ -35,8 +35,8 @@ export function SignInButton({
   }
 
   return (
-    <Button onClick={handleSignIn} disabled={isLoading} className={className}>
-      {isLoading ? 'Signing in...' : children || 'Sign In'}
+    <Button onClick={() => void handleSignIn()} disabled={isLoading} className={className}>
+      {isLoading ? 'Signing in...' : (children ?? 'Sign In')}
     </Button>
   )
 }

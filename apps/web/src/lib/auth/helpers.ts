@@ -18,7 +18,7 @@ export async function getServerSession() {
 export async function requireAuth() {
   const session = await auth()
 
-  if (!session || !session.user) {
+  if (!session?.user) {
     throw new Error('Authentication required')
   }
 
@@ -52,7 +52,7 @@ export async function requireAuthWithOrg() {
  */
 export async function getUserId(): Promise<string | null> {
   const session = await auth()
-  return session?.user?.id ?? null
+  return session?.user.id ?? null
 }
 
 /**
@@ -61,5 +61,5 @@ export async function getUserId(): Promise<string | null> {
  */
 export async function getOrganizationId(): Promise<string | null> {
   const session = await auth()
-  return session?.user?.organizationId ?? null
+  return session?.user.organizationId ?? null
 }

@@ -28,7 +28,7 @@ export function UserMenu({ session }: UserMenuProps) {
           <User className="h-5 w-5" />
         </Button>
 
-        <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out">
+        <Button variant="ghost" size="icon" onClick={() => void handleSignOut()} title="Sign out">
           <LogOut className="h-5 w-5" />
         </Button>
       </div>

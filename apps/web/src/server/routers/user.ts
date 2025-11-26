@@ -16,7 +16,7 @@ export const userRouter = router({
    * Returns: Array of users with their details (name, email, persona, etc.)
    */
   listByOrganization: orgProcedure.query(async ({ ctx }) => {
-    const users = await listUsersByOrganization(ctx.session.user.organizationId)
+    const users = await listUsersByOrganization(ctx.organizationId)
     return users
   }),
 })

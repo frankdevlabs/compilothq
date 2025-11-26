@@ -1,4 +1,4 @@
-import { TRPCError, initTRPC } from '@trpc/server'
+import { initTRPC, TRPCError } from '@trpc/server'
 
 import { type Context } from './context'
 
@@ -18,7 +18,7 @@ export const publicProcedure = t.procedure
  * Use for authenticated endpoints that don't require organization context
  */
 export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
-  if (!ctx.session || !ctx.session.user) {
+  if (!ctx.session?.user) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Authentication required' })
   }
 

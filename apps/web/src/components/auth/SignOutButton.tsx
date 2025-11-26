@@ -25,12 +25,12 @@ export function SignOutButton({ children, className, callbackUrl = '/' }: SignOu
 
   return (
     <Button
-      onClick={handleSignOut}
+      onClick={() => void handleSignOut()}
       disabled={isLoading}
       variant="ghost"
       className={className}
     >
-      {isLoading ? 'Signing out...' : children || 'Sign Out'}
+      {isLoading ? 'Signing out...' : (children ?? 'Sign Out')}
     </Button>
   )
 }

@@ -10,7 +10,11 @@ interface EmailFormProps {
   isLoading?: boolean
 }
 
-export function EmailForm({ onSubmit, buttonText = 'Continue with Email', isLoading = false }: EmailFormProps) {
+export function EmailForm({
+  onSubmit,
+  buttonText = 'Continue with Email',
+  isLoading = false,
+}: EmailFormProps) {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
 
@@ -19,7 +23,7 @@ export function EmailForm({ onSubmit, buttonText = 'Continue with Email', isLoad
     setError('')
 
     // Basic email validation
-    if (!email || !email.includes('@')) {
+    if (!email.includes('@')) {
       setError('Please enter a valid email address')
       return
     }
@@ -32,7 +36,7 @@ export function EmailForm({ onSubmit, buttonText = 'Continue with Email', isLoad
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
