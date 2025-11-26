@@ -213,6 +213,178 @@ compilothq/
 
 - Press Cmd+Shift+P → type "TypeScript: Restart TS Server" → Enter
 
+## Design System
+
+Compilo has a minimal, cohesive design aesthetic enforced through a comprehensive design system.
+
+### Core Principles
+
+1. **Minimal Aesthetic**: Navy/cream color palette inspired by franksblog.nl
+2. **OKLCH Color Format**: Perceptual color space for superior dark mode and gradients
+3. **8px Grid System**: Spacing foundation (8, 16, 24, 32, 48, 64, 96px)
+4. **shadcn/ui Foundation**: All components extend shadcn/ui base components
+5. **WCAG 2.1 AA Compliance**: Mandatory accessibility standard
+
+### Design System Location
+
+**Source of Truth**: `docs/DESIGN_SYSTEM.md` (600+ line comprehensive document)
+
+This single file contains:
+
+- Complete color system (OKLCH tokens with light/dark mode mappings)
+- Typography system (Ubuntu/Raleway fonts, type scale)
+- Spacing system (8px grid with Tailwind class mappings)
+- Component specifications (shadcn/ui patterns)
+- Accessibility requirements (WCAG 2.1 AA)
+- Implementation guide with examples
+
+**Token Reference**: `docs/design-tokens/*.json` (documentation only, not implementation)
+
+- `color.json` - Navy/cream palette documentation
+- `typography.json` - Font families and type scale
+- `spacing.json` - 8px grid system reference
+- `effects.json` - Border radius, shadows, transitions
+
+**Implementation**: `apps/web/src/app/globals.css`
+
+- CSS variables in OKLCH format
+- Light and dark mode mappings
+- Tailwind v4 @theme inline declarations
+
+### Design System Rules (NON-NEGOTIABLE)
+
+**Colors**:
+
+- ✅ ONLY use semantic tokens: `bg-primary`, `text-foreground`, `border-border`
+- ❌ NEVER hardcode colors: `bg-[#09192B]`, `bg-[oklch(0.205_0_0)]`, `style={{ color: '#09192B' }}`
+
+**Spacing**:
+
+- ✅ ONLY use Tailwind scale: `p-2`, `p-4`, `p-6`, `p-8`, `p-12`, `p-16`, `p-24` (8px increments preferred)
+- ❌ NEVER arbitrary values: `p-[13px]`, `gap-[22px]`
+
+**Typography**:
+
+- ✅ ONLY use type scale: `text-sm`, `text-base`, `text-xl`, `text-2xl`, `text-3xl`
+- ❌ NEVER arbitrary sizes: `text-[17px]`, `text-[28px]`
+
+**Components**:
+
+- ✅ EXTEND shadcn/ui components from `@compilothq/ui` or `@/components/ui/*`
+- ❌ NEVER rebuild components from scratch when shadcn/ui has a base
+
+**Accessibility**:
+
+- ✅ Semantic HTML (button not div with onClick)
+- ✅ Keyboard navigation (Tab, Enter, Escape)
+- ✅ Focus indicators (`focus-visible:ring-2 focus-visible:ring-ring`)
+- ✅ ARIA labels on icon-only buttons
+- ✅ Color contrast minimum 4.5:1
+
+### Design System Workflow
+
+**When building any UI component:**
+
+1. **Read the design system**: `docs/DESIGN_SYSTEM.md` (ALWAYS before implementing)
+2. **Check shadcn/ui**: Does a base component exist? Use it.
+3. **Apply design tokens**: Only semantic tokens, never hardcoded values
+4. **Validate accessibility**: WCAG 2.1 AA compliance required
+5. **Use design agents**: `@ui-builder` for building, `@design-guardian` for validation
+
+### Design System Agents
+
+**@ui-builder** (`.claude/agents/ui-builder.md`):
+
+- **Purpose**: Proactively builds components correctly from the start
+- **When to use**: Creating new UI components or implementing visual features
+- **Process**:
+  1. Reads `docs/DESIGN_SYSTEM.md`
+  2. Checks for shadcn/ui base component
+  3. Implements with design tokens exclusively
+  4. Ensures WCAG 2.1 AA compliance
+  5. Provides complete documentation
+
+**@design-guardian** (`.claude/agents/design-guardian.md`):
+
+- **Purpose**: Reactively validates design system compliance
+- **When to use**: Code reviews, pre-commit validation, codebase audits
+- **Process**:
+  1. Scans for violations (hardcoded colors, arbitrary spacing, accessibility issues)
+  2. Generates detailed violation reports with specific fixes
+  3. Categorizes by severity (Critical/High/Medium/Low)
+  4. Offers automated remediation
+  5. Creates pre-commit hooks to prevent future violations
+
+### Design System Skill
+
+**compilo-design** (`.claude/skills/compilo-design/SKILL.md`):
+
+- Lightweight enforcement skill inherited by all UI-related agents
+- Contains quick reference for common patterns
+- References `docs/DESIGN_SYSTEM.md` for detailed specifications
+- Provides violation remediation templates
+
+### Integration with Agent Patterns
+
+**For UI-Heavy Features:**
+
+1. **implementer** coordinates full-stack work
+2. **@ui-builder** handles UI component creation using design system
+3. **@design-guardian** validates compliance before merge
+
+**For Complex Components:**
+
+1. **@ui-builder** reads design system and builds component correctly
+2. Component automatically follows design tokens, accessibility standards
+3. **@design-guardian** audits as part of PR review
+
+**For Design Violations:**
+
+1. **@design-guardian** detects violations (manual audit or pre-commit)
+2. Provides specific remediation (before/after code examples)
+3. Offers to auto-fix or educate developer
+
+### Quick Reference
+
+**Most Common Tokens**:
+
+```tsx
+// Colors
+<div className="bg-background text-foreground">           // Page background
+<Card className="bg-card text-card-foreground">           // Card background
+<Button className="bg-primary text-primary-foreground">   // Primary action
+<p className="text-muted-foreground">                     // Secondary text
+
+// Spacing (8px grid: p-2=8px, p-4=16px, p-6=24px, p-8=32px)
+<div className="p-6">                                      // 24px padding (default card)
+<div className="space-y-4">                                // 16px vertical spacing
+<div className="gap-6">                                    // 24px grid gap
+
+// Typography
+<h1 className="text-3xl font-bold">                       // 30px heading
+<p className="text-base leading-relaxed">                  // 16px body text
+<span className="text-sm text-muted-foreground">          // 14px metadata
+
+// Accessibility
+<button className="focus-visible:ring-2 focus-visible:ring-ring" aria-label="Close">
+  <XIcon />
+</button>
+```
+
+### Validation Scripts
+
+Pre-commit hooks automatically check for design system violations:
+
+- Hardcoded colors (hex, rgb, hsl, oklch values)
+- Arbitrary spacing values
+- Non-semantic interactive elements
+
+Run manual validation:
+
+```bash
+pnpm run validate:design  # Check all files for violations
+```
+
 ### Agent Usage Guidelines
 
 This project uses specialized Claude Code agents for specific types of work. Understanding when to use each agent ensures optimal code quality and adherence to architectural boundaries.
