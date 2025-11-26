@@ -1,5 +1,4 @@
 import { UserMenu } from '@/components/auth/UserMenu'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { auth } from '@/lib/auth/config'
 
 export async function TopBar() {
@@ -10,10 +9,7 @@ export async function TopBar() {
       <div className="flex items-center gap-4">
         <h1 className="text-xl font-semibold">Compilo</h1>
       </div>
-      <div className="flex items-center gap-4">
-        <ThemeToggle />
-        {session && <UserMenu session={session} />}
-      </div>
+      <div className="flex items-center gap-4">{session && <UserMenu session={session} />}</div>
     </div>
   )
 }
