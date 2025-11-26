@@ -1,3 +1,5 @@
+import { PrismaClient } from '@compilothq/database'
+import { seedDevUsers } from '@compilothq/database/prisma/seeds/devUsers'
 import { FullConfig } from '@playwright/test'
 import { exec } from 'child_process'
 import path from 'path'
@@ -90,19 +92,25 @@ async function globalSetup(_config: FullConfig) {
       throw error
     }
 
-    // Optionally seed minimal reference data
-    console.log('🌱 Seeding reference data...')
+    // Seed development users for E2E tests
+    console.log('🔧 Seeding development users for E2E tests...')
 
     try {
-      // For now, we'll skip seeding as the utilities aren't ready yet
-      console.log('⏭️  Reference data seeding skipped (utilities not yet available)')
+      const prisma = new PrismaClient({
+        datasources: {
+          db: {
+            url: testDbUrl,
+          },
+        },
+      })
 
-      // TODO: When database test-utils are available, use them here:
-      // import { seedReferenceData } from '@compilothq/database/test-utils';
-      // await seedReferenceData();
+      await seedDevUsers(prisma)
+      await prisma.$disconnect()
+
+      console.log('✅ Development users seeded successfully')
     } catch (error) {
-      console.error('⚠️  Warning: Failed to seed reference data:', error)
-      // Don't throw - seeding is optional
+      console.error('❌ Failed to seed development users:', error)
+      throw error
     }
 
     console.log('\n✅ Playwright E2E test setup completed successfully\n')

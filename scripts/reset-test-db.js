@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-env node */
+/* global setTimeout */
 
 /**
  * Reset Test Database Script

@@ -1,9 +1,10 @@
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@compilothq/ui'
 import { Users } from 'lucide-react'
 
-import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog'
-import { PendingInvitationsList } from '@/components/team/PendingInvitationsList'
-import { TeamMembersList } from '@/components/team/TeamMembersList'
+// TODO: Create these components
+// import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog'
+// import { PendingInvitationsList } from '@/components/team/PendingInvitationsList'
+// import { TeamMembersList } from '@/components/team/TeamMembersList'
 
 /**
  * Team Settings Page
@@ -37,12 +38,11 @@ export default function TeamSettingsPage() {
                 Send invitations to add new members to your organization
               </CardDescription>
             </div>
-            <InviteTeamMemberDialog>
-              <Button>
-                <Users className="mr-2 h-4 w-4" />
-                Invite Member
-              </Button>
-            </InviteTeamMemberDialog>
+            {/* TODO: Add InviteTeamMemberDialog component */}
+            <Button disabled>
+              <Users className="mr-2 h-4 w-4" />
+              Invite Member (Coming Soon)
+            </Button>
           </div>
         </CardHeader>
       </Card>
@@ -56,7 +56,8 @@ export default function TeamSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PendingInvitationsList />
+          {/* TODO: Add PendingInvitationsList component */}
+          <p className="text-sm text-muted-foreground">No pending invitations</p>
         </CardContent>
       </Card>
 
@@ -67,7 +68,8 @@ export default function TeamSettingsPage() {
           <CardDescription>All members currently in your organization</CardDescription>
         </CardHeader>
         <CardContent>
-          <TeamMembersList />
+          {/* TODO: Add TeamMembersList component */}
+          <p className="text-sm text-muted-foreground">Team members list coming soon</p>
         </CardContent>
       </Card>
     </div>

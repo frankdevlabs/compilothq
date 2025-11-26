@@ -21,6 +21,7 @@ export default prisma
 // Export all DAL functions
 export * from './dal/countries'
 export * from './dal/dataNatures'
+export * from './dal/devSessions'
 export * from './dal/invitations'
 export * from './dal/organizations'
 export * from './dal/processingActs'
