@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'crypto'
 
-import type { Organization, OrganizationStatus } from '../../index'
+import type { Organization, OrganizationStatus, User } from '../../index'
 import { prisma } from '../../index'
 
 export interface OrganizationFactoryOptions {
@@ -34,7 +34,7 @@ export interface OrganizationFactoryOptions {
  */
 export async function createTestOrganization(
   options: OrganizationFactoryOptions = {}
-): Promise<{ org: Organization; users: Array<{ id: string; email: string; name: string }> }> {
+): Promise<{ org: Organization; users: User[] }> {
   const {
     name = `Test Organization ${randomUUID().slice(0, 8)}`,
     slug = `test-org-${randomUUID().slice(0, 8)}`,
@@ -84,9 +84,7 @@ export async function createTestOrganization(
  */
 export async function createTestOrganizations(
   configs: OrganizationFactoryOptions[]
-): Promise<
-  Array<{ org: Organization; users: Array<{ id: string; email: string; name: string }> }>
-> {
+): Promise<Array<{ org: Organization; users: User[] }>> {
   const results = []
 
   for (const config of configs) {

@@ -6,7 +6,7 @@ import nextTs from "eslint-config-next/typescript";
 import reactHooks from "eslint-plugin-react-hooks";
 import vitest from "eslint-plugin-vitest";
 
-export default [
+const eslintConfig = [
   // Global ignores - must be first
   {
     ignores: [
@@ -51,3 +51,5 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;

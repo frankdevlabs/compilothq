@@ -12,18 +12,19 @@
   /* Light Mode Colors */  /* Cream/off-white background */  /* Dark navy text */
   --primary: oklch(0.205 0 0);     /* Primary color for UI elements */
   --accent: oklch(0.97 0 0);      /* Golden yellow accent (consistent across modes) */
+  --accent-gold: oklch(0.786 0.088 81.5);  /* franksblog.nl signature gold for highlights */
 
   /* Derived Colors for Layering */
-  --surface: #F5F2EB;     /* Slightly darker than background for cards/elevated elements */
+  --surface: oklch(0.97 0.005 85);  /* Slightly darker than background for cards/elevated elements */
   --border: oklch(0.922 0 0);  /* Subtle borders using primary with opacity */
 
   /* Text Colors */
-  --text: #09192B;        /* Primary text color */
-  --text-secondary: rgba(9, 25, 43, 0.7);  /* Secondary text with reduced opacity */
+  --text: oklch(0.145 0 0);  /* Primary text color */
+  --text-secondary: oklch(0.145 0 0 / 0.7);  /* Secondary text with reduced opacity */
 
   /* Button Colors */
-  --button-bg: #09192B;   /* Button background in light mode */
-  --button-text: #FEFBF4; /* Button text in light mode */
+  --button-bg: oklch(0.145 0 0);  /* Button background in light mode */
+  --button-text: oklch(1 0 0);  /* Button text in light mode */
 
   /* Component-specific Colors (for shadcn/ui compatibility) */
   --card: oklch(1 0 0);
@@ -66,18 +67,19 @@
   --foreground: oklch(0.985 0 0);  /* Cream/off-white text */
   --primary: oklch(0.922 0 0);     /* Primary color inverted */
   --accent: oklch(0.269 0 0);      /* Accent unchanged (consistent across modes) */
+  --accent-gold: oklch(0.786 0.088 81.5);  /* franksblog.nl signature gold (same in dark mode) */
 
   /* Derived Colors for Layering */
-  --surface: #0F1F35;     /* Slightly lighter than background for cards/elevated elements */
+  --surface: oklch(0.18 0.01 250);  /* Slightly lighter than background for cards/elevated elements */
   --border: oklch(1 0 0 / 10%);  /* Subtle borders using foreground with opacity */
 
   /* Text Colors */
-  --text: #FEFBF4;        /* Primary text color */
-  --text-secondary: rgba(254, 251, 244, 0.7);  /* Secondary text with reduced opacity */
+  --text: oklch(0.985 0 0);  /* Primary text color */
+  --text-secondary: oklch(0.985 0 0 / 0.7);  /* Secondary text with reduced opacity */
 
   /* Button Colors */
-  --button-bg: #D9BF65;   /* Button background in dark mode (accent color) */
-  --button-text: #09192B; /* Button text in dark mode (dark navy) */
+  --button-bg: oklch(0.786 0.088 81.5);  /* Button background in dark mode (accent color) */
+  --button-text: oklch(0.145 0 0);  /* Button text in dark mode (dark navy) */
 
   /* Component-specific Colors (for shadcn/ui compatibility) */
   --card: oklch(0.205 0 0);
@@ -121,6 +123,7 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-accent: var(--accent);
+  --color-accent-gold: var(--accent-gold);
   --color-surface: var(--surface);
   --color-border: var(--border);
 

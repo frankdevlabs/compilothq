@@ -18,6 +18,29 @@ interface InvitationEmailProps {
   invitedPersona: string
 }
 
+/**
+ * Email Design Tokens
+ *
+ * Email clients don't support CSS variables or Tailwind classes.
+ * These constants mirror the Compilo Design System for email compatibility.
+ *
+ * Color Mappings:
+ * - background: #f6f9fc → bg-background (light mode equivalent)
+ * - cardBackground: #ffffff → bg-card
+ * - text: #333 → text-foreground
+ * - buttonBg: #000 → bg-primary (dark navy)
+ * - buttonText: #fff → text-primary-foreground
+ * - mutedText: #8898aa → text-muted-foreground
+ */
+const EMAIL_COLORS = {
+  background: '#f6f9fc', // Light background (mirrors bg-background)
+  cardBackground: '#ffffff', // Card surface (mirrors bg-card)
+  text: '#333', // Primary text (mirrors text-foreground)
+  buttonBg: '#000', // Primary button (mirrors bg-primary - dark navy)
+  buttonText: '#fff', // Button text (mirrors text-primary-foreground)
+  mutedText: '#8898aa', // Secondary text (mirrors text-muted-foreground)
+} as const
+
 export function InvitationEmail({
   inviteeEmail,
   organizationName,
@@ -40,8 +63,8 @@ export function InvitationEmail({
           <Heading style={h1}>You&apos;ve been invited to join {organizationName}</Heading>
 
           <Text style={text}>
-            <strong>{inviterName}</strong> has invited you to join <strong>{organizationName}</strong>{' '}
-            on Compilo as a <strong>{formattedPersona}</strong>.
+            <strong>{inviterName}</strong> has invited you to join{' '}
+            <strong>{organizationName}</strong> on Compilo as a <strong>{formattedPersona}</strong>.
           </Text>
 
           <Section style={buttonContainer}>
@@ -74,13 +97,13 @@ export function InvitationEmail({
 
 // Styles
 const main = {
-  backgroundColor: '#f6f9fc',
+  backgroundColor: EMAIL_COLORS.background,
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 }
 
 const container = {
-  backgroundColor: '#ffffff',
+  backgroundColor: EMAIL_COLORS.cardBackground,
   margin: '0 auto',
   padding: '20px 0 48px',
   marginBottom: '64px',
@@ -88,7 +111,7 @@ const container = {
 }
 
 const h1 = {
-  color: '#333',
+  color: EMAIL_COLORS.text,
   fontSize: '24px',
   fontWeight: 'bold',
   margin: '40px 0',
@@ -97,7 +120,7 @@ const h1 = {
 }
 
 const text = {
-  color: '#333',
+  color: EMAIL_COLORS.text,
   fontSize: '16px',
   lineHeight: '26px',
   padding: '0 40px',
@@ -108,9 +131,9 @@ const buttonContainer = {
 }
 
 const button = {
-  backgroundColor: '#000',
+  backgroundColor: EMAIL_COLORS.buttonBg,
   borderRadius: '8px',
-  color: '#fff',
+  color: EMAIL_COLORS.buttonText,
   fontSize: '16px',
   fontWeight: 'bold',
   textDecoration: 'none',
@@ -121,7 +144,7 @@ const button = {
 }
 
 const footer = {
-  color: '#8898aa',
+  color: EMAIL_COLORS.mutedText,
   fontSize: '14px',
   lineHeight: '24px',
   padding: '0 40px',

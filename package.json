@@ -7,6 +7,7 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "start": "node scripts/ensure-docker.js && pnpm dev",
+    "validate:tokens": "./scripts/validate-tokens.sh",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
     "lint:strict": "pnpm typecheck && pnpm lint",
@@ -15,6 +16,7 @@
     "typecheck": "tsc --build",
     "typecheck:watch": "tsc --build --watch",
     "validate": "pnpm format:check && pnpm lint:strict && pnpm test:unit",
+    "validate:design": "bash -c 'EXIT=0; echo \"🎨 Checking for design system violations...\"; if grep -rE \"className.*#[0-9A-Fa-f]{3,6}\" apps/web/src --include=\"*.tsx\" --include=\"*.jsx\" 2>/dev/null; then echo \"❌ VIOLATION: Hardcoded hex colors found\"; EXIT=1; fi; if grep -rE \"className.*\\[oklch\\(\" apps/web/src --include=\"*.tsx\" --include=\"*.jsx\" 2>/dev/null; then echo \"❌ VIOLATION: Hardcoded OKLCH values found\"; EXIT=1; fi; if grep -rE \"(p|m|gap|space)(-[xy])?-\\[[0-9]+px\\]\" apps/web/src --include=\"*.tsx\" --include=\"*.jsx\" 2>/dev/null; then echo \"❌ VIOLATION: Arbitrary spacing values found\"; EXIT=1; fi; if grep -rE \"style=\\{\\{.*(color|backgroundColor|borderColor)\" apps/web/src --include=\"*.tsx\" --include=\"*.jsx\" 2>/dev/null; then echo \"⚠️  WARNING: Inline styles with colors found\"; fi; if grep -rE \"<div[^>]*onClick\" apps/web/src --include=\"*.tsx\" --include=\"*.jsx\" 2>/dev/null; then echo \"⚠️  WARNING: Non-semantic interactive elements found\"; fi; if [ $EXIT -eq 0 ]; then echo \"✅ Design system validation passed\"; fi; exit $EXIT'",
     "test": "dotenv -e .env.test -- vitest",
     "test:unit": "dotenv -e .env.test -- vitest run __tests__/unit",
     "test:integration": "dotenv -e .env.test -- vitest run __tests__/integration",
@@ -48,6 +50,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
+      "bash -c 'for file in \"$@\"; do if echo \"$file\" | grep -qE \"apps/web/src/.*\\.(tsx|jsx)$\"; then if grep -E \"className.*#[0-9A-Fa-f]{3,6}\" \"$file\" 2>/dev/null; then echo \"❌ VIOLATION in $file: Hardcoded hex colors\"; exit 1; fi; if grep -E \"className.*\\[oklch\\(\" \"$file\" 2>/dev/null; then echo \"❌ VIOLATION in $file: Hardcoded OKLCH values\"; exit 1; fi; if grep -E \"(p|m|gap|space)(-[xy])?-\\[[0-9]+px\\]\" \"$file\" 2>/dev/null; then echo \"❌ VIOLATION in $file: Arbitrary spacing\"; exit 1; fi; fi; done' --",
       "eslint --fix --max-warnings 0",
       "prettier --write"
     ],
@@ -96,5 +99,10 @@
     "next-auth": "5.0.0-beta.30",
     "react-email": "^5.0.5",
     "resend": "^6.5.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@auth/core": "0.41.1"
+    }
   }
 }

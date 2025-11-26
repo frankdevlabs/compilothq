@@ -21,6 +21,7 @@ const execAsync = promisify(exec)
  * @param config - Playwright full configuration
  */
 async function globalSetup(_config: FullConfig) {
+  void _config // Explicitly mark as intentionally unused (required by Playwright API)
   console.log('\n🚀 Starting Playwright E2E test setup...\n')
 
   try {
