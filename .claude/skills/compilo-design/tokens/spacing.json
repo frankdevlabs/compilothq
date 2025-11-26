@@ -1,0 +1,48 @@
+{
+  "$type": "dimension",
+  "spacing": {
+    "xs": {
+      "$value": "8px",
+      "$description": "0.5rem - Extra small spacing - tight gaps, compact layouts (p-2, m-2, gap-2)"
+    },
+    "sm": {
+      "$value": "16px",
+      "$description": "1rem - Small spacing - component padding, small gaps (p-4, m-4, gap-4)"
+    },
+    "md": {
+      "$value": "24px",
+      "$description": "1.5rem - Medium spacing - default gaps, card padding (p-6, m-6, gap-6)"
+    },
+    "lg": {
+      "$value": "32px",
+      "$description": "2rem - Large spacing - section padding, generous gaps (p-8, m-8, gap-8)"
+    },
+    "xl": {
+      "$value": "48px",
+      "$description": "3rem - Extra large spacing - major sections, page padding (p-12, m-12, gap-12)"
+    },
+    "2xl": {
+      "$value": "64px",
+      "$description": "4rem - 2X large spacing - page sections, large containers (p-16, m-16, gap-16)"
+    },
+    "3xl": {
+      "$value": "96px",
+      "$description": "6rem - 3X large spacing - hero sections, major layout gaps (p-24, m-24, gap-24)"
+    }
+  },
+  "layout": {
+    "container": {
+      "max-width": {
+        "$value": "1140px",
+        "$description": "Maximum content width for main containers"
+      }
+    },
+    "grid": {
+      "gap": {
+        "$value": "{spacing.md}",
+        "$description": "Default grid gap - 24px (gap-6)"
+      }
+    }
+  },
+  "$note": "This 8px-based scale (p-2, p-4, p-6, p-8, p-12, p-16, p-24) is recommended for consistency, but the full Tailwind spacing scale (p-1, p-3, p-5, etc.) is also acceptable. Avoid arbitrary values like p-[13px]."
+}

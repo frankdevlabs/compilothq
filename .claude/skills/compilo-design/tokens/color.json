@@ -1,0 +1,229 @@
+{
+  "$type": "color",
+  "color": {
+    "primitive": {
+      "white": {
+        "$value": "#FFFFFF",
+        "$description": "Pure white"
+      },
+      "black": {
+        "$value": "#000000",
+        "$description": "Pure black"
+      },
+      "cream": {
+        "50": { "$value": "#FEFBF4", "$description": "Lightest cream - from franksblog.nl" },
+        "100": { "$value": "#F5F2EB", "$description": "Light cream background - surface color" },
+        "200": { "$value": "#EBEBEB", "$description": "Cream with slight gray" },
+        "300": { "$value": "#D9D6CF", "$description": "Medium cream" },
+        "400": { "$value": "#C7C4BD", "$description": "Darker cream" },
+        "500": { "$value": "#B5B2AB", "$description": "Base cream/beige" }
+      },
+      "navy": {
+        "50": { "$value": "#E8EBF0", "$description": "Lightest navy tint" },
+        "100": { "$value": "#C5CBD6", "$description": "Light navy" },
+        "200": { "$value": "#9BA4B4", "$description": "Medium-light navy" },
+        "300": { "$value": "#717C92", "$description": "Medium navy" },
+        "400": { "$value": "#4A5670", "$description": "Medium-dark navy" },
+        "500": { "$value": "#2D3A52", "$description": "Base navy" },
+        "600": { "$value": "#1F2C42", "$description": "Dark navy" },
+        "700": { "$value": "#121D32", "$description": "Darker navy" },
+        "800": { "$value": "#0C1623", "$description": "Very dark navy" },
+        "900": {
+          "$value": "#09192B",
+          "$description": "Darkest navy - primary text color from franksblog.nl"
+        }
+      },
+      "neutral": {
+        "50": { "$value": "#FAFAFA", "$description": "Near white" },
+        "100": { "$value": "#F5F5F5", "$description": "Very light gray" },
+        "200": { "$value": "#E5E5E5", "$description": "Light gray" },
+        "300": { "$value": "#D4D4D4", "$description": "Medium-light gray" },
+        "400": { "$value": "#A3A3A3", "$description": "Medium gray" },
+        "500": { "$value": "#737373", "$description": "Base gray" },
+        "600": { "$value": "#525252", "$description": "Dark gray" },
+        "700": { "$value": "#404040", "$description": "Darker gray" },
+        "800": { "$value": "#262626", "$description": "Very dark gray" },
+        "900": { "$value": "#171717", "$description": "Near black" }
+      },
+      "golden": {
+        "50": { "$value": "#FEFCE8", "$description": "Lightest golden" },
+        "100": { "$value": "#FEF9C3", "$description": "Very light golden" },
+        "200": { "$value": "#FEF08A", "$description": "Light golden" },
+        "300": { "$value": "#FDE047", "$description": "Medium-light golden" },
+        "400": { "$value": "#FACC15", "$description": "Medium golden" },
+        "500": { "$value": "#EAB308", "$description": "Base golden" },
+        "600": {
+          "$value": "#D9BF65",
+          "$description": "Signature franksblog.nl gold - use for hover states, active navigation, featured badges, and CTAs in dark mode"
+        },
+        "700": { "$value": "#A16207", "$description": "Dark golden" }
+      },
+      "blue": {
+        "400": { "$value": "#60A5FA", "$description": "Light blue - for links/info" },
+        "500": { "$value": "#3B82F6", "$description": "Base blue" },
+        "600": { "$value": "#2563EB", "$description": "Dark blue" },
+        "700": { "$value": "#1D4ED8", "$description": "Darker blue" }
+      },
+      "green": {
+        "500": { "$value": "#22C55E", "$description": "Base green - success states" },
+        "600": { "$value": "#16A34A", "$description": "Dark green" }
+      },
+      "red": {
+        "500": { "$value": "#EF4444", "$description": "Base red - error states" },
+        "600": { "$value": "#DC2626", "$description": "Dark red" }
+      },
+      "amber": {
+        "500": { "$value": "#F59E0B", "$description": "Base amber - warning states" },
+        "600": { "$value": "#D97706", "$description": "Dark amber" }
+      }
+    },
+    "semantic": {
+      "background": {
+        "default": {
+          "$value": "{color.primitive.white}",
+          "$description": "Main page background (light mode) - maps to --background"
+        },
+        "subtle": {
+          "$value": "{color.primitive.cream.100}",
+          "$description": "Subtle background for cards, surfaces - maps to --card or --muted"
+        },
+        "muted": {
+          "$value": "{color.primitive.cream.200}",
+          "$description": "Muted background for disabled states - maps to --muted"
+        },
+        "dark": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "Dark mode background - maps to dark: --background"
+        }
+      },
+      "text": {
+        "default": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "Primary text color - high contrast - maps to --foreground"
+        },
+        "secondary": {
+          "$value": "{color.primitive.neutral.600}",
+          "$description": "Secondary text - metadata, captions - maps to --muted-foreground"
+        },
+        "tertiary": {
+          "$value": "{color.primitive.neutral.500}",
+          "$description": "Tertiary text - placeholders, disabled"
+        },
+        "inverse": {
+          "$value": "{color.primitive.cream.50}",
+          "$description": "Text on dark backgrounds - maps to --primary-foreground"
+        }
+      },
+      "border": {
+        "default": {
+          "$value": "rgba(9, 25, 43, 0.09)",
+          "$description": "Navy-tinted borders (9% opacity navy, franksblog.nl pattern) - maps to --border"
+        },
+        "subtle": {
+          "$value": "{color.primitive.cream.200}",
+          "$description": "Subtle borders for cards"
+        },
+        "focus": {
+          "$value": "{color.primitive.neutral.500}",
+          "$description": "Focus ring color - maps to --ring"
+        }
+      },
+      "accent": {
+        "default": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "Primary brand color - dark navy - maps to --primary (light mode)"
+        },
+        "hover": {
+          "$value": "{color.primitive.navy.800}",
+          "$description": "Accent hover state - slightly lighter navy"
+        },
+        "subtle": {
+          "$value": "{color.primitive.cream.100}",
+          "$description": "Subtle accent for backgrounds - cream - maps to --accent"
+        },
+        "golden": {
+          "$value": "{color.primitive.golden.600}",
+          "$description": "Signature gold accent from franksblog.nl - use for: hover states on important links, active/selected UI elements, featured badges, CTA highlights in dark mode, important callout borders"
+        }
+      },
+      "feedback": {
+        "success": {
+          "$value": "{color.primitive.green.600}",
+          "$description": "Success states - maps to bg-green-600 or custom --success"
+        },
+        "error": {
+          "$value": "{color.primitive.red.600}",
+          "$description": "Error states - maps to --destructive"
+        },
+        "warning": {
+          "$value": "{color.primitive.amber.600}",
+          "$description": "Warning states - maps to bg-amber-600 or custom --warning"
+        }
+      }
+    },
+    "shadcn": {
+      "$description": "Documentation of shadcn/ui CSS variable mappings to design tokens",
+      "light": {
+        "background": { "$value": "{color.primitive.white}", "$description": "oklch(1 0 0)" },
+        "foreground": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "oklch(0.145 0 0)"
+        },
+        "primary": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "oklch(0.205 0 0) - dark navy"
+        },
+        "primary-foreground": {
+          "$value": "{color.primitive.cream.50}",
+          "$description": "oklch(0.985 0 0)"
+        },
+        "secondary": { "$value": "{color.primitive.cream.100}", "$description": "oklch(0.97 0 0)" },
+        "secondary-foreground": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "oklch(0.205 0 0)"
+        },
+        "accent": {
+          "$value": "{color.primitive.cream.100}",
+          "$description": "oklch(0.97 0 0) - golden/cream"
+        },
+        "accent-foreground": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "oklch(0.205 0 0)"
+        },
+        "muted": { "$value": "{color.primitive.cream.100}", "$description": "oklch(0.97 0 0)" },
+        "muted-foreground": {
+          "$value": "{color.primitive.neutral.600}",
+          "$description": "oklch(0.556 0 0)"
+        },
+        "card": { "$value": "{color.primitive.white}", "$description": "oklch(1 0 0)" },
+        "card-foreground": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "oklch(0.145 0 0)"
+        },
+        "border": { "$value": "{color.primitive.cream.200}", "$description": "oklch(0.922 0 0)" },
+        "input": { "$value": "{color.primitive.cream.200}", "$description": "oklch(0.922 0 0)" },
+        "ring": { "$value": "{color.primitive.neutral.500}", "$description": "oklch(0.708 0 0)" }
+      },
+      "dark": {
+        "background": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "oklch(0.145 0 0) - dark navy"
+        },
+        "foreground": {
+          "$value": "{color.primitive.cream.50}",
+          "$description": "oklch(0.985 0 0)"
+        },
+        "primary": { "$value": "{color.primitive.cream.200}", "$description": "oklch(0.922 0 0)" },
+        "primary-foreground": {
+          "$value": "{color.primitive.navy.900}",
+          "$description": "oklch(0.205 0 0)"
+        },
+        "accent": { "$value": "{color.primitive.navy.700}", "$description": "oklch(0.269 0 0)" },
+        "accent-foreground": {
+          "$value": "{color.primitive.cream.50}",
+          "$description": "oklch(0.985 0 0)"
+        }
+      }
+    }
+  }
+}
