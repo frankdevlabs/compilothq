@@ -64,3 +64,27 @@ Allowed for specific use cases only:
 - `calc(100% - Xrem)` - Responsive calculations using rem units
 
 All other arbitrary values should use the 8px grid system.
+
+## Development Authentication for Testing
+
+When validating or testing authenticated UI features, use the development authentication system:
+
+```bash
+# Quick authentication for browser testing
+pnpm dev:login --persona=DPO
+
+# Use in Playwright tests
+import { setAuthCookie } from './__tests__/e2e/helpers/dev-auth'
+await setAuthCookie(page, 'DPO')
+```
+
+**Available personas**: DPO, PRIVACY_OFFICER, BUSINESS_OWNER, IT_ADMIN, SECURITY_TEAM, LEGAL_TEAM
+
+**Common scenarios**:
+
+- Validating protected pages and components in browser
+- Taking screenshots of authenticated features for Claude Code validation
+- E2E testing of user-specific UI flows
+- Testing persona-based access control and permissions
+
+**Full guide**: [docs/development-authentication.md](../../docs/development-authentication.md)

@@ -203,6 +203,33 @@ compilothq/
 3. Integration tests for API routes
 4. E2E tests for critical user flows
 
+### Development Authentication for Testing
+
+When testing or validating authenticated features, use the development authentication system to bypass manual login flows:
+
+```bash
+# Generate session for browser testing
+pnpm dev:login --persona=DPO
+
+# Get session token for API testing
+pnpm dev:login --persona=DPO --format=token
+
+# Use in Playwright E2E tests
+import { setAuthCookie } from './__tests__/e2e/helpers/dev-auth'
+await setAuthCookie(page, 'DPO')
+```
+
+**Available personas**: DPO, PRIVACY_OFFICER, BUSINESS_OWNER, IT_ADMIN, SECURITY_TEAM, LEGAL_TEAM
+
+**Use cases**:
+
+- Browser testing during development (copy cookie to DevTools)
+- Playwright E2E tests (use `setAuthCookie` helper)
+- Manual API testing with Postman/curl
+- Claude Code validation of protected features (screenshots)
+
+**Documentation**: See [docs/development-authentication.md](./docs/development-authentication.md) for complete usage guide.
+
 ### Git Workflow
 
 - Branch naming: `feature/`, `bugfix/`, `refactor/`
@@ -212,230 +239,6 @@ compilothq/
 ### Linting issues, first try/advice this:
 
 - Press Cmd+Shift+P → type "TypeScript: Restart TS Server" → Enter
-
-## Design System
-
-Compilo has a minimal, cohesive design aesthetic enforced through a comprehensive design system.
-
-### Core Principles
-
-1. **Minimal Aesthetic**: Navy/cream color palette inspired by franksblog.nl
-2. **OKLCH Color Format**: Perceptual color space for superior dark mode and gradients
-3. **8px Grid System**: Spacing foundation (8, 16, 24, 32, 48, 64, 96px)
-4. **shadcn/ui Foundation**: All components extend shadcn/ui base components
-5. **WCAG 2.1 AA Compliance**: Mandatory accessibility standard
-
-### Design System Location
-
-**Source of Truth**: `docs/DESIGN_SYSTEM.md` (600+ line comprehensive document)
-
-This single file contains:
-
-- Complete color system (OKLCH tokens with light/dark mode mappings)
-- Typography system (Ubuntu/Raleway fonts, type scale)
-- Spacing system (8px grid with Tailwind class mappings)
-- Component specifications (shadcn/ui patterns)
-- Accessibility requirements (WCAG 2.1 AA)
-- Implementation guide with examples
-
-**Token Reference**: `docs/design-tokens/*.json` (documentation only, not implementation)
-
-- `color.json` - Navy/cream palette documentation
-- `typography.json` - Font families and type scale
-- `spacing.json` - 8px grid system reference
-- `effects.json` - Border radius, shadows, transitions
-
-**Implementation**: `apps/web/src/app/globals.css`
-
-- CSS variables in OKLCH format
-- Light and dark mode mappings
-- Tailwind v4 @theme inline declarations
-
-### Design System Rules (NON-NEGOTIABLE)
-
-**Colors**:
-
-- ✅ ONLY use semantic tokens: `bg-primary`, `text-foreground`, `border-border`
-- ❌ NEVER hardcode colors: `bg-[#09192B]`, `bg-[oklch(0.205_0_0)]`, `style={{ color: '#09192B' }}`
-
-**Spacing**:
-
-- ✅ ONLY use Tailwind scale: `p-2`, `p-4`, `p-6`, `p-8`, `p-12`, `p-16`, `p-24` (8px increments preferred)
-- ❌ NEVER arbitrary values: `p-[13px]`, `gap-[22px]`
-
-**Typography**:
-
-- ✅ ONLY use type scale: `text-sm`, `text-base`, `text-xl`, `text-2xl`, `text-3xl`
-- ❌ NEVER arbitrary sizes: `text-[17px]`, `text-[28px]`
-
-**Components**:
-
-- ✅ EXTEND shadcn/ui components from `@compilothq/ui` or `@/components/ui/*`
-- ❌ NEVER rebuild components from scratch when shadcn/ui has a base
-
-**Accessibility**:
-
-- ✅ Semantic HTML (button not div with onClick)
-- ✅ Keyboard navigation (Tab, Enter, Escape)
-- ✅ Focus indicators (`focus-visible:ring-2 focus-visible:ring-ring`)
-- ✅ ARIA labels on icon-only buttons
-- ✅ Color contrast minimum 4.5:1
-
-### Design System Workflow
-
-**When building any UI component:**
-
-1. **Read the design system**: `docs/DESIGN_SYSTEM.md` (ALWAYS before implementing)
-2. **Check shadcn/ui**: Does a base component exist? Use it.
-3. **Apply design tokens**: Only semantic tokens, never hardcoded values
-4. **Validate accessibility**: WCAG 2.1 AA compliance required
-5. **Use design agents**: `@ui-builder` for building, `@design-guardian` for validation
-
-### Design System Agents
-
-**@ui-builder** (`.claude/agents/ui-builder.md`):
-
-- **Purpose**: Proactively builds components correctly from the start
-- **When to use**: Creating new UI components or implementing visual features
-- **Process**:
-  1. Reads `docs/DESIGN_SYSTEM.md`
-  2. Checks for shadcn/ui base component
-  3. Implements with design tokens exclusively
-  4. Ensures WCAG 2.1 AA compliance
-  5. Provides complete documentation
-
-**@design-guardian** (`.claude/agents/design-guardian.md`):
-
-- **Purpose**: Reactively validates design system compliance
-- **When to use**: Code reviews, pre-commit validation, codebase audits
-- **Process**:
-  1. Scans for violations (hardcoded colors, arbitrary spacing, accessibility issues)
-  2. Generates detailed violation reports with specific fixes
-  3. Categorizes by severity (Critical/High/Medium/Low)
-  4. Offers automated remediation
-  5. Creates pre-commit hooks to prevent future violations
-
-### Design System Skill
-
-**compilo-design** (`.claude/skills/compilo-design/SKILL.md`):
-
-- Lightweight enforcement skill inherited by all UI-related agents
-- Contains quick reference for common patterns
-- References `docs/DESIGN_SYSTEM.md` for detailed specifications
-- Provides violation remediation templates
-
-### Integration with Agent Patterns
-
-**For UI-Heavy Features:**
-
-1. **implementer** coordinates full-stack work
-2. **@ui-builder** handles UI component creation using design system
-3. **@design-guardian** validates compliance before merge
-
-**For Complex Components:**
-
-1. **@ui-builder** reads design system and builds component correctly
-2. Component automatically follows design tokens, accessibility standards
-3. **@design-guardian** audits as part of PR review
-
-**For Design Violations:**
-
-1. **@design-guardian** detects violations (manual audit or pre-commit)
-2. Provides specific remediation (before/after code examples)
-3. Offers to auto-fix or educate developer
-
-### Quick Reference
-
-**Most Common Tokens**:
-
-```tsx
-// Colors
-<div className="bg-background text-foreground">           // Page background
-<Card className="bg-card text-card-foreground">           // Card background
-<Button className="bg-primary text-primary-foreground">   // Primary action
-<p className="text-muted-foreground">                     // Secondary text
-
-// Spacing (8px grid: p-2=8px, p-4=16px, p-6=24px, p-8=32px)
-<div className="p-6">                                      // 24px padding (default card)
-<div className="space-y-4">                                // 16px vertical spacing
-<div className="gap-6">                                    // 24px grid gap
-
-// Typography
-<h1 className="text-3xl font-bold">                       // 30px heading
-<p className="text-base leading-relaxed">                  // 16px body text
-<span className="text-sm text-muted-foreground">          // 14px metadata
-
-// Accessibility
-<button className="focus-visible:ring-2 focus-visible:ring-ring" aria-label="Close">
-  <XIcon />
-</button>
-```
-
-### Validation Scripts
-
-Pre-commit hooks automatically check for design system violations:
-
-- Hardcoded colors (hex, rgb, hsl, oklch values)
-- Arbitrary spacing values
-- Non-semantic interactive elements
-
-Run manual validation:
-
-```bash
-pnpm run validate:design  # Check all files for violations
-```
-
-### Agent Usage Guidelines
-
-This project uses specialized Claude Code agents for specific types of work. Understanding when to use each agent ensures optimal code quality and adherence to architectural boundaries.
-
-#### When to Use api-engineer
-
-The **api-engineer** agent is a specialist for complex API architecture and backend logic. Invoke this agent for:
-
-- **Complex tRPC router architecture** - Designing hierarchical router structures, implementing advanced patterns, organizing large API surfaces
-- **Advanced authentication/authorization** - Creating reusable auth middleware, role-based access control, session management, security hardening
-- **Multi-service business logic** - Orchestrating multiple services, implementing complex workflows, transaction coordination
-- **API performance optimization** - Request batching, caching strategies, query optimization at the API layer
-- **Rate limiting & security** - Implementing rate limiters, request throttling, API security best practices
-- **Complex Server Actions** - Server Actions involving multiple data operations, complex validation, or business rules
-- **API refactoring** - Restructuring routers, improving API patterns, architectural changes to the API layer
-
-#### When to Use implementer (Default)
-
-The **implementer** agent is your default full-stack generalist. Use for:
-
-- **Simple CRUD endpoints** - Standard create/read/update/delete operations following existing patterns
-- **Standard API features** - Straightforward API implementations that match established conventions
-- **Full-stack features** - Features spanning database + API + UI layers that need coordinated changes
-- **Rapid prototyping** - Building MVPs or prototypes quickly across multiple layers
-- **Low API complexity** - Features where the API layer is straightforward and not the main complexity
-
-#### Agent Coordination Pattern
-
-**For Complex Features:**
-
-1. **database-engineer** creates Prisma schema, migrations, and DAL functions
-2. **api-engineer** builds tRPC routers and business logic using DAL functions
-3. **ui-designer** creates UI components consuming the API
-
-**For Simple Features:**
-
-1. **implementer** handles all layers following existing patterns
-2. Creates DAL functions for simple CRUD operations
-3. Implements tRPC procedures and UI components
-
-**Critical Rule:** api-engineer MUST use DAL functions from database-engineer. Never write direct Prisma queries in API code.
-
-#### Choosing the Right Agent
-
-Ask yourself:
-
-- **Is the API layer complex or novel?** → api-engineer
-- **Is this following an established pattern?** → implementer
-- **Does it span multiple architectural layers?** → implementer
-- **Is the challenge primarily in the API design?** → api-engineer
-- **Is it a simple CRUD feature?** → implementer
 
 ## Instructions for Claude
 

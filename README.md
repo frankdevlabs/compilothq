@@ -202,6 +202,34 @@ pnpm db:generate
 pnpm db:migrate
 ```
 
+#### Development Authentication
+
+Quickly authenticate as different user personas for testing:
+
+```bash
+# Generate session for DPO persona
+pnpm dev:login --persona=DPO
+
+# Other available personas
+pnpm dev:login --persona=PRIVACY_OFFICER
+pnpm dev:login --persona=BUSINESS_OWNER
+pnpm dev:login --persona=IT_ADMIN
+pnpm dev:login --persona=SECURITY_TEAM
+pnpm dev:login --persona=LEGAL_TEAM
+
+# See all options
+pnpm dev:login --help
+```
+
+**Use cases:**
+
+- Browser testing (copy cookie to DevTools)
+- Playwright E2E tests (`setAuthCookie(page, 'DPO')`)
+- Manual API testing (Postman/curl)
+- Claude Code validation (screenshots)
+
+See [Development Authentication Guide](./docs/development-authentication.md) for complete usage details.
+
 #### Working with Packages
 
 ```bash
@@ -635,6 +663,7 @@ pnpm --filter @compilothq/web start
 ## Documentation
 
 - **[Authentication Guide](./docs/authentication.md)** - Complete authentication system documentation
+- **[Development Authentication Guide](./docs/development-authentication.md)** - Quick authentication for development and testing
 - **[Testing Guide](./docs/testing-guide.md)** - Testing patterns, utilities, and best practices
 
 ## License
