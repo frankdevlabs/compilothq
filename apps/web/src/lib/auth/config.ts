@@ -13,7 +13,8 @@ import { sendMagicLink } from '../email/send'
  * Uses database sessions via Prisma adapter for better security and audit trail
  */
 export const authConfig = {
-  adapter: PrismaAdapter(prisma),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(prisma as any),
   providers: [
     // Email Magic Link Provider (Primary)
     Resend({
@@ -40,18 +41,8 @@ export const authConfig = {
     updateAge: 24 * 60 * 60, // 24 hours
   },
 
-  // Cookie configuration for security
-  cookies: {
-    sessionToken: {
-      name: '__Secure-next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env['NODE_ENV'] === 'production',
-      },
-    },
-  },
+  // Cookie configuration handled by NextAuth defaults
+  // Uses 'authjs.session-token' in dev, '__Secure-authjs.session-token' in prod
 
   pages: {
     signIn: '/login',
@@ -64,7 +55,7 @@ export const authConfig = {
      * signIn callback
      * Controls whether a user is allowed to sign in
      */
-    async signIn() {
+    signIn() {
       // For now, allow all sign-ins
       // Future: Add additional validation here (e.g., domain restrictions)
       return true
@@ -74,30 +65,29 @@ export const authConfig = {
      * session callback
      * Adds organizationId and primaryPersona to session
      * This data is available to all authenticated requests
+     * Note: organizationId may be null for users who haven't completed onboarding
      */
     async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id
+      session.user.id = user.id
 
-        // Fetch full user data with organization
-        const fullUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          include: {
-            organization: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-              },
+      // Fetch full user data with organization
+      const fullUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+          organization: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
             },
           },
-        })
+        },
+      })
 
-        if (fullUser) {
-          session.user.organizationId = fullUser.organizationId
-          session.user.primaryPersona = fullUser.primaryPersona
-          session.user.organization = fullUser.organization
-        }
+      if (fullUser) {
+        session.user.organizationId = fullUser.organizationId ?? null
+        session.user.primaryPersona = fullUser.primaryPersona
+        session.user.organization = fullUser.organization ?? null
       }
 
       return session

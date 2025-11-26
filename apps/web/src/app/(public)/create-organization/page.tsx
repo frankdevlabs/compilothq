@@ -9,15 +9,15 @@ import { trpc } from '@/lib/trpc/client'
 
 export default function CreateOrganizationPage() {
   const router = useRouter()
-  const { data: session, status, update } = useSession()
+  const { data: session, status } = useSession()
   const [organizationName, setOrganizationName] = useState('')
   const [error, setError] = useState('')
 
   const createOrganization = trpc.organization.create.useMutation({
-    onSuccess: async () => {
-      // Update the session with the new organization
-      await update()
-      router.push('/dashboard')
+    onSuccess: () => {
+      // Force full page reload to ensure fresh session with new organization
+      // window.location.href is more reliable than router.push + session update
+      window.location.href = '/dashboard'
     },
     onError: (error) => {
       setError(error.message)
@@ -26,7 +26,7 @@ export default function CreateOrganizationPage() {
 
   // Redirect if user already has an organization
   useEffect(() => {
-    if (status === 'authenticated' && session?.user.organizationId) {
+    if (status === 'authenticated' && session.user.organizationId) {
       router.push('/dashboard')
     }
   }, [status, session, router])
@@ -100,9 +100,7 @@ export default function CreateOrganizationPage() {
           </div>
 
           {error && (
-            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-              {error}
-            </div>
+            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">{error}</div>
           )}
 
           <Button
