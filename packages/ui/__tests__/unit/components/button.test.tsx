@@ -64,7 +64,7 @@ describe('Button Component - Unit Tests', () => {
 
       // Assert - Large size
       button = screen.getByRole('button')
-      expect(button).toHaveClass('h-10')
+      expect(button).toHaveClass('h-12')
     })
   })
 
