@@ -1,10 +1,10 @@
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@compilothq/ui'
-import { Users } from 'lucide-react'
+'use client'
 
-// TODO: Create these components
-// import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog'
-// import { PendingInvitationsList } from '@/components/team/PendingInvitationsList'
-// import { TeamMembersList } from '@/components/team/TeamMembersList'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@compilothq/ui'
+
+import { InviteTeamMemberDialog } from '@/components/team/InviteTeamMemberDialog'
+import { PendingInvitationsList } from '@/components/team/PendingInvitationsList'
+import { TeamMembersList } from '@/components/team/TeamMembersList'
 
 /**
  * Team Settings Page
@@ -38,11 +38,7 @@ export default function TeamSettingsPage() {
                 Send invitations to add new members to your organization
               </CardDescription>
             </div>
-            {/* TODO: Add InviteTeamMemberDialog component */}
-            <Button disabled>
-              <Users className="mr-2 h-4 w-4" />
-              Invite Member (Coming Soon)
-            </Button>
+            <InviteTeamMemberDialog />
           </div>
         </CardHeader>
       </Card>
@@ -56,8 +52,7 @@ export default function TeamSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* TODO: Add PendingInvitationsList component */}
-          <p className="text-sm text-muted-foreground">No pending invitations</p>
+          <PendingInvitationsList />
         </CardContent>
       </Card>
 
@@ -68,8 +63,7 @@ export default function TeamSettingsPage() {
           <CardDescription>All members currently in your organization</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* TODO: Add TeamMembersList component */}
-          <p className="text-sm text-muted-foreground">Team members list coming soon</p>
+          <TeamMembersList />
         </CardContent>
       </Card>
     </div>
