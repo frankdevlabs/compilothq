@@ -28,11 +28,8 @@ export function EmailForm({
       return
     }
 
-    try {
-      await onSubmit(email)
-    } catch {
-      setError('Failed to send magic link. Please try again.')
-    }
+    // Parent component handles errors via isLoading state
+    await onSubmit(email)
   }
 
   return (
@@ -47,12 +44,23 @@ export function EmailForm({
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
           required
+          aria-invalid={!!error}
+          aria-describedby={error ? 'email-error' : undefined}
         />
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && (
+          <p id="email-error" role="alert" className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
       </div>
 
-      <Button className="w-full" type="submit" disabled={isLoading || !email}>
-        <Mail className="mr-2 h-4 w-4" />
+      <Button
+        size="lg"
+        className="w-full font-semibold text-base"
+        type="submit"
+        disabled={isLoading || !email}
+      >
+        <Mail className="size-5" />
         {isLoading ? 'Sending...' : buttonText}
       </Button>
     </form>

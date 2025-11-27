@@ -3,26 +3,65 @@ import { prisma } from '@compilothq/database'
 import { config } from '@compilothq/validation'
 import type { NextAuthConfig } from 'next-auth'
 import NextAuth from 'next-auth'
+import type { Adapter, AdapterUser } from 'next-auth/adapters'
 import Google from 'next-auth/providers/google'
 import Resend from 'next-auth/providers/resend'
 
 import { sendMagicLink } from '../email/send'
 
 /**
+ * Custom Prisma Adapter that ensures 'name' field is always provided
+ * For email magic links: generates name from email prefix (e.g., "john.doe" from "john.doe@example.com")
+ * For OAuth: uses the name from the provider profile
+ */
+function createCustomPrismaAdapter(p: typeof prisma): Adapter {
+  const baseAdapter = PrismaAdapter(p)
+
+  return {
+    ...baseAdapter,
+    createUser: async (data: Omit<AdapterUser, 'id'>) => {
+      // Generate name from email if not provided (email magic link flow)
+      // Keep OAuth-provided names unchanged
+      const name = data.name ?? data.email.split('@')[0]
+
+      const user = await p.user.create({
+        data: {
+          email: data.email,
+          name,
+          emailVerified: data.emailVerified ?? null,
+          image: data.image ?? null,
+        },
+      })
+
+      return user as AdapterUser
+    },
+  }
+}
+
+/**
  * NextAuth.js v5 Configuration
  * Uses database sessions via Prisma adapter for better security and audit trail
  */
 export const authConfig = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter: PrismaAdapter(prisma as any),
+  adapter: createCustomPrismaAdapter(prisma),
   providers: [
     // Email Magic Link Provider (Primary)
     Resend({
       apiKey: config.auth.email.resendApiKey,
-      from: 'Compilo <auth@compilo.app>',
+      from: 'Compilo <auth@mrfrank.dev>',
       sendVerificationRequest: async ({ identifier: email, url }) => {
-        // Use custom email template via our email service
-        await sendMagicLink(email, url)
+        console.log('[Auth] sendVerificationRequest called for:', email)
+        console.log('[Auth] Magic link URL:', url)
+        console.log('[Auth] API key present:', !!config.auth.email.resendApiKey)
+
+        try {
+          // Use custom email template via our email service
+          await sendMagicLink(email, url)
+          console.log('[Auth] Magic link sent successfully')
+        } catch (error) {
+          console.error('[Auth] Failed to send magic link:', error)
+          throw error // Re-throw to propagate to signIn()
+        }
       },
     }),
 

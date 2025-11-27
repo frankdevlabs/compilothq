@@ -14,15 +14,41 @@ export default function SignupPage() {
   const callbackUrl = searchParams.get('callbackUrl') ?? '/create-organization'
   const [emailSent, setEmailSent] = useState(false)
   const [sentEmail, setSentEmail] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleEmailSubmit = async (email: string) => {
-    await signIn('resend', {
-      email,
-      callbackUrl,
-      redirect: false,
-    })
-    setSentEmail(email)
-    setEmailSent(true)
+    console.log('[Signup] Starting email sign-up flow for:', email)
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      console.log('[Signup] Calling signIn with:', { email, callbackUrl, redirect: false })
+      const result = await signIn('resend', {
+        email,
+        callbackUrl,
+        redirect: false,
+      })
+
+      console.log('[Signup] signIn result:', result)
+
+      // Check the result for errors
+      if (result.error) {
+        console.error('[Signup] Sign in error:', result.error)
+        setError('Failed to send magic link. Please try again.')
+        return
+      }
+
+      // Only show success if no error
+      console.log('[Signup] Sign in successful, showing confirmation')
+      setSentEmail(email)
+      setEmailSent(true)
+    } catch (err) {
+      console.error('[Signup] Unexpected error during sign in:', err)
+      setError('An unexpected error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (emailSent) {
@@ -61,7 +87,17 @@ export default function SignupPage() {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        <EmailForm onSubmit={handleEmailSubmit} buttonText="Continue with Email" />
+        <EmailForm
+          onSubmit={handleEmailSubmit}
+          buttonText="Continue with Email"
+          isLoading={isLoading}
+        />
+
+        {error && (
+          <p className="text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        )}
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

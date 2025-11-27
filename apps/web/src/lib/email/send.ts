@@ -12,18 +12,41 @@ const resend = new Resend(config.auth.email.resendApiKey)
  * @param magicLink - The magic link URL
  */
 export async function sendMagicLink(email: string, magicLink: string) {
+  console.log('[Email] Preparing to send magic link')
+  console.log('[Email] Recipient:', email)
+  console.log('[Email] Resend API key present:', !!config.auth.email.resendApiKey)
+
   try {
-    await resend.emails.send({
-      from: 'Compilo <auth@compilo.app>',
+    const result = await resend.emails.send({
+      from: 'Compilo <auth@mrfrank.dev>',
       to: email,
       subject: 'Sign in to Compilo',
       react: MagicLinkEmail({ email, magicLink }),
     })
 
-    console.log(`Magic link email sent to ${email}`)
+    console.log('[Email] Resend response:', result)
+
+    // Check for Resend API errors
+    if (result.error) {
+      console.error('[Email] Resend API rejected email:', result.error)
+
+      if (result.error.statusCode === 403) {
+        console.error(
+          '[Email] Domain not authorized. Please verify your domain in Resend dashboard:',
+          'https://resend.com/domains'
+        )
+        throw new Error(
+          'Email domain not verified. Please verify compilo.app in your Resend dashboard.'
+        )
+      }
+
+      throw new Error(`Resend API error: ${result.error.message}`)
+    }
+
+    console.log(`[Email] Magic link email sent successfully to ${email}`)
   } catch (error) {
-    console.error('Error sending magic link email:', error)
-    throw new Error('Failed to send magic link email')
+    console.error('[Email] Failed to send magic link:', error)
+    throw error
   }
 }
 
@@ -40,7 +63,7 @@ export async function sendInvitation(invitation: {
 }) {
   try {
     await resend.emails.send({
-      from: 'Compilo <invites@compilo.app>',
+      from: 'Compilo <invites@mrfrank.dev>',
       to: invitation.email,
       subject: `Join ${invitation.organizationName} on Compilo`,
       react: InvitationEmail({
