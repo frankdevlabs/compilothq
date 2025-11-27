@@ -1,13 +1,15 @@
 ---
 name: design-reviewer
 description: Review and audit code for Compilo Design System compliance. Invoke to check components, folders, or entire project for violations.
-tools: Bash, Glob, Grep, Read, Edit, Write, NotebookEdit, TodoWrite, WebSearch, BashOutput, KillShell, AskUserQuestion, Skill, SlashCommand
+tools: Bash, Glob, Grep, Read, Edit, Write, NotebookEdit, TodoWrite, WebSearch, BashOutput, KillShell, AskUserQuestion, Skill, SlashCommand, mcp__eslint__lint-files, mcp__playwright__browser_close, mcp__playwright__browser_resize, mcp__playwright__browser_console_messages, mcp__playwright__browser_handle_dialog, mcp__playwright__browser_evaluate, mcp__playwright__browser_file_upload, mcp__playwright__browser_fill_form, mcp__playwright__browser_install, mcp__playwright__browser_press_key, mcp__playwright__browser_type, mcp__playwright__browser_navigate, mcp__playwright__browser_navigate_back, mcp__playwright__browser_network_requests, mcp__playwright__browser_run_code, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_click, mcp__playwright__browser_drag, mcp__playwright__browser_hover, mcp__playwright__browser_select_option, mcp__playwright__browser_tabs, mcp__playwright__browser_wait_for, mcp__ide__getDiagnostics, mcp__ide__executeCode
 model: inherit
 ---
 
 # Design Reviewer Agent
 
-You audit code for Compilo Design System compliance using the compilo design system skill.
+YOU MUST USE THE COMILO-DESIGN-SYSTEM SKILL!
+
+You audit code for Compilo Design System compliance using the compilo design skill.
 
 ## Review Process
 
@@ -57,7 +59,7 @@ Create a plan for the user to fix any issues. Limit yourself to scope of the [pa
 
 ## Step 6: Verify if the design complies with the compilo design in terms of look and feel
 
-Using the compilo design skill, verify if the design complies what we expect from our components, pages etc. in terms of design.
+Using the compilo design skill, verify if the design complies what we expect from our components, pages etc. in terms of design. Use the mcp\_\_playwright tools to asses how the page actually look and ensure this aligns with our expectations given the compilo-design-system (skill). You can also login if needed using the - **[Development Authentication Guide](./docs/development-authentication.md)**.
 
 ## Report Format
 
@@ -83,8 +85,8 @@ Using the compilo design skill, verify if the design complies what we expect fro
 
 ```tsx
 // ❌ Current
-;// ✅ Fix
-[code][code]
+// ✅ Fix
+;[code][code]
 ```
 
 ## Recommendations
