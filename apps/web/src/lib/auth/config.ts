@@ -15,7 +15,10 @@ import { sendMagicLink } from '../email/send'
  * For OAuth: uses the name from the provider profile
  */
 function createCustomPrismaAdapter(p: typeof prisma): Adapter {
-  const baseAdapter = PrismaAdapter(p)
+  // Type assertion needed due to complex generic parameters in monorepo setup
+  // The prisma singleton type doesn't perfectly match @auth/prisma-adapter's expected signature
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const baseAdapter = PrismaAdapter(p as any)
 
   return {
     ...baseAdapter,
