@@ -1,4 +1,8 @@
-import { PrismaClient } from '../generated/client'
+import 'dotenv/config'
+
+import { PrismaPg } from '@prisma/adapter-pg'
+
+import { PrismaClient } from '../generated/client/client'
 import { seedCountries } from './seeds/countries'
 import { seedDataNatures } from './seeds/dataNatures'
 import { seedDevUsers } from './seeds/devUsers'
@@ -8,7 +12,11 @@ import { seedRecipientCategories } from './seeds/recipientCategories'
 import { seedTransferMechanisms } from './seeds/transferMechanisms'
 import { seedUsers } from './seeds/users'
 
-const prisma = new PrismaClient()
+// Seed scripts need their own client instance with driver adapter
+const adapter = new PrismaPg({
+  connectionString: process.env['DATABASE_URL'],
+})
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('Starting database seeding...\n')

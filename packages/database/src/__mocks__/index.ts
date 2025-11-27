@@ -30,4 +30,4 @@ beforeEach(() => {
 })
 
 // Re-export all types, enums, and utilities from the actual module
-export * from '../../generated/client'
+export * from '../../generated/client/client'

@@ -1,4 +1,4 @@
-import type { PrismaClient } from '../../generated/client'
+import type { PrismaClient } from '../../generated/client/client'
 
 /**
  * Seed organizations for development and testing

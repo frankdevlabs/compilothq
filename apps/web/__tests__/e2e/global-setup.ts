@@ -1,6 +1,9 @@
+import 'dotenv/config'
+
 import { PrismaClient } from '@compilothq/database'
 import { seedDevUsers } from '@compilothq/database/prisma/seeds/devUsers'
 import { FullConfig } from '@playwright/test'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { exec } from 'child_process'
 import path from 'path'
 import { promisify } from 'util'
@@ -96,13 +99,9 @@ async function globalSetup(_config: FullConfig) {
     console.log('🔧 Seeding development users for E2E tests...')
 
     try {
-      const prisma = new PrismaClient({
-        datasources: {
-          db: {
-            url: testDbUrl,
-          },
-        },
-      })
+      // Prisma 7 requires driver adapter for PrismaClient initialization
+      const adapter = new PrismaPg({ connectionString: testDbUrl })
+      const prisma = new PrismaClient({ adapter })
 
       await seedDevUsers(prisma)
       await prisma.$disconnect()

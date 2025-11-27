@@ -2,6 +2,7 @@
   "name": "@compilothq/database",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
   "exports": {
@@ -36,10 +37,14 @@
   },
   "dependencies": {
     "@compilothq/validation": "workspace:*",
-    "@prisma/client": "catalog:"
+    "@prisma/adapter-pg": "catalog:",
+    "@prisma/client": "catalog:",
+    "@prisma/client-runtime-utils": "catalog:",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.10",
     "dotenv": "^17.2.3",
     "prisma": "catalog:",
     "tsx": "^4.20.6",

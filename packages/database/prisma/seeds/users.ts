@@ -1,4 +1,4 @@
-import { type PrismaClient, UserPersona } from '../../generated/client'
+import { type PrismaClient, UserPersona } from '../../generated/client/client'
 
 /**
  * Seed users for development and testing

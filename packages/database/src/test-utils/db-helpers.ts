@@ -1,3 +1,4 @@
+import { PrismaPg } from '@prisma/adapter-pg'
 import { execSync } from 'child_process'
 import path from 'path'
 
@@ -7,20 +8,19 @@ import { PrismaClient } from '../index'
  * Test database client instance
  * This should use the test DATABASE_URL (port 5433)
  */
-let testPrismaClient: PrismaClient | null = null
+let testPrismaClient: InstanceType<typeof PrismaClient> | null = null
 
 /**
  * Get the test database client instance
  * Uses DATABASE_URL from environment (should be test database on port 5433)
  */
-export function getTestDatabaseClient(): PrismaClient {
-  testPrismaClient ??= new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env['DATABASE_URL'],
-      },
-    },
-  })
+export function getTestDatabaseClient(): InstanceType<typeof PrismaClient> {
+  if (!testPrismaClient) {
+    const adapter = new PrismaPg({
+      connectionString: process.env['DATABASE_URL'],
+    })
+    testPrismaClient = new PrismaClient({ adapter })
+  }
   return testPrismaClient
 }
 

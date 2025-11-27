@@ -4,12 +4,18 @@
     "composite": true,
     "outDir": "./dist",
     "skipLibCheck": true,
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    // Override strict options incompatible with CommonJS + Prisma
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "target": "ES2022",
     "verbatimModuleSyntax": false,
-    "exactOptionalPropertyTypes": false // Prisma types don't support this yet
+    "exactOptionalPropertyTypes": false
   },
-  "include": ["src/**/*", "prisma/seed.ts", "prisma/seeds/**/*"],
+  "include": [
+    "src/**/*",
+    "prisma/seed.ts",
+    "prisma/seeds/**/*",
+    "prisma.config.ts",
+    "generated/**/*"
+  ],
   "exclude": ["node_modules", "dist", "prisma/migrations", "__tests__"]
 }
