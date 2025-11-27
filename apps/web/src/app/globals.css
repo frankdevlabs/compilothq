@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Tailwind v4: Scan source files for utility classes */
+@source "../../**/*.{ts,tsx}";
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================
@@ -161,11 +165,14 @@
   /* So pt-6 = 6 * 0.25rem = 1.5rem = 24px (3 grid units) */
   --spacing: 0.25rem;
 
-  /* Border Radius - 4px default (minimal aesthetic) */
-  --radius-sm: 2px;
-  --radius: 4px;        /* Default border radius */
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  /* Border Radius - Refined Values
+   * Matches design token definitions for subtle visual hierarchy
+   * sm: 6px, md: 10px, lg: 12px, xl: 14px
+   */
+  --radius-sm: 6px;
+  --radius: 10px;        /* Default border radius */
+  --radius-md: 10px;
+  --radius-lg: 12px;
   --radius-full: 9999px;
 
   /* Shadows - Minimal values following franksblog.nl */
@@ -199,7 +206,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: 14px;
 }
 
 /* ============================================
@@ -249,19 +256,5 @@ h1, h2, h3, h4, h5, h6 {
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-/* Temporary fix: Explicitly define padding utilities that aren't being generated */
-@layer utilities {
-  .pt-6 {
-    padding-top: 1.5rem; /* 24px */
-  }
-  .pb-6 {
-    padding-bottom: 1.5rem; /* 24px */
-  }
-  .py-6 {
-    padding-top: 1.5rem; /* 24px */
-    padding-bottom: 1.5rem; /* 24px */
   }
 }

@@ -14,10 +14,10 @@ export default function LandingPage() {
           makes compliance scalable.
         </p>
         <div className="flex gap-4 justify-center flex-wrap">
-          <Button size="lg" variant="gold" className="h-12 px-8 !flex" asChild>
+          <Button size="lg" variant="gold" asChild>
             <Link href="/signup">Get Started</Link>
           </Button>
-          <Button size="lg" variant="outline" className="h-12 px-8 !flex" asChild>
+          <Button size="lg" variant="outline" asChild>
             <Link href="/features">Learn More</Link>
           </Button>
         </div>
