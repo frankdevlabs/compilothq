@@ -4,7 +4,29 @@ import { Resend } from 'resend'
 import { InvitationEmail } from '@/emails/InvitationEmail'
 import { MagicLinkEmail } from '@/emails/MagicLinkEmail'
 
-const resend = new Resend(config.auth.email.resendApiKey)
+/**
+ * Lazy-initialized Resend client (singleton pattern)
+ * This prevents instantiation during Next.js static generation where env vars may not be available
+ */
+let resendClient: Resend | null = null
+
+/**
+ * Get or create the Resend client instance
+ * Lazily initializes the client only when actually sending emails (runtime)
+ * This allows the module to be imported during build without requiring RESEND_API_KEY
+ */
+function getResendClient(): Resend {
+  if (!resendClient) {
+    if (!config.auth.email.resendApiKey) {
+      throw new Error(
+        'RESEND_API_KEY is not configured. Email functionality requires a Resend API key.\n' +
+          'Get one at https://resend.com/api-keys and add it to your .env file.'
+      )
+    }
+    resendClient = new Resend(config.auth.email.resendApiKey)
+  }
+  return resendClient
+}
 
 /**
  * Send a magic link email for passwordless authentication
@@ -17,6 +39,7 @@ export async function sendMagicLink(email: string, magicLink: string) {
   console.log('[Email] Resend API key present:', !!config.auth.email.resendApiKey)
 
   try {
+    const resend = getResendClient()
     const result = await resend.emails.send({
       from: 'Compilo <auth@mrfrank.dev>',
       to: email,
@@ -62,6 +85,7 @@ export async function sendInvitation(invitation: {
   invitedPersona: string
 }) {
   try {
+    const resend = getResendClient()
     await resend.emails.send({
       from: 'Compilo <invites@mrfrank.dev>',
       to: invitation.email,
