@@ -121,6 +121,8 @@ jobs:
       NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
       NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
       NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+      # Skip env validation during build (Next.js static gen workers don't inherit env vars)
+      SKIP_ENV_VALIDATION: true
       # Temporary: Allow coverage reporting without failing CI while we improve coverage
       # Remove this when ready to enforce 80% coverage thresholds (see vitest.config.ts)
       CI_SKIP_COVERAGE_THRESHOLD: true
@@ -200,6 +202,8 @@ jobs:
       NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
       NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
       NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+      # Skip env validation during build (Next.js static gen workers don't inherit env vars)
+      SKIP_ENV_VALIDATION: true
 
     steps:
       - name: Checkout code
@@ -325,6 +329,8 @@ jobs:
       NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
       NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
       NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+      # Skip env validation during build (Next.js static gen workers don't inherit env vars)
+      SKIP_ENV_VALIDATION: true
 
     steps:
       - name: Checkout code

@@ -26,24 +26,53 @@ const envSchema = z.object({
 })
 
 /**
- * Parse and validate environment variables
- * In test mode, we defer validation to allow test setup to load .env.test first
+ * Skip validation during builds (Next.js static generation workers don't inherit env vars)
+ * This is a standard pattern used by T3 Stack and other Next.js apps
  */
-const parsed = envSchema.safeParse(process.env)
+const skipValidation = process.env['SKIP_ENV_VALIDATION'] === 'true'
 
-if (!parsed.success) {
-  // In test mode, provide a more helpful error message
-  if (process.env['NODE_ENV'] === 'test') {
-    console.error(
-      '\n⚠️  Environment variables not loaded yet. This usually means test setup has not run.\n' +
-        'Ensure your test file imports from this package AFTER setup files have loaded .env.test\n'
-    )
+type EnvType = z.infer<typeof envSchema>
+
+let env: EnvType
+
+if (skipValidation) {
+  // Provide placeholder values during build - these are never used at runtime
+  env = {
+    DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
+    NEXTAUTH_URL: 'http://localhost:3000',
+    NEXTAUTH_SECRET: 'build-time-placeholder-not-for-production',
+    GOOGLE_CLIENT_ID: undefined,
+    GOOGLE_CLIENT_SECRET: undefined,
+    RESEND_API_KEY: undefined,
+    NEXT_PUBLIC_APP_NAME: 'Compilo',
+    NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+    NODE_ENV: 'production',
+    NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: false,
+    NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: false,
+    NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: false,
   }
-  console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors)
-  throw new Error('Invalid environment variables')
+} else {
+  /**
+   * Parse and validate environment variables
+   * In test mode, we defer validation to allow test setup to load .env.test first
+   */
+  const parsed = envSchema.safeParse(process.env)
+
+  if (!parsed.success) {
+    // In test mode, provide a more helpful error message
+    if (process.env['NODE_ENV'] === 'test') {
+      console.error(
+        '\n⚠️  Environment variables not loaded yet. This usually means test setup has not run.\n' +
+          'Ensure your test file imports from this package AFTER setup files have loaded .env.test\n'
+      )
+    }
+    console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors)
+    throw new Error('Invalid environment variables')
+  }
+  env = parsed.data
 }
 
-export const env = parsed.data
+export { env }
 
 export const features = {
   questionnaires: env.NEXT_PUBLIC_FEATURE_QUESTIONNAIRES,
