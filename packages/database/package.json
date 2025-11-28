@@ -10,9 +10,9 @@
       "types": "./dist/src/index.d.ts",
       "import": "./dist/src/index.js"
     },
-    "./prisma/seeds/*": {
-      "types": "./prisma/seeds/*.ts",
-      "import": "./prisma/seeds/*.ts"
+    "./prisma/seeds/devUsers": {
+      "types": "./prisma/seeds/devUsers.ts",
+      "import": "./prisma/seeds/devUsers.ts"
     }
   },
   "scripts": {

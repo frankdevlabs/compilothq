@@ -1,12 +1,13 @@
 import 'dotenv/config'
 
 import { PrismaClient } from '@compilothq/database'
-import { seedDevUsers } from '@compilothq/database/prisma/seeds/devUsers'
 import { FullConfig } from '@playwright/test'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { exec } from 'child_process'
 import path from 'path'
 import { promisify } from 'util'
+
+import { seedDevUsers } from '../../../../packages/database/prisma/seeds/devUsers'
 
 const execAsync = promisify(exec)
 
