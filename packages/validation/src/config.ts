@@ -28,8 +28,17 @@ const envSchema = z.object({
 /**
  * Skip validation during builds (Next.js static generation workers don't inherit env vars)
  * This is a standard pattern used by T3 Stack and other Next.js apps
+ *
+ * We check multiple signals because worker threads don't reliably inherit all env vars:
+ * 1. SKIP_ENV_VALIDATION=true - Explicit override (local testing)
+ * 2. CI=true - CI environments (GitHub Actions, etc.)
+ * 3. Production build without NEXTAUTH_URL - Build-time context detection
  */
-const skipValidation = process.env['SKIP_ENV_VALIDATION'] === 'true'
+const skipValidation =
+  process.env['SKIP_ENV_VALIDATION'] === 'true' ||
+  process.env['CI'] === 'true' ||
+  (process.env['NODE_ENV'] === 'production' &&
+    (process.env['NEXTAUTH_URL'] === undefined || process.env['NEXTAUTH_URL'] === ''))
 
 type EnvType = z.infer<typeof envSchema>
 
