@@ -52,7 +52,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "bash -c 'for file in \"$@\"; do if echo \"$file\" | grep -qE \"apps/web/src/.*\\.(tsx|jsx)$\"; then if grep -E \"className.*#[0-9A-Fa-f]{3,6}\" \"$file\" 2>/dev/null; then echo \"❌ VIOLATION in $file: Hardcoded hex colors\"; exit 1; fi; if grep -E \"className.*\\[oklch\\(\" \"$file\" 2>/dev/null; then echo \"❌ VIOLATION in $file: Hardcoded OKLCH values\"; exit 1; fi; if grep -E \"(p|m|gap|space)(-[xy])?-\\[[0-9]+px\\]\" \"$file\" 2>/dev/null; then echo \"❌ VIOLATION in $file: Arbitrary spacing\"; exit 1; fi; fi; done' --",
-      "eslint --fix --max-warnings 0",
+      "eslint --fix --max-warnings 0 --no-warn-ignored",
       "prettier --write"
     ],
     "*.{json,md}": [
