@@ -52,10 +52,14 @@ test.describe('Authenticated User Redirects', () => {
     test('authenticated user can access homepage', async ({ page }) => {
       await setAuthCookie(page, 'DPO')
 
-      // Navigate away from / (warmup goes there) to test fresh navigation
-      await page.goto('/login')
-      await page.goto('/')
+      // Navigate directly to homepage with waitUntil to ensure page is fully loaded
+      const response = await page.goto('/', { waitUntil: 'networkidle' })
 
+      // Verify we got a successful response (not a redirect to login)
+      expect(response?.ok()).toBe(true)
+
+      // Check final URL - authenticated users should be able to access homepage
+      // The URL should end with / (homepage) or contain /dashboard (if redirected)
       await expect(page).toHaveURL(/\/$/)
     })
 
