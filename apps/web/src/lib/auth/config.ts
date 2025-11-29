@@ -10,6 +10,23 @@ import Resend from 'next-auth/providers/resend'
 import { sendMagicLink } from '../email/send'
 
 /**
+ * Explicit cookie configuration for session token
+ * Exported so dev-auth helper can import and match exactly
+ */
+export const AUTH_COOKIE_CONFIG = {
+  name:
+    process.env.NODE_ENV === 'production'
+      ? '__Secure-authjs.session-token'
+      : 'authjs.session-token',
+  options: {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+  },
+} as const
+
+/**
  * Custom Prisma Adapter that ensures 'name' field is always provided
  * For email magic links: generates name from email prefix (e.g., "john.doe" from "john.doe@example.com")
  * For OAuth: uses the name from the provider profile
@@ -83,8 +100,13 @@ export const authConfig = {
     updateAge: 24 * 60 * 60, // 24 hours
   },
 
-  // Cookie configuration handled by NextAuth defaults
-  // Uses 'authjs.session-token' in dev, '__Secure-authjs.session-token' in prod
+  // Explicit cookie configuration (imported by dev-auth helper)
+  cookies: {
+    sessionToken: {
+      name: AUTH_COOKIE_CONFIG.name,
+      options: AUTH_COOKIE_CONFIG.options,
+    },
+  },
 
   pages: {
     signIn: '/login',

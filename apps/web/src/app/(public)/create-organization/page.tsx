@@ -26,8 +26,7 @@ export default function CreateOrganizationPage() {
 
   // Redirect if user already has an organization
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (status === 'authenticated' && session?.user?.organizationId) {
+    if (status === 'authenticated' && session.user.organizationId) {
       router.push('/dashboard')
     }
   }, [status, session, router])

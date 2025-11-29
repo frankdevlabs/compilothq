@@ -105,9 +105,26 @@ async function globalSetup(_config: FullConfig) {
       const prisma = new PrismaClient({ adapter })
 
       await seedDevUsers(prisma)
-      await prisma.$disconnect()
-
       console.log('✅ Development users seeded successfully')
+
+      // Clean up stale dev sessions from previous runs
+      // This prevents session accumulation and ensures a clean slate
+      console.log('🧹 Cleaning up stale dev sessions...')
+      const deletedSessions = await prisma.session.deleteMany({
+        where: {
+          user: {
+            email: {
+              endsWith: '@dev.compilo.local',
+            },
+          },
+          expires: {
+            lt: new Date(Date.now() - 60 * 60 * 1000), // older than 1 hour
+          },
+        },
+      })
+      console.log(`✅ Cleaned up ${deletedSessions.count} stale dev sessions`)
+
+      await prisma.$disconnect()
     } catch (error) {
       console.error('❌ Failed to seed development users:', error)
       throw error

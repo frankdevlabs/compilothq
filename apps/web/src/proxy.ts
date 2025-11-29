@@ -1,4 +1,4 @@
-import { auth } from '@/lib/auth/middleware'
+import { auth } from '@/lib/auth/config'
 
 /**
  * Next.js 16 Proxy (formerly middleware)
@@ -8,17 +8,29 @@ export const proxy = auth((req) => {
   const { pathname } = req.nextUrl
   const isAuthenticated = !!req.auth
 
-  // Public routes that don't require authentication
-  const publicRoutes = ['/', '/login', '/signup', '/error', '/verify-request']
+  // Routes that require user to NOT be authenticated (redirect to dashboard if logged in)
+  const authRoutes = ['/login', '/signup']
 
-  // Check if current route is public
+  // Routes accessible to everyone regardless of auth status
+  const publicRoutes = ['/', '/error', '/verify-request']
+
+  // Check route types
+  const isAuthRoute = authRoutes.some((route) => pathname === route)
   const isPublicRoute =
     publicRoutes.some((route) => pathname === route) ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/invite/')
 
-  // If route is public, allow access
-  if (isPublicRoute) {
+  // If user is authenticated and trying to access auth pages, redirect away
+  if (isAuthenticated && isAuthRoute) {
+    const callbackUrl = req.nextUrl.searchParams.get('callbackUrl')
+    // Validate callbackUrl: must be relative path starting with /
+    const redirectTo = callbackUrl?.startsWith('/') ? callbackUrl : '/dashboard'
+    return Response.redirect(new URL(redirectTo, req.url))
+  }
+
+  // If route is public or auth route (for unauthenticated users), allow access
+  if (isPublicRoute || isAuthRoute) {
     return
   }
 

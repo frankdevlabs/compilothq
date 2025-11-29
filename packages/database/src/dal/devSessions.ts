@@ -75,16 +75,16 @@ export async function createDevSession(persona: UserPersona): Promise<{
     )
   }
 
-  // Delete any existing sessions for this user (clean slate)
-  await prisma.session.deleteMany({
-    where: { userId: user.id },
-  })
+  // Note: We intentionally DO NOT delete existing sessions here.
+  // This allows parallel test workers to create independent sessions
+  // without interfering with each other. Stale sessions are cleaned up
+  // in global-setup.ts before the test run.
 
   // Generate session token
   const sessionToken = generateSessionToken()
 
   // Create session (30-day expiration, matching NextAuth.js default)
-  const session = await prisma.session.create({
+  await prisma.session.create({
     data: {
       sessionToken,
       userId: user.id,
@@ -92,14 +92,47 @@ export async function createDevSession(persona: UserPersona): Promise<{
     },
   })
 
+  // Verify session was created and is readable
+  const verifiedSession = await prisma.session.findUnique({
+    where: { sessionToken },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          organizationId: true,
+          primaryPersona: true,
+        },
+      },
+    },
+  })
+
+  if (!verifiedSession) {
+    throw new Error(
+      `Failed to verify session creation for persona: ${persona}\n` +
+        `Session token was generated but could not be retrieved from database.`
+    )
+  }
+
+  // User is guaranteed by include, but organizationId needs validation
+  const { user: sessionUser } = verifiedSession
+
+  if (!sessionUser.organizationId) {
+    throw new Error(
+      `Session user has no organizationId for persona: ${persona}\n` +
+        `This should not happen for dev users.`
+    )
+  }
+
   return {
-    session,
+    session: verifiedSession,
     user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      organizationId: user.organizationId,
-      primaryPersona: user.primaryPersona,
+      id: sessionUser.id,
+      name: sessionUser.name,
+      email: sessionUser.email,
+      organizationId: sessionUser.organizationId,
+      primaryPersona: sessionUser.primaryPersona,
     },
     token: sessionToken,
   }
