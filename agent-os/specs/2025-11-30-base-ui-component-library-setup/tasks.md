@@ -212,37 +212,37 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** Task Group 4 (keyboard hook)
 
-- [ ] 6.0 Complete enhanced sidebar with collapsed mode
-  - [ ] 6.1 Write 4-6 focused tests for enhanced Sidebar
+- [x] 6.0 Complete enhanced sidebar with collapsed mode
+  - [x] 6.1 Write 4-6 focused tests for enhanced Sidebar
     - Test sidebar renders in expanded mode by default
     - Test collapse toggle button shows/hides labels
     - Test collapsed mode shows only icons
     - Test keyboard navigation (Arrow keys) moves between items
     - Test Enter/Space activates focused item
-  - [ ] 6.2 Add collapsed state management to `apps/web/src/components/navigation/sidebar.tsx`
+  - [x] 6.2 Add collapsed state management to `apps/web/src/components/navigation/sidebar.tsx`
     - Add `isCollapsed` state via `useState(false)`
     - Consider future context extraction (out of scope for this spec)
     - Maintain existing `expandedItems` state for collapsible sections
-  - [ ] 6.3 Implement collapse toggle button
+  - [x] 6.3 Implement collapse toggle button
     - Add toggle button at bottom of sidebar
     - Use ChevronLeft/ChevronRight icon (or similar) to indicate direction
     - Style: `focus-visible:ring-2 focus-visible:ring-ring` for accessibility
-  - [ ] 6.4 Implement collapsed mode styling
+  - [x] 6.4 Implement collapsed mode styling
     - Collapsed width: ~64px (icon-only)
     - Expanded width: existing 256px (`w-64`)
     - Hide text labels in collapsed mode using conditional rendering or CSS
     - Keep icons visible at `h-4 w-4` size
     - Preserve gold accent active states: `bg-accent-gold/5 border-l-4 border-accent-gold`
-  - [ ] 6.5 Add hover expansion behavior for collapsed mode
+  - [x] 6.5 Add hover expansion behavior for collapsed mode
     - On hover in collapsed mode, show tooltip with label OR expand temporarily
     - Use CSS transitions for smooth expand/collapse animation
     - Keep existing `transition-colors duration-200` pattern
-  - [ ] 6.6 Implement keyboard navigation
+  - [x] 6.6 Implement keyboard navigation
     - Arrow Up/Down to move focus between nav items
     - Enter/Space to activate (navigate or expand section)
     - Use `tabIndex` and `onKeyDown` handlers
     - Maintain focus visible styling: `focus-visible:ring-2 focus-visible:ring-ring`
-  - [ ] 6.7 Ensure enhanced sidebar tests pass
+  - [x] 6.7 Ensure enhanced sidebar tests pass
     - Run ONLY the 4-6 tests written in 6.1
     - Verify collapsed mode and keyboard navigation work
 
