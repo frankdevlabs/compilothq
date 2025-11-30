@@ -203,6 +203,33 @@ compilothq/
 3. Integration tests for API routes
 4. E2E tests for critical user flows
 
+### Development Authentication for Testing
+
+When testing or validating authenticated features, use the development authentication system to bypass manual login flows:
+
+```bash
+# Generate session for browser testing
+pnpm dev:login --persona=DPO
+
+# Get session token for API testing
+pnpm dev:login --persona=DPO --format=token
+
+# Use in Playwright E2E tests
+import { setAuthCookie } from './__tests__/e2e/helpers/dev-auth'
+await setAuthCookie(page, 'DPO')
+```
+
+**Available personas**: DPO, PRIVACY_OFFICER, BUSINESS_OWNER, IT_ADMIN, SECURITY_TEAM, LEGAL_TEAM
+
+**Use cases**:
+
+- Browser testing during development (copy cookie to DevTools)
+- Playwright E2E tests (use `setAuthCookie` helper)
+- Manual API testing with Postman/curl
+- Claude Code validation of protected features (screenshots)
+
+**Documentation**: See [docs/development-authentication.md](./docs/development-authentication.md) for complete usage guide.
+
 ### Git Workflow
 
 - Branch naming: `feature/`, `bugfix/`, `refactor/`
@@ -212,58 +239,6 @@ compilothq/
 ### Linting issues, first try/advice this:
 
 - Press Cmd+Shift+P → type "TypeScript: Restart TS Server" → Enter
-
-### Agent Usage Guidelines
-
-This project uses specialized Claude Code agents for specific types of work. Understanding when to use each agent ensures optimal code quality and adherence to architectural boundaries.
-
-#### When to Use api-engineer
-
-The **api-engineer** agent is a specialist for complex API architecture and backend logic. Invoke this agent for:
-
-- **Complex tRPC router architecture** - Designing hierarchical router structures, implementing advanced patterns, organizing large API surfaces
-- **Advanced authentication/authorization** - Creating reusable auth middleware, role-based access control, session management, security hardening
-- **Multi-service business logic** - Orchestrating multiple services, implementing complex workflows, transaction coordination
-- **API performance optimization** - Request batching, caching strategies, query optimization at the API layer
-- **Rate limiting & security** - Implementing rate limiters, request throttling, API security best practices
-- **Complex Server Actions** - Server Actions involving multiple data operations, complex validation, or business rules
-- **API refactoring** - Restructuring routers, improving API patterns, architectural changes to the API layer
-
-#### When to Use implementer (Default)
-
-The **implementer** agent is your default full-stack generalist. Use for:
-
-- **Simple CRUD endpoints** - Standard create/read/update/delete operations following existing patterns
-- **Standard API features** - Straightforward API implementations that match established conventions
-- **Full-stack features** - Features spanning database + API + UI layers that need coordinated changes
-- **Rapid prototyping** - Building MVPs or prototypes quickly across multiple layers
-- **Low API complexity** - Features where the API layer is straightforward and not the main complexity
-
-#### Agent Coordination Pattern
-
-**For Complex Features:**
-
-1. **database-engineer** creates Prisma schema, migrations, and DAL functions
-2. **api-engineer** builds tRPC routers and business logic using DAL functions
-3. **ui-designer** creates UI components consuming the API
-
-**For Simple Features:**
-
-1. **implementer** handles all layers following existing patterns
-2. Creates DAL functions for simple CRUD operations
-3. Implements tRPC procedures and UI components
-
-**Critical Rule:** api-engineer MUST use DAL functions from database-engineer. Never write direct Prisma queries in API code.
-
-#### Choosing the Right Agent
-
-Ask yourself:
-
-- **Is the API layer complex or novel?** → api-engineer
-- **Is this following an established pattern?** → implementer
-- **Does it span multiple architectural layers?** → implementer
-- **Is the challenge primarily in the API design?** → api-engineer
-- **Is it a simple CRUD feature?** → implementer
 
 ## Instructions for Claude
 

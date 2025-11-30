@@ -121,6 +121,8 @@ jobs:
       NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
       NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
       NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+      # Skip env validation during build (Next.js static gen workers don't inherit env vars)
+      SKIP_ENV_VALIDATION: true
       # Temporary: Allow coverage reporting without failing CI while we improve coverage
       # Remove this when ready to enforce 80% coverage thresholds (see vitest.config.ts)
       CI_SKIP_COVERAGE_THRESHOLD: true
@@ -188,6 +190,20 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     needs: [unit-tests]
+
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/compilothq_test
+      CI: true
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ci-build-placeholder-not-for-production
+      NEXT_PUBLIC_APP_NAME: Compilo Test
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
+      NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
+      NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+      # Skip env validation during build (Next.js static gen workers don't inherit env vars)
+      SKIP_ENV_VALIDATION: true
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -216,6 +232,8 @@ jobs:
 
       - name: Build all packages
         run: pnpm turbo build
+        env:
+          NODE_ENV: production
 
       - name: Verify build artifacts
         run: |
@@ -312,6 +330,8 @@ jobs:
       NEXT_PUBLIC_FEATURE_QUESTIONNAIRES: true
       NEXT_PUBLIC_FEATURE_DOCUMENT_GENERATION: true
       NEXT_PUBLIC_FEATURE_AI_ASSISTANCE: true
+      # Skip env validation during build (Next.js static gen workers don't inherit env vars)
+      SKIP_ENV_VALIDATION: true
 
     steps:
       - name: Checkout code

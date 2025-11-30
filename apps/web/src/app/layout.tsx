@@ -3,7 +3,9 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Raleway, Ubuntu } from 'next/font/google'
 
+import { SessionProvider } from '@/components/auth/SessionProvider'
 import { ThemeProvider } from '@/components/theme-provider'
+import { auth } from '@/lib/auth/config'
 import { TRPCProvider } from '@/lib/trpc/client'
 
 const ubuntu = Ubuntu({
@@ -23,24 +25,28 @@ export const metadata: Metadata = {
   description: 'Generate GDPR documentation in hours, not weeks',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const session = await auth()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${ubuntu.variable} ${raleway.variable} antialiased`}>
-        <TRPCProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange={false}
-          >
-            {children}
-          </ThemeProvider>
-        </TRPCProvider>
+        <SessionProvider session={session}>
+          <TRPCProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange={false}
+            >
+              {children}
+            </ThemeProvider>
+          </TRPCProvider>
+        </SessionProvider>
       </body>
     </html>
   )

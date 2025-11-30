@@ -49,3 +49,6 @@ src/**/*.js.map
 src/**/*.d.ts
 src/**/*.d.ts.map
 !src/**/*.config.js
+
+# Exception: Allow hand-written type declarations in src/types/
+!src/types/**/*.d.ts

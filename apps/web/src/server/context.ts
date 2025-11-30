@@ -1,11 +1,18 @@
 import { type NextRequest } from 'next/server'
 
-// Note: Async is intentional for future session/database integration
-// eslint-disable-next-line @typescript-eslint/require-await
+import { auth } from '@/lib/auth/config'
+
+/**
+ * Create tRPC context with NextAuth session
+ * This context is available to all tRPC procedures
+ */
 export const createContext = async (opts: { req: NextRequest }) => {
+  // Get session from NextAuth
+  const session = await auth()
+
   return {
     req: opts.req,
-    // Future: Add session, database client
+    session,
   }
 }
 

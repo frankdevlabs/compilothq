@@ -1,3 +1,4 @@
+import { PrismaPg } from '@prisma/adapter-pg'
 import { execSync } from 'child_process'
 import path from 'path'
 
@@ -7,20 +8,19 @@ import { PrismaClient } from '../index'
  * Test database client instance
  * This should use the test DATABASE_URL (port 5433)
  */
-let testPrismaClient: PrismaClient | null = null
+let testPrismaClient: InstanceType<typeof PrismaClient> | null = null
 
 /**
  * Get the test database client instance
  * Uses DATABASE_URL from environment (should be test database on port 5433)
  */
-export function getTestDatabaseClient(): PrismaClient {
-  testPrismaClient ??= new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env['DATABASE_URL'],
-      },
-    },
-  })
+export function getTestDatabaseClient(): InstanceType<typeof PrismaClient> {
+  if (!testPrismaClient) {
+    const adapter = new PrismaPg({
+      connectionString: process.env['DATABASE_URL'],
+    })
+    testPrismaClient = new PrismaClient({ adapter })
+  }
   return testPrismaClient
 }
 
@@ -60,12 +60,14 @@ export function setupTestDatabase(): void {
   }
 
   try {
-    // Run migrations using Prisma CLI directly (not through pnpm)
-    // This ensures DATABASE_URL is properly passed to the Prisma process
-    const prismaSchemaPath = path.resolve(__dirname, '../../prisma/schema.prisma')
-    const prismaBinPath = path.resolve(__dirname, '../../node_modules/.bin/prisma')
+    // Run migrations using Prisma CLI from the database package directory
+    // Prisma 7.x requires datasource config in prisma.config.ts, not schema.prisma
+    // By running from the package directory without --schema flag, Prisma will use prisma.config.ts
+    const databasePackagePath = path.resolve(__dirname, '../..')
+    const prismaBinPath = path.resolve(databasePackagePath, 'node_modules/.bin/prisma')
 
-    execSync(`"${prismaBinPath}" migrate deploy --schema="${prismaSchemaPath}"`, {
+    execSync(`"${prismaBinPath}" migrate deploy`, {
+      cwd: databasePackagePath,
       env: { ...process.env, DATABASE_URL: databaseUrl },
       stdio: 'pipe', // Suppress output unless there's an error
     })

@@ -18,7 +18,7 @@
 
 4. [x] Organization & User Models with Multi-Tenancy — Implement Organization model with settings and metadata, implement User model with UserPersona enum (DPO, PRIVACY_OFFICER, BUSINESS_OWNER, IT_ADMIN, SECURITY_TEAM, LEGAL_TEAM), establish organizationId foreign keys with cascading deletes, add compound indexes for multi-tenant queries, and create migrations testing that all queries properly isolate by organization to establish secure multi-tenancy foundation. `S`
 
-5. [ ] Authentication Foundation with NextAuth.js v5 — Set up NextAuth.js with email magic links and Google OAuth, configure Prisma adapter for User and session management, implement organization context in session, create login/signup UI components with organization creation flow, set up protected route middleware injecting user and organizationId into requests, and test session management and organization switching to secure all application features. `M`
+5. [x] Authentication Foundation with NextAuth.js v5 — Set up NextAuth.js with email magic links and Google OAuth, configure Prisma adapter for User and session management, implement organization context in session, create login/signup UI components with organization creation flow, set up protected route middleware injecting user and organizationId into requests, implement complete invitation system with team management UI, and test session management to secure all application features. `M`
 
 6. [ ] tRPC API Layer with Auth Context — Set up tRPC v11 server with Next.js App Router integration, create authenticated context injecting user and organizationId from session, implement base router structure organized by domain (processing activities, assessments, vendors), create Zod validation schemas for Organization and User entities, implement authorization middleware ensuring all queries filter by organizationId, set up tRPC client with TanStack Query, and implement error handling to enable type-safe, authorized API communication. `M`
 
@@ -170,4 +170,4 @@
 
 ## Additional Resources
 
-📝 **[Roadmap Strategic Notes](./roadmap-notes.md)** - Detailed product planning context, success metrics, risk assessment, and go-to-market strategy for this roadmap
+**[Roadmap Strategic Notes](./roadmap-notes.md)** - Detailed product planning context, success metrics, risk assessment, and go-to-market strategy for this roadmap

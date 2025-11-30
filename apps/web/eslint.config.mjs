@@ -6,7 +6,7 @@ import nextTs from "eslint-config-next/typescript";
 import reactHooks from "eslint-plugin-react-hooks";
 import vitest from "eslint-plugin-vitest";
 
-export default [
+const eslintConfig = [
   // Global ignores - must be first
   {
     ignores: [
@@ -14,6 +14,8 @@ export default [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "playwright-report/**",
+      "test-results/**",
     ],
   },
 
@@ -51,3 +53,5 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;

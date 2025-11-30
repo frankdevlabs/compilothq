@@ -53,9 +53,10 @@ export default [
     },
   },
 
-  // TypeScript files with strict type-checked rules
+  // TypeScript files with strict type-checked rules (exclude scripts)
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    ignores: ['scripts/**/*.ts'], // Exclude scripts from type-aware linting
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -141,6 +142,63 @@ export default [
     files: ['scripts/**/*.js'],
     rules: {
       'security/detect-object-injection': 'off',
+    },
+  },
+
+  // Scripts TypeScript files - disable type-aware linting for standalone scripts
+  {
+    files: ['scripts/**/*.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+        // No projectService - disable type-aware linting for scripts
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        exports: 'writable',
+        global: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': typescriptEslint,
+      import: importPlugin,
+      'simple-import-sort': simpleImportSort,
+    },
+    rules: {
+      'security/detect-object-injection': 'off',
+      // Disable type-aware rules for scripts (they work but linting would be slow)
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/promise-function-async': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/restrict-template-expressions': 'off',
+      '@typescript-eslint/restrict-plus-operands': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/switch-exhaustiveness-check': 'off',
+      // Basic TypeScript rules for scripts
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'error',
+      'no-undef': 'off', // TypeScript handles this
+      'no-unused-vars': 'off',
+      // Import organization
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'import/first': 'error',
+      'import/newline-after-import': 'error',
+      'import/no-duplicates': 'error',
     },
   },
 

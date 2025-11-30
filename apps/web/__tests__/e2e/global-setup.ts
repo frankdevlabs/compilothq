@@ -1,7 +1,13 @@
+import 'dotenv/config'
+
+import { PrismaClient } from '@compilothq/database'
 import { FullConfig } from '@playwright/test'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { exec } from 'child_process'
 import path from 'path'
 import { promisify } from 'util'
+
+import { seedDevUsers } from '../../../../packages/database/prisma/seeds/devUsers'
 
 const execAsync = promisify(exec)
 
@@ -21,6 +27,7 @@ const execAsync = promisify(exec)
  * @param config - Playwright full configuration
  */
 async function globalSetup(_config: FullConfig) {
+  void _config // Explicitly mark as intentionally unused (required by Playwright API)
   console.log('\n🚀 Starting Playwright E2E test setup...\n')
 
   try {
@@ -89,19 +96,38 @@ async function globalSetup(_config: FullConfig) {
       throw error
     }
 
-    // Optionally seed minimal reference data
-    console.log('🌱 Seeding reference data...')
+    // Seed development users for E2E tests
+    console.log('🔧 Seeding development users for E2E tests...')
 
     try {
-      // For now, we'll skip seeding as the utilities aren't ready yet
-      console.log('⏭️  Reference data seeding skipped (utilities not yet available)')
+      // Prisma 7 requires driver adapter for PrismaClient initialization
+      const adapter = new PrismaPg({ connectionString: testDbUrl })
+      const prisma = new PrismaClient({ adapter })
 
-      // TODO: When database test-utils are available, use them here:
-      // import { seedReferenceData } from '@compilothq/database/test-utils';
-      // await seedReferenceData();
+      await seedDevUsers(prisma)
+      console.log('✅ Development users seeded successfully')
+
+      // Clean up stale dev sessions from previous runs
+      // This prevents session accumulation and ensures a clean slate
+      console.log('🧹 Cleaning up stale dev sessions...')
+      const deletedSessions = await prisma.session.deleteMany({
+        where: {
+          user: {
+            email: {
+              endsWith: '@dev.compilo.local',
+            },
+          },
+          expires: {
+            lt: new Date(Date.now() - 60 * 60 * 1000), // older than 1 hour
+          },
+        },
+      })
+      console.log(`✅ Cleaned up ${deletedSessions.count} stale dev sessions`)
+
+      await prisma.$disconnect()
     } catch (error) {
-      console.error('⚠️  Warning: Failed to seed reference data:', error)
-      // Don't throw - seeding is optional
+      console.error('❌ Failed to seed development users:', error)
+      throw error
     }
 
     console.log('\n✅ Playwright E2E test setup completed successfully\n')

@@ -1,4 +1,4 @@
-import { type PrismaClient } from '../../generated/client'
+import { type PrismaClient } from '../../generated/client/client'
 
 export async function seedRecipientCategories(prisma: PrismaClient) {
   // Check if recipient categories already exist

@@ -54,7 +54,7 @@ export default defineConfig({
   globalTimeout: process.env.CI ? 600000 : undefined,
 
   /* Global setup - prepares test database */
-  globalSetup: require.resolve('./__tests__/e2e/global-setup.ts'),
+  globalSetup: './__tests__/e2e/global-setup.ts',
 
   /* Configure projects for major browsers */
   projects: [

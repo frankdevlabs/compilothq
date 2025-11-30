@@ -79,9 +79,15 @@ CompiloHQ requires environment configuration for Docker services and the Next.js
 
 3. **Configure application settings:**
    Update `apps/web/.env.local` with your specific settings:
-   - NextAuth configuration
+   - **NextAuth.js configuration** (see [Authentication Setup](#authentication))
    - Feature flags
    - External service integrations (if needed)
+
+4. **Configure authentication:**
+   Follow the [Authentication Setup Guide](./docs/authentication.md) to configure:
+   - Email magic links via Resend
+   - Google OAuth credentials
+   - NextAuth.js secret generation
 
 ### Docker Infrastructure
 
@@ -128,7 +134,50 @@ pnpm docker:restart
 pnpm docker:reset
 ```
 
-### Development
+## Authentication
+
+CompiloHQ uses **NextAuth.js v5** (Auth.js) with database session storage for secure, passwordless authentication.
+
+### Quick Setup
+
+```bash
+# Generate NextAuth secret
+openssl rand -base64 32
+
+# Add to apps/web/.env.local
+NEXTAUTH_SECRET="<generated-secret>"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Configure authentication providers
+RESEND_API_KEY="<your-resend-api-key>"
+GOOGLE_CLIENT_ID="<your-google-client-id>"
+GOOGLE_CLIENT_SECRET="<your-google-client-secret>"
+```
+
+### Authentication Methods
+
+1. **Email Magic Links** (Primary) - Passwordless authentication via Resend
+2. **Google OAuth** (Secondary) - OAuth 2.0 for convenience
+
+### Key Features
+
+- Database session storage for security and audit trail
+- Multi-tenancy with organization isolation
+- Team invitation system with role assignment
+- Protected route middleware
+- tRPC authenticated context
+
+**Complete documentation:** [Authentication Guide](./docs/authentication.md)
+
+### Common Issues
+
+- **Magic links not received?** Check spam folder and verify Resend domain
+- **Google OAuth errors?** Verify redirect URI matches Google Cloud Console
+- **Session issues?** Clear cookies and verify NEXTAUTH_SECRET is set
+
+See [Authentication Troubleshooting](./docs/authentication.md#troubleshooting) for solutions.
+
+## Development
 
 #### Quick Start (Automated)
 
@@ -152,6 +201,34 @@ pnpm db:generate
 # Run migrations (Docker auto-starts if needed)
 pnpm db:migrate
 ```
+
+#### Development Authentication
+
+Quickly authenticate as different user personas for testing:
+
+```bash
+# Generate session for DPO persona
+pnpm dev:login --persona=DPO
+
+# Other available personas
+pnpm dev:login --persona=PRIVACY_OFFICER
+pnpm dev:login --persona=BUSINESS_OWNER
+pnpm dev:login --persona=IT_ADMIN
+pnpm dev:login --persona=SECURITY_TEAM
+pnpm dev:login --persona=LEGAL_TEAM
+
+# See all options
+pnpm dev:login --help
+```
+
+**Use cases:**
+
+- Browser testing (copy cookie to DevTools)
+- Playwright E2E tests (`setAuthCookie(page, 'DPO')`)
+- Manual API testing (Postman/curl)
+- Claude Code validation (screenshots)
+
+See [Development Authentication Guide](./docs/development-authentication.md) for complete usage details.
 
 #### Working with Packages
 
@@ -234,6 +311,7 @@ packages/database/
 apps/web/
   __tests__/
     unit/              # Component and utility tests
+    integration/       # Authentication workflow tests
     e2e/               # Playwright end-to-end tests
 ```
 
@@ -362,6 +440,15 @@ cp docker/.env.example docker/.env
 2. Wait for health checks: `pnpm docker:health`
 3. Check network connectivity: `pnpm docker:ps`
 
+### Authentication Issues
+
+See the [Authentication Troubleshooting Guide](./docs/authentication.md#troubleshooting) for:
+
+- Magic link delivery issues
+- Google OAuth configuration errors
+- Session and cookie problems
+- Database connection issues
+
 ### Test Database Issues
 
 **Test database not accessible on port 5433:**
@@ -406,10 +493,18 @@ docker logs compilothq-postgres-test
 - **TanStack Query** - Data fetching
 - **tRPC v11** - End-to-end type-safe API
 
+### Authentication & Security
+
+- **NextAuth.js v5** (Auth.js) - Authentication framework
+- **Prisma Adapter** - Database session storage
+- **Resend** - Email delivery for magic links
+- **Google OAuth 2.0** - Social authentication
+
 ### Backend & Database
 
 - **Prisma ORM** - Database access
 - **PostgreSQL 17** - Primary database
+- **Redis** - Session tracking and caching
 - **Zod** - Runtime validation
 
 ### Testing
@@ -564,6 +659,12 @@ pnpm --filter @compilothq/web build
 # Start production server
 pnpm --filter @compilothq/web start
 ```
+
+## Documentation
+
+- **[Authentication Guide](./docs/authentication.md)** - Complete authentication system documentation
+- **[Development Authentication Guide](./docs/development-authentication.md)** - Quick authentication for development and testing
+- **[Testing Guide](./docs/testing-guide.md)** - Testing patterns, utilities, and best practices
 
 ## License
 

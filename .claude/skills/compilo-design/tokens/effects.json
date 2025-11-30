@@ -1,0 +1,102 @@
+{
+  "radius": {
+    "$type": "dimension",
+    "base": {
+      "$value": "10px",
+      "$description": "0.625rem - Base border radius (--radius variable)"
+    },
+    "sm": {
+      "$value": "6px",
+      "$description": "calc(var(--radius) - 4px) - Small radius - badges, tags (rounded-sm)"
+    },
+    "default": {
+      "$value": "8px",
+      "$description": "calc(var(--radius) - 2px) - Default radius (rounded)"
+    },
+    "md": {
+      "$value": "10px",
+      "$description": "var(--radius) - Medium radius - buttons, inputs (rounded-md)"
+    },
+    "lg": {
+      "$value": "12px",
+      "$description": "calc(var(--radius) + 2px) - Large radius - cards (rounded-lg)"
+    },
+    "xl": {
+      "$value": "14px",
+      "$description": "calc(var(--radius) + 4px) - Extra large radius (rounded-xl)"
+    },
+    "full": {
+      "$value": "9999px",
+      "$description": "Full radius - pills, avatars, circular elements (rounded-full)"
+    }
+  },
+  "shadow": {
+    "$type": "shadow",
+    "sm": {
+      "$value": {
+        "offsetX": "0px",
+        "offsetY": "1px",
+        "blur": "2px",
+        "spread": "0px",
+        "color": "rgba(0, 0, 0, 0.05)"
+      },
+      "$description": "Subtle shadow - minimal elevation (shadow-sm)"
+    },
+    "default": {
+      "$value": {
+        "offsetX": "0px",
+        "offsetY": "1px",
+        "blur": "3px",
+        "spread": "0px",
+        "color": "rgba(0, 0, 0, 0.1)"
+      },
+      "$description": "Default shadow - standard elevation (shadow)"
+    },
+    "md": {
+      "$value": {
+        "offsetX": "0px",
+        "offsetY": "4px",
+        "blur": "6px",
+        "spread": "-1px",
+        "color": "rgba(0, 0, 0, 0.1)"
+      },
+      "$description": "Medium shadow - cards, dropdowns (shadow-md)"
+    },
+    "lg": {
+      "$value": {
+        "offsetX": "0px",
+        "offsetY": "10px",
+        "blur": "15px",
+        "spread": "-3px",
+        "color": "rgba(0, 0, 0, 0.1)"
+      },
+      "$description": "Large shadow - modals, popovers, elevated content (shadow-lg)"
+    }
+  },
+  "transition": {
+    "$type": "duration",
+    "fast": {
+      "$value": "150ms",
+      "$description": "Fast transitions - hovers, small UI changes"
+    },
+    "normal": {
+      "$value": "200ms",
+      "$description": "Normal transitions - standard interactions"
+    },
+    "slow": {
+      "$value": "300ms",
+      "$description": "Slow transitions - slides, complex animations"
+    },
+    "theme": {
+      "$description": "Asymmetric theme transitions (franksblog.nl pattern)",
+      "light": {
+        "$value": "0ms",
+        "$description": "Instant light mode transition - energetic feel"
+      },
+      "dark": {
+        "$value": "750ms",
+        "$description": "Slow dark mode fade - calm, luxurious feel"
+      }
+    }
+  }
+}

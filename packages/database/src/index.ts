@@ -1,16 +1,22 @@
-import { PrismaClient } from '../generated/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
-// Prevent multiple Prisma Client instances in development
-// This singleton pattern ensures connection pooling works correctly in serverless environments
+import { PrismaClient } from '../generated/client/client'
+
+// Create PostgreSQL adapter with connection string
+// Prisma 7 requires explicit driver adapters for all databases
+const adapter = new PrismaPg({
+  connectionString: process.env['DATABASE_URL'],
+})
+
+// Singleton pattern for PrismaClient
+// Prevents multiple Prisma Client instances in development
+// This ensures connection pooling works correctly in serverless environments
 // and prevents the "too many connections" error during Next.js hot reload
-
-declare global {
-  var prisma: PrismaClient | undefined
+const globalForPrisma = globalThis as unknown as {
+  prisma: InstanceType<typeof PrismaClient> | undefined
 }
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient | undefined }
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 
 if (process.env['NODE_ENV'] !== 'production') {
   globalForPrisma.prisma = prisma
@@ -21,23 +27,36 @@ export default prisma
 // Export all DAL functions
 export * from './dal/countries'
 export * from './dal/dataNatures'
+export * from './dal/devSessions'
+export * from './dal/invitations'
 export * from './dal/organizations'
 export * from './dal/processingActs'
 export * from './dal/recipientCategories'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
 
+// NOTE: Server-only utilities (tokens) are NOT exported from the main index
+// to avoid bundling Node.js modules (crypto) in Edge Runtime (middleware).
+// Import directly from '@compilothq/database/src/utils/tokens' when needed on the server.
+
+// Re-export PrismaClient type and class for use in other files
+export { PrismaClient } from '../generated/client/client'
+
 // Re-export all Prisma types, enums, and utilities for convenience
 // This includes both types and runtime values (enums)
-export * from '../generated/client'
+export * from '../generated/client/client'
 
-// Explicit type exports for documentation (these are also included in export * above)
+// Explicit type exports for documentation
 export type {
+  Account,
   Country,
   DataNature,
+  Invitation,
   Organization,
   ProcessingAct,
   RecipientCategory,
+  Session,
   TransferMechanism,
   User,
-} from '../generated/client'
+  VerificationToken,
+} from '../generated/client/client'

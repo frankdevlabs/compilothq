@@ -1,4 +1,4 @@
-import { type PrismaClient, TransferMechanismCategory } from '../../generated/client'
+import { type PrismaClient, TransferMechanismCategory } from '../../generated/client/client'
 
 export async function seedTransferMechanisms(prisma: PrismaClient) {
   // Check if transfer mechanisms already exist

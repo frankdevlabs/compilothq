@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Tailwind v4: Scan source files for utility classes */
+@source "../../**/*.{ts,tsx}";
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================
@@ -10,20 +14,22 @@
 
 :root {
   /* Light Mode Colors */  /* Cream/off-white background */  /* Dark navy text */
-  --primary: oklch(0.205 0 0);     /* Primary color for UI elements */
-  --accent: oklch(0.97 0 0);      /* Golden yellow accent (consistent across modes) */
+  --primary: oklch(0.145 0 0);     /* Navy #09192B - Primary brand color for CTAs */
+  --accent: oklch(0.786 0.088 81.5);  /* Signature gold #D9BF65 - Interactive accents, hover states */
+  --accent-subtle: oklch(0.97 0 0);   /* Cream - Subtle backgrounds (not for CTAs) */
+  --accent-gold: oklch(0.786 0.088 81.5);  /* franksblog.nl signature gold for highlights */
 
   /* Derived Colors for Layering */
-  --surface: #F5F2EB;     /* Slightly darker than background for cards/elevated elements */
+  --surface: oklch(0.97 0.005 85);  /* Slightly darker than background for cards/elevated elements */
   --border: oklch(0.922 0 0);  /* Subtle borders using primary with opacity */
 
   /* Text Colors */
-  --text: #09192B;        /* Primary text color */
-  --text-secondary: rgba(9, 25, 43, 0.7);  /* Secondary text with reduced opacity */
+  --text: oklch(0.145 0 0);  /* Primary text color */
+  --text-secondary: oklch(0.145 0 0 / 0.7);  /* Secondary text with reduced opacity */
 
   /* Button Colors */
-  --button-bg: #09192B;   /* Button background in light mode */
-  --button-text: #FEFBF4; /* Button text in light mode */
+  --button-bg: oklch(0.145 0 0);  /* Button background in light mode */
+  --button-text: oklch(1 0 0);  /* Button text in light mode */
 
   /* Component-specific Colors (for shadcn/ui compatibility) */
   --card: oklch(1 0 0);
@@ -31,7 +37,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary-foreground: oklch(0.145 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --destructive: oklch(0.577 0.245 27.325);
@@ -49,7 +55,7 @@
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent-foreground: oklch(0.145 0 0);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -66,18 +72,19 @@
   --foreground: oklch(0.985 0 0);  /* Cream/off-white text */
   --primary: oklch(0.922 0 0);     /* Primary color inverted */
   --accent: oklch(0.269 0 0);      /* Accent unchanged (consistent across modes) */
+  --accent-gold: oklch(0.786 0.088 81.5);  /* franksblog.nl signature gold (same in dark mode) */
 
   /* Derived Colors for Layering */
-  --surface: #0F1F35;     /* Slightly lighter than background for cards/elevated elements */
+  --surface: oklch(0.18 0.01 250);  /* Slightly lighter than background for cards/elevated elements */
   --border: oklch(1 0 0 / 10%);  /* Subtle borders using foreground with opacity */
 
   /* Text Colors */
-  --text: #FEFBF4;        /* Primary text color */
-  --text-secondary: rgba(254, 251, 244, 0.7);  /* Secondary text with reduced opacity */
+  --text: oklch(0.985 0 0);  /* Primary text color */
+  --text-secondary: oklch(0.985 0 0 / 0.7);  /* Secondary text with reduced opacity */
 
   /* Button Colors */
-  --button-bg: #D9BF65;   /* Button background in dark mode (accent color) */
-  --button-text: #09192B; /* Button text in dark mode (dark navy) */
+  --button-bg: oklch(0.786 0.088 81.5);  /* Button background in dark mode (accent color) */
+  --button-text: oklch(0.145 0 0);  /* Button text in dark mode (dark navy) */
 
   /* Component-specific Colors (for shadcn/ui compatibility) */
   --card: oklch(0.205 0 0);
@@ -121,6 +128,8 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-accent: var(--accent);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-subtle: var(--accent-subtle);
   --color-surface: var(--surface);
   --color-border: var(--border);
 
@@ -151,11 +160,19 @@
   --font-weight-medium: 500;
   --font-weight-bold: 700;
 
-  /* Border Radius - 4px default (minimal aesthetic) */
-  --radius-sm: 2px;
-  --radius: 4px;        /* Default border radius */
-  --radius-md: 4px;
-  --radius-lg: 8px;
+  /* Spacing Scale - 8px grid system (base unit = 0.25rem = 4px) */
+  /* In Tailwind v4, spacing utilities multiply the base --spacing value by the number */
+  /* So pt-6 = 6 * 0.25rem = 1.5rem = 24px (3 grid units) */
+  --spacing: 0.25rem;
+
+  /* Border Radius - Refined Values
+   * Matches design token definitions for subtle visual hierarchy
+   * sm: 6px, md: 10px, lg: 12px, xl: 14px
+   */
+  --radius-sm: 6px;
+  --radius: 10px;        /* Default border radius */
+  --radius-md: 10px;
+  --radius-lg: 12px;
   --radius-full: 9999px;
 
   /* Shadows - Minimal values following franksblog.nl */
@@ -189,7 +206,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: 14px;
 }
 
 /* ============================================

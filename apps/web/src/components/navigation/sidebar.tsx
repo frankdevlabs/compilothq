@@ -61,7 +61,7 @@ export function Sidebar() {
               <div key={item.label} className="mb-1">
                 <button
                   onClick={() => toggleExpanded(item.label)}
-                  className="flex items-center gap-3 w-full px-3 py-2 text-sm rounded hover:bg-accent/10 transition-colors"
+                  className="flex items-center gap-3 w-full px-3 py-2 text-sm rounded hover:bg-accent-gold/5 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   <item.icon className="h-4 w-4" />
                   <span className="flex-1 text-left">{item.label}</span>
@@ -76,10 +76,10 @@ export function Sidebar() {
                         key={child.href}
                         href={child.href}
                         className={cn(
-                          'block px-3 py-2 text-sm rounded transition-colors',
+                          'block px-3 py-2 text-sm rounded transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                           pathname === child.href
-                            ? 'bg-accent/10 text-accent font-medium'
-                            : 'hover:bg-accent/5'
+                            ? 'bg-accent-gold/5 text-foreground font-medium border-l-4 border-accent-gold'
+                            : 'hover:bg-accent-gold/5 text-foreground'
                         )}
                       >
                         {child.label}
@@ -96,10 +96,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 mb-1 text-sm rounded transition-colors',
+                'flex items-center gap-3 px-3 py-2 mb-1 text-sm rounded transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                 pathname === item.href
-                  ? 'bg-accent/10 text-accent font-medium'
-                  : 'hover:bg-accent/5'
+                  ? 'bg-accent-gold/5 text-foreground font-medium border-l-4 border-accent-gold'
+                  : 'hover:bg-accent-gold/5 text-foreground'
               )}
             >
               <item.icon className="h-4 w-4" />

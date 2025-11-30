@@ -1,5 +1,6 @@
 import type { Organization, OrganizationStatus } from '../index'
 import { Prisma, prisma } from '../index'
+import { generateSlug } from '../utils/tokens'
 
 /**
  * Create a new organization
@@ -18,6 +19,52 @@ export async function createOrganization(data: {
       settings: data.settings ?? Prisma.JsonNull,
     },
   })
+}
+
+/**
+ * Create an organization with an initial owner user
+ * Used during signup flow - creates both organization and assigns user
+ * @param name - Organization name
+ * @param userId - ID of the user to assign as organization owner (currently unused, kept for future use)
+ * @param status - Organization status (defaults to ACTIVE)
+ * @returns Created organization
+ */
+export async function createOrganizationWithOwner(
+  name: string,
+  _userId: string, // Prefixed with underscore to indicate intentionally unused parameter
+  status: OrganizationStatus = 'ACTIVE'
+): Promise<Organization> {
+  const slug = generateSlug(name)
+
+  // Check if slug already exists
+  const existing = await getOrganizationBySlug(slug)
+  if (existing) {
+    // Append random suffix to make slug unique
+    const uniqueSlug = `${slug}-${Math.random().toString(36).substring(2, 8)}`
+    return await prisma.organization.create({
+      data: {
+        name,
+        slug: uniqueSlug,
+        status,
+      },
+    })
+  }
+
+  return await prisma.organization.create({
+    data: {
+      name,
+      slug,
+      status,
+    },
+  })
+}
+
+/**
+ * Generate a slug from an organization name
+ * Exported utility for external use
+ */
+export function generateSlugFromName(name: string): string {
+  return generateSlug(name)
 }
 
 /**

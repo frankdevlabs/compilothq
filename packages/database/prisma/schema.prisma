@@ -2,13 +2,12 @@
 // This schema uses a monolithic structure with organization by comment sections
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
   output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================================================
@@ -33,6 +32,14 @@ enum OrganizationStatus {
   CANCELLED  // Permanently deactivated organization
 }
 
+// Invitation status enum for team invitation workflow
+enum InvitationStatus {
+  PENDING   // Invitation sent, awaiting acceptance
+  ACCEPTED  // Invitation accepted, user joined organization
+  EXPIRED   // Invitation expired (7 days)
+  CANCELLED // Invitation cancelled by sender
+}
+
 // Organization model with soft delete support
 model Organization {
   id        String              @id @default(cuid())
@@ -45,7 +52,8 @@ model Organization {
   updatedAt DateTime            @updatedAt
 
   // Relations
-  users User[]
+  users       User[]
+  invitations Invitation[]
 
   @@index([deletedAt])
 }
@@ -57,16 +65,84 @@ model User {
   email          String       @unique
   emailVerified  DateTime?    // NextAuth.js email verification timestamp
   image          String?      // Profile picture URL
-  organizationId String       // Foreign key to Organization
+  organizationId String?      // Foreign key to Organization (optional during signup)
   primaryPersona UserPersona  @default(BUSINESS_OWNER) // Required role with default
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id])
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  accounts        Account[]     // OAuth provider accounts
+  sessions        Session[]     // Database sessions
+  invitationsSent Invitation[]  @relation("InvitationsSent")
 
   @@index([organizationId, primaryPersona])
   @@index([organizationId, createdAt])
+}
+
+// NextAuth.js Account model for OAuth providers
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// NextAuth.js Session model for database-stored sessions
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// NextAuth.js VerificationToken model for email magic links
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Invitation model for organization team invitations
+model Invitation {
+  id             String           @id @default(cuid())
+  email          String
+  token          String           @unique
+  organizationId String
+  invitedBy      String
+  invitedPersona UserPersona      @default(BUSINESS_OWNER)
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inviter      User         @relation("InvitationsSent", fields: [invitedBy], references: [id])
+
+  @@index([email, status])
+  @@index([organizationId, status])
+  @@index([token])
+  @@index([expiresAt])
 }
 
 // ============================================================================

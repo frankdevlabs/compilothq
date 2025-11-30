@@ -1,13 +1,22 @@
-import { PrismaClient } from '../generated/client'
+import 'dotenv/config'
+
+import { PrismaPg } from '@prisma/adapter-pg'
+
+import { PrismaClient } from '../generated/client/client'
 import { seedCountries } from './seeds/countries'
 import { seedDataNatures } from './seeds/dataNatures'
+import { seedDevUsers } from './seeds/devUsers'
 import { seedOrganizations } from './seeds/organizations'
 import { seedProcessingActs } from './seeds/processingActs'
 import { seedRecipientCategories } from './seeds/recipientCategories'
 import { seedTransferMechanisms } from './seeds/transferMechanisms'
 import { seedUsers } from './seeds/users'
 
-const prisma = new PrismaClient()
+// Seed scripts need their own client instance with driver adapter
+const adapter = new PrismaPg({
+  connectionString: process.env['DATABASE_URL'],
+})
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('Starting database seeding...\n')
@@ -24,6 +33,9 @@ async function main() {
     const organizationsCount = await seedOrganizations(prisma)
     const usersCount = await seedUsers(prisma)
 
+    // Seed development users (skipped in production)
+    const devUsersCount = await seedDevUsers(prisma)
+
     const totalRecords =
       countriesCount +
       dataNaturesCount +
@@ -31,7 +43,8 @@ async function main() {
       transferMechanismsCount +
       recipientCategoriesCount +
       organizationsCount +
-      usersCount
+      usersCount +
+      devUsersCount
 
     console.log('\n=== Seeding Summary ===')
     console.log(`Countries: ${countriesCount}`)
@@ -41,6 +54,7 @@ async function main() {
     console.log(`Recipient Categories: ${recipientCategoriesCount}`)
     console.log(`Organizations: ${organizationsCount}`)
     console.log(`Users: ${usersCount}`)
+    console.log(`Development Users: ${devUsersCount}`)
     console.log(`Total Records: ${totalRecords}`)
     console.log('======================\n')
 

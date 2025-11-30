@@ -1,7 +1,12 @@
 import { Sidebar } from '@/components/navigation/sidebar'
 import { TopBar } from '@/components/navigation/topbar'
+import { requireAuthWithOrg } from '@/lib/auth/helpers'
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  // Ensure user is authenticated and has an organization
+  // Redirects to login or create-organization if needed
+  await requireAuthWithOrg()
+
   return (
     <div className="flex h-screen">
       <Sidebar />
