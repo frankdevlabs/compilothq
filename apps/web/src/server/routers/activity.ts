@@ -55,7 +55,7 @@ export const activityRouter = router({
     return await handlePrismaError(
       createActivityDAL({
         name: input.name,
-        description: input.description ?? null,
+        description: input.description ?? undefined,
         organizationId: ctx.organizationId,
       })
     )
@@ -94,7 +94,12 @@ export const activityRouter = router({
       // Extract only the update fields (not id)
       const { id, ...updateData } = input
 
-      return await handlePrismaError(updateActivityDAL(id, updateData))
+      return await handlePrismaError(
+        updateActivityDAL(id, {
+          ...updateData,
+          description: updateData.description ?? undefined,
+        })
+      )
     }),
 
   /**

@@ -54,7 +54,7 @@ export const processorRouter = router({
       createProcessorDAL({
         name: input.name,
         type: input.type,
-        description: input.description ?? null,
+        description: input.description ?? undefined,
         organizationId: ctx.organizationId,
         isActive: input.isActive,
       })
@@ -98,7 +98,12 @@ export const processorRouter = router({
       // Extract only the update fields (not id)
       const { id, ...updateData } = input
 
-      return await handlePrismaError(updateProcessorDAL(id, updateData))
+      return await handlePrismaError(
+        updateProcessorDAL(id, {
+          ...updateData,
+          description: updateData.description ?? undefined,
+        })
+      )
     }),
 
   /**
