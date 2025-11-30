@@ -6,7 +6,7 @@ import type { Session } from 'next-auth'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { type Context } from '@/server/context'
-import { activityRouter } from '@/server/routers/activity'
+import { dataProcessingActivityRouter } from '@/server/routers/dataProcessingActivity'
 import { processorRouter } from '@/server/routers/processor'
 
 /**
@@ -58,7 +58,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
   describe('P2025 - Record Not Found Errors', () => {
     it('should transform P2025 to NOT_FOUND when getting non-existent activity', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Try to get non-existent activity
       await expect(caller.getById({ id: 'non-existent-id' })).rejects.toThrow(TRPCError)
@@ -93,7 +93,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
 
     it('should transform P2025 to NOT_FOUND when updating non-existent activity', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Try to update non-existent activity
       await expect(
@@ -116,7 +116,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
 
     it('should transform P2025 to NOT_FOUND when deleting non-existent activity', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Try to delete non-existent activity
       await expect(caller.delete({ id: 'non-existent-id' })).rejects.toThrow(TRPCError)
@@ -133,7 +133,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
   describe('Authorization Errors vs Database Errors', () => {
     it('should differentiate between FORBIDDEN and NOT_FOUND errors', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Create activity
       const activity = await caller.create({
@@ -149,7 +149,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
       })
 
       const otherCtx = createTestContext(otherUsers[0])
-      const otherCaller = activityRouter.createCaller(otherCtx)
+      const otherCaller = dataProcessingActivityRouter.createCaller(otherCtx)
 
       // Try to access activity from other org - should be FORBIDDEN
       try {
@@ -179,12 +179,12 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
   describe('Error Message Quality', () => {
     it('should provide user-friendly error messages without technical details', async () => {
       const ctx = createTestContext(testUser)
-      const activityCaller = activityRouter.createCaller(ctx)
+      const dataProcessingActivityCaller = dataProcessingActivityRouter.createCaller(ctx)
       const processorCaller = processorRouter.createCaller(ctx)
 
       // Test activity not found error message
       try {
-        await activityCaller.getById({ id: 'non-existent-activity' })
+        await dataProcessingActivityCaller.getById({ id: 'non-existent-activity' })
       } catch (error) {
         const message = (error as TRPCError).message
         // Should be user-friendly
@@ -213,10 +213,10 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
 
     it('should provide context-aware error messages', async () => {
       const ctx = createTestContext(testUser)
-      const activityCaller = activityRouter.createCaller(ctx)
+      const dataProcessingActivityCaller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Create activity
-      const activity = await activityCaller.create({
+      const activity = await dataProcessingActivityCaller.create({
         name: 'Context Error Test',
         description: 'Testing context-aware errors',
       })
@@ -229,7 +229,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
       })
 
       const otherCtx = createTestContext(otherUsers[0])
-      const otherCaller = activityRouter.createCaller(otherCtx)
+      const otherCaller = dataProcessingActivityRouter.createCaller(otherCtx)
 
       // Test FORBIDDEN error message
       try {
@@ -244,7 +244,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
       }
 
       // Cleanup
-      await activityCaller.delete({ id: activity.id })
+      await dataProcessingActivityCaller.delete({ id: activity.id })
       await cleanupTestOrganizations([otherOrg.id])
     })
   })
@@ -252,7 +252,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
   describe('Error Consistency Across Routers', () => {
     it('should handle errors consistently across activity and processor routers', async () => {
       const ctx = createTestContext(testUser)
-      const activityCaller = activityRouter.createCaller(ctx)
+      const dataProcessingActivityCaller = dataProcessingActivityRouter.createCaller(ctx)
       const processorCaller = processorRouter.createCaller(ctx)
 
       // Both should throw NOT_FOUND for non-existent IDs
@@ -260,7 +260,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
       let processorError: TRPCError | null = null
 
       try {
-        await activityCaller.getById({ id: 'non-existent' })
+        await dataProcessingActivityCaller.getById({ id: 'non-existent' })
       } catch (e) {
         activityError = e as TRPCError
       }
@@ -283,7 +283,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
 
     it('should handle delete errors consistently across routers', async () => {
       const ctx = createTestContext(testUser)
-      const activityCaller = activityRouter.createCaller(ctx)
+      const dataProcessingActivityCaller = dataProcessingActivityRouter.createCaller(ctx)
       const processorCaller = processorRouter.createCaller(ctx)
 
       // Both should throw NOT_FOUND when deleting non-existent items
@@ -291,7 +291,7 @@ describe('Integration: Prisma Error Transformation in Routers', () => {
       let processorDeleteError: TRPCError | null = null
 
       try {
-        await activityCaller.delete({ id: 'non-existent' })
+        await dataProcessingActivityCaller.delete({ id: 'non-existent' })
       } catch (e) {
         activityDeleteError = e as TRPCError
       }

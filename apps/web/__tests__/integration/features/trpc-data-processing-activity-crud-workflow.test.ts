@@ -4,18 +4,18 @@ import type { Session } from 'next-auth'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { type Context } from '@/server/context'
-import { activityRouter } from '@/server/routers/activity'
+import { dataProcessingActivityRouter } from '@/server/routers/dataProcessingActivity'
 
 /**
- * Integration Test: Full Activity CRUD Workflow
+ * Integration Test: Full DataProcessingActivity CRUD Workflow
  *
- * This test validates the complete end-to-end data flow for Activities:
+ * This test validates the complete end-to-end data flow for DataProcessingActivities:
  * Router → DAL → Database → Validation
  *
  * Purpose: Ensure all layers work together correctly for real-world workflows.
  * Coverage: Full lifecycle from creation to deletion with updates.
  */
-describe('Integration: Activity CRUD Workflow', () => {
+describe('Integration: DataProcessingActivity CRUD Workflow', () => {
   let testOrg: Organization
   let testUser: User
 
@@ -54,7 +54,7 @@ describe('Integration: Activity CRUD Workflow', () => {
 
   it('should execute complete CRUD workflow: create → read → update → delete', async () => {
     const ctx = createTestContext(testUser)
-    const caller = activityRouter.createCaller(ctx)
+    const caller = dataProcessingActivityRouter.createCaller(ctx)
 
     // STEP 1: CREATE - Create a new activity
     const created = await caller.create({
@@ -91,7 +91,8 @@ describe('Integration: Activity CRUD Workflow', () => {
     expect(updated.updatedAt.getTime()).toBeGreaterThan(created.updatedAt.getTime())
 
     // STEP 4: LIST - Verify activity appears in list
-    const activities = await caller.list()
+    const listResult = await caller.list()
+    const activities = listResult.items
 
     const foundActivity = activities.find((a) => a.id === created.id)
     expect(foundActivity).toBeDefined()
@@ -108,14 +109,15 @@ describe('Integration: Activity CRUD Workflow', () => {
     })
 
     // Verify not in list
-    const activitiesAfterDelete = await caller.list()
+    const afterDeleteResult = await caller.list()
+    const activitiesAfterDelete = afterDeleteResult.items
     const deletedActivity = activitiesAfterDelete.find((a) => a.id === created.id)
     expect(deletedActivity).toBeUndefined()
   })
 
   it('should handle partial updates correctly', async () => {
     const ctx = createTestContext(testUser)
-    const caller = activityRouter.createCaller(ctx)
+    const caller = dataProcessingActivityRouter.createCaller(ctx)
 
     // Create initial activity
     const created = await caller.create({
@@ -147,7 +149,7 @@ describe('Integration: Activity CRUD Workflow', () => {
 
   it('should validate input data throughout workflow', async () => {
     const ctx = createTestContext(testUser)
-    const caller = activityRouter.createCaller(ctx)
+    const caller = dataProcessingActivityRouter.createCaller(ctx)
 
     // Validation on CREATE - empty name should fail
     await expect(
@@ -175,7 +177,7 @@ describe('Integration: Activity CRUD Workflow', () => {
 
   it('should maintain data consistency across operations', async () => {
     const ctx = createTestContext(testUser)
-    const caller = activityRouter.createCaller(ctx)
+    const caller = dataProcessingActivityRouter.createCaller(ctx)
 
     // Create activity
     const created = await caller.create({

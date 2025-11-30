@@ -28,7 +28,7 @@
 
 ### Core Privacy Entities
 
-8. [ ] Processing Activity Model — Implement DataProcessingActivity model with organizationId for multi-tenancy, workflow status tracking (DRAFT, UNDER_REVIEW, APPROVED, ACTIVE, SUSPENDED, ARCHIVED), risk level assessment, DPIA requirement flags (requiresDPIA, dpiaStatus), review date tracking, business owner and processing owner fields, retention period tracking, and metadata JSON field; add compound indexes for dashboard queries (organizationId + status + requiresDPIA, organizationId + nextReviewDate, riskLevel + dpiaStatus); create migrations and test multi-tenant isolation to enable core processing activity management. `S`
+8. [x] Processing Activity Model — Implement DataProcessingActivity model with organizationId for multi-tenancy, workflow status tracking (DRAFT, UNDER_REVIEW, APPROVED, ACTIVE, SUSPENDED, ARCHIVED), risk level assessment, DPIA requirement flags (requiresDPIA, dpiaStatus), review date tracking, business owner and processing owner fields, retention period tracking, and metadata JSON field; add compound indexes for dashboard queries (organizationId + status + requiresDPIA, organizationId + nextReviewDate, riskLevel + dpiaStatus); create migrations and test multi-tenant isolation to enable core processing activity management. `S`
 
 9. [ ] Data Subject Category Model — Implement DataSubject model with name, description, category classification, vulnerability flags (isVulnerable) for children/elderly/patients, example descriptions, and audit timestamps; create migrations and test to enable data subject tracking and automatic DPIA requirement detection for vulnerable groups. `S`
 

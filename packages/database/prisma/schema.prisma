@@ -52,10 +52,10 @@ model Organization {
   updatedAt DateTime            @updatedAt
 
   // Relations
-  users       User[]
-  invitations Invitation[]
-  activities  Activity[]
-  processors  Processor[]
+  users                    User[]
+  invitations              Invitation[]
+  dataProcessingActivities DataProcessingActivity[]
+  processors               Processor[]
 
   @@index([deletedAt])
 }
@@ -73,10 +73,12 @@ model User {
   updatedAt      DateTime     @updatedAt
 
   // Relations
-  organization    Organization? @relation(fields: [organizationId], references: [id])
-  accounts        Account[]     // OAuth provider accounts
-  sessions        Session[]     // Database sessions
-  invitationsSent Invitation[]  @relation("InvitationsSent")
+  organization              Organization?            @relation(fields: [organizationId], references: [id])
+  accounts                  Account[]                // OAuth provider accounts
+  sessions                  Session[]                // Database sessions
+  invitationsSent           Invitation[]             @relation("InvitationsSent")
+  ownedActivitiesBusiness   DataProcessingActivity[] @relation("BusinessOwner")
+  ownedActivitiesProcessing DataProcessingActivity[] @relation("ProcessingOwner")
 
   @@index([organizationId, primaryPersona])
   @@index([organizationId, createdAt])
@@ -253,28 +255,88 @@ model RecipientCategory {
 // Data Processing
 // ============================================================================
 
-// Activity status enum for lifecycle tracking
-enum ActivityStatus {
-  DRAFT       // Activity being created, not yet finalized
-  ACTIVE      // Activity in use, operational
-  ARCHIVED    // Activity no longer in use but kept for records
+// Data processing activity status enum for lifecycle tracking
+enum DataProcessingActivityStatus {
+  DRAFT           // Being created, not yet submitted
+  UNDER_REVIEW    // Submitted for DPO/Privacy Officer review
+  UNDER_REVISION  // Returned for changes by reviewer
+  REJECTED        // Permanently rejected
+  APPROVED        // Approved but not yet in production
+  ACTIVE          // In production use
+  SUSPENDED       // Temporarily paused
+  ARCHIVED        // End of life, historical record
+}
+
+// Risk level enum for processing activity assessment
+enum RiskLevel {
+  LOW      // Low risk to data subjects
+  MEDIUM   // Medium risk requiring monitoring
+  HIGH     // High risk requiring additional safeguards
+  CRITICAL // Critical risk requiring immediate action
+}
+
+// DPIA status enum for Data Protection Impact Assessment tracking
+enum DPIAStatus {
+  NOT_STARTED       // Required but not begun
+  IN_PROGRESS       // Being conducted
+  UNDER_REVIEW      // Submitted for DPO review
+  REQUIRES_REVISION // Returned for changes
+  APPROVED          // DPO approved
+  OUTDATED          // Needs refresh due to changes
+}
+
+// Time unit enum for retention period specification
+enum TimeUnit {
+  DAYS   // Retention measured in days
+  MONTHS // Retention measured in months
+  YEARS  // Retention measured in years
 }
 
 // Processing activity model for GDPR Article 30 record of processing activities
-model Activity {
-  id             String         @id @default(cuid())
-  name           String         // Activity name/title
-  description    String?        // Detailed description of the processing activity
-  organizationId String         // Foreign key to Organization
-  status         ActivityStatus @default(DRAFT) // Lifecycle status
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+model DataProcessingActivity {
+  id             String                        @id @default(cuid())
+  name           String                        // Activity name/title
+  description    String?                       // Detailed description of the processing activity
+  organizationId String                        // Foreign key to Organization
+  status         DataProcessingActivityStatus  @default(DRAFT) // Lifecycle status
+
+  // Risk and DPIA
+  riskLevel    RiskLevel?  // Risk assessment level (null = not yet assessed)
+  requiresDPIA Boolean?    // DPIA requirement determination (null = not yet determined)
+  dpiaStatus   DPIAStatus? // DPIA assessment status (only relevant when requiresDPIA = true)
+
+  // Owners (FK to User)
+  businessOwnerId   String? // Business owner responsible for the activity
+  processingOwnerId String? // Processing owner responsible for implementation
+
+  // Retention
+  retentionPeriodValue   Int?     // Numeric value for retention period (e.g., 7)
+  retentionPeriodUnit    TimeUnit? // Unit of time for retention period
+  retentionJustification String?  // Legal or business rationale for retention period
+
+  // Review scheduling
+  lastReviewedAt        DateTime? // Timestamp of most recent review
+  nextReviewDate        DateTime? // Scheduled date for next review
+  reviewFrequencyMonths Int?      // Review frequency in months (null = ad-hoc/as-needed)
+
+  // Metadata
+  metadata Json? // Extensible metadata field for custom attributes
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  businessOwner   User?        @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
+  processingOwner User?        @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)
 
+  // Indexes
   @@index([organizationId])
   @@index([organizationId, status])
+  @@index([organizationId, status, requiresDPIA])
+  @@index([organizationId, nextReviewDate])
+  @@index([riskLevel, dpiaStatus])
 }
 
 // Processor type enum for categorization
