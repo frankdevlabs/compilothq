@@ -2,7 +2,7 @@
 
 import { Button } from '@compilothq/ui'
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 
 import { getPlatformModifierKey, useKeyboardShortcut } from '@/hooks/use-keyboard-shortcut'
 
@@ -26,13 +26,13 @@ import { getPlatformModifierKey, useKeyboardShortcut } from '@/hooks/use-keyboar
  * ```
  */
 export function CommandPaletteTrigger() {
-  // Track the modifier key label for SSR compatibility
-  const [modifierKey, setModifierKey] = useState<string>('Ctrl')
-
-  // Determine the correct modifier key on the client side
-  useEffect(() => {
-    setModifierKey(getPlatformModifierKey())
-  }, [])
+  // Use useSyncExternalStore for platform-dependent state (React 19 best practice)
+  // This avoids setState in useEffect and properly handles SSR/client hydration
+  const modifierKey = useSyncExternalStore(
+    () => () => {}, // subscribe: no-op since platform doesn't change
+    () => getPlatformModifierKey(), // getSnapshot: client-side value
+    () => 'Ctrl' // getServerSnapshot: SSR fallback
+  )
 
   /**
    * Handle command palette trigger
