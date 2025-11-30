@@ -95,26 +95,26 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** None (can run parallel to Task Groups 1-2)
 
-- [ ] 3.0 Complete form field wrapper component
-  - [ ] 3.1 Write 3-5 focused tests for FormFieldWrapper functionality
+- [x] 3.0 Complete form field wrapper component
+  - [x] 3.1 Write 3-5 focused tests for FormFieldWrapper functionality
     - Test FormFieldWrapper renders label correctly
     - Test description text renders when provided
     - Test error message displays when form field has error
     - Test proper aria-describedby linking for accessibility
-  - [ ] 3.2 Create `packages/ui/src/components/form-field.tsx`
+  - [x] 3.2 Create `packages/ui/src/components/form-field.tsx`
     - Props interface: `label: string`, `name: string`, `description?: string`, `children: ReactNode`
     - Import FormItem, FormLabel, FormControl, FormDescription, FormMessage from existing `form.tsx`
-  - [ ] 3.3 Implement FormFieldWrapper component logic
+  - [x] 3.3 Implement FormFieldWrapper component logic
     - Use `useFormContext()` from react-hook-form for field state access
     - Compose: FormItem > FormLabel > FormControl (children) > FormDescription > FormMessage
     - Conditionally render FormDescription only when `description` prop provided
-  - [ ] 3.4 Ensure accessibility compliance
+  - [x] 3.4 Ensure accessibility compliance
     - Verify proper `aria-describedby` linking via existing `formDescriptionId` pattern
     - Maintain existing error state highlighting from FormLabel
     - Follow patterns from `packages/ui/src/components/form.tsx:92-104`
-  - [ ] 3.5 Export form-field component from `packages/ui/src/index.ts`
+  - [x] 3.5 Export form-field component from `packages/ui/src/index.ts`
     - Add `export * from './components/form-field'`
-  - [ ] 3.6 Ensure form field wrapper tests pass
+  - [x] 3.6 Ensure form field wrapper tests pass
     - Run ONLY the 3-5 tests written in 3.1
     - Verify accessibility attributes are correct
 
