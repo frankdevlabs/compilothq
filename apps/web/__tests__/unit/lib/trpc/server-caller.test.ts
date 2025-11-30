@@ -66,7 +66,7 @@ describe('Server-Side tRPC Caller Design', () => {
           list: () => ['user1', 'user2'],
           getById: (id: string) => `user-${id}`,
         },
-        activity: {
+        dataProcessingActivity: {
           list: () => ['activity1'],
           getById: (id: string) => `activity-${id}`,
         },

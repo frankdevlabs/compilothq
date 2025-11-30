@@ -5,9 +5,9 @@ import type { Session } from 'next-auth'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { type Context } from '@/server/context'
-import { activityRouter } from '@/server/routers/activity'
+import { dataProcessingActivityRouter } from '@/server/routers/dataProcessingActivity'
 
-describe('Activity Router', () => {
+describe('DataProcessingActivity Router', () => {
   let testOrg: Organization
   let testUser: User
   let otherOrg: Organization
@@ -60,7 +60,7 @@ describe('Activity Router', () => {
     it('should return only activities for current organization', async () => {
       // Create activities for both organizations
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Create activities for test org
       await caller.create({ name: 'Activity 1', description: 'Test activity 1' })
@@ -68,11 +68,12 @@ describe('Activity Router', () => {
 
       // Create activity for other org
       const otherCtx = createTestContext(otherUser)
-      const otherCaller = activityRouter.createCaller(otherCtx)
+      const otherCaller = dataProcessingActivityRouter.createCaller(otherCtx)
       await otherCaller.create({ name: 'Other Activity', description: 'Other org activity' })
 
       // List activities for test org
-      const activities = await caller.list()
+      const result = await caller.list()
+      const activities = result.items
 
       expect(activities.length).toBeGreaterThanOrEqual(2)
       expect(activities.every((a) => a.organizationId === testOrg.id)).toBe(true)
@@ -83,13 +84,14 @@ describe('Activity Router', () => {
 
     it('should filter activities by status when provided', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Create activity with DRAFT status (default)
       await caller.create({ name: 'Draft Activity', description: 'Draft' })
 
       // List only DRAFT activities
-      const draftActivities = await caller.list({ status: 'DRAFT' })
+      const result = await caller.list({ status: 'DRAFT' })
+      const draftActivities = result.items
 
       expect(draftActivities.length).toBeGreaterThan(0)
       expect(draftActivities.every((a) => a.status === 'DRAFT')).toBe(true)
@@ -97,10 +99,11 @@ describe('Activity Router', () => {
 
     it('should respect limit parameter', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // List with limit
-      const activities = await caller.list({ limit: 1 })
+      const result = await caller.list({ limit: 1 })
+      const activities = result.items
 
       expect(activities.length).toBeLessThanOrEqual(1)
     })
@@ -109,7 +112,7 @@ describe('Activity Router', () => {
   describe('getById', () => {
     it('should return activity with proper data', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Create an activity
       const created = await caller.create({
@@ -129,7 +132,7 @@ describe('Activity Router', () => {
 
     it('should throw NOT_FOUND if activity does not exist', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       await expect(caller.getById({ id: 'non-existent-id' })).rejects.toThrow(TRPCError)
       await expect(caller.getById({ id: 'non-existent-id' })).rejects.toMatchObject({
@@ -140,7 +143,7 @@ describe('Activity Router', () => {
     it('should throw FORBIDDEN if activity belongs to different organization', async () => {
       // Create activity for testOrg
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
       const created = await caller.create({
         name: 'Test Activity for Org Check',
         description: 'Test',
@@ -148,7 +151,7 @@ describe('Activity Router', () => {
 
       // Try to access it from otherOrg
       const otherCtx = createTestContext(otherUser)
-      const otherCaller = activityRouter.createCaller(otherCtx)
+      const otherCaller = dataProcessingActivityRouter.createCaller(otherCtx)
 
       await expect(otherCaller.getById({ id: created.id })).rejects.toThrow(TRPCError)
       await expect(otherCaller.getById({ id: created.id })).rejects.toMatchObject({
@@ -160,7 +163,7 @@ describe('Activity Router', () => {
   describe('create', () => {
     it('should create activity with validation', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       const activity = await caller.create({
         name: 'New Activity',
@@ -179,7 +182,7 @@ describe('Activity Router', () => {
 
     it('should create activity without optional description', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       const activity = await caller.create({
         name: 'Activity Without Description',
@@ -194,7 +197,7 @@ describe('Activity Router', () => {
   describe('update', () => {
     it('should update activity with proper authorization', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Create an activity
       const created = await caller.create({
@@ -218,7 +221,7 @@ describe('Activity Router', () => {
     it('should throw FORBIDDEN when updating activity from different organization', async () => {
       // Create activity for testOrg
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
       const created = await caller.create({
         name: 'Test Activity',
         description: 'Test',
@@ -226,7 +229,7 @@ describe('Activity Router', () => {
 
       // Try to update from otherOrg
       const otherCtx = createTestContext(otherUser)
-      const otherCaller = activityRouter.createCaller(otherCtx)
+      const otherCaller = dataProcessingActivityRouter.createCaller(otherCtx)
 
       await expect(
         otherCaller.update({
@@ -248,7 +251,7 @@ describe('Activity Router', () => {
   describe('delete', () => {
     it('should delete activity with proper authorization', async () => {
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // Create an activity
       const created = await caller.create({
@@ -268,7 +271,7 @@ describe('Activity Router', () => {
     it('should throw FORBIDDEN when deleting activity from different organization', async () => {
       // Create activity for testOrg
       const ctx = createTestContext(testUser)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
       const created = await caller.create({
         name: 'Test Activity',
         description: 'Test',
@@ -276,7 +279,7 @@ describe('Activity Router', () => {
 
       // Try to delete from otherOrg
       const otherCtx = createTestContext(otherUser)
-      const otherCaller = activityRouter.createCaller(otherCtx)
+      const otherCaller = dataProcessingActivityRouter.createCaller(otherCtx)
 
       await expect(otherCaller.delete({ id: created.id })).rejects.toThrow(TRPCError)
       await expect(otherCaller.delete({ id: created.id })).rejects.toMatchObject({
@@ -301,7 +304,7 @@ describe('Activity Router', () => {
       }
 
       const ctx = createTestContext(userWithoutOrg)
-      const caller = activityRouter.createCaller(ctx)
+      const caller = dataProcessingActivityRouter.createCaller(ctx)
 
       // All orgProcedure operations should throw FORBIDDEN
       await expect(caller.list()).rejects.toThrow(TRPCError)
