@@ -1,14 +1,14 @@
 import { z } from 'zod'
 
-import { ActivityCreateSchema } from './create.schema'
+import { DataProcessingActivityCreateSchema } from './create.schema'
 
 /**
- * Validation schema for updating an Activity
+ * Validation schema for updating a Data Processing Activity
  * All fields are optional to support partial updates
  */
-export const ActivityUpdateSchema = ActivityCreateSchema.partial()
+export const DataProcessingActivityUpdateSchema = DataProcessingActivityCreateSchema.partial()
 
 /**
- * Inferred TypeScript type for activity updates
+ * Inferred TypeScript type for data processing activity updates
  */
-export type ActivityUpdate = z.infer<typeof ActivityUpdateSchema>
+export type DataProcessingActivityUpdate = z.infer<typeof DataProcessingActivityUpdateSchema>
