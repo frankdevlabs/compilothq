@@ -25,12 +25,14 @@ if (process.env['NODE_ENV'] !== 'production') {
 export default prisma
 
 // Export all DAL functions
+export * from './dal/activities'
 export * from './dal/countries'
 export * from './dal/dataNatures'
 export * from './dal/devSessions'
 export * from './dal/invitations'
 export * from './dal/organizations'
 export * from './dal/processingActs'
+export * from './dal/processors'
 export * from './dal/recipientCategories'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
@@ -49,11 +51,13 @@ export * from '../generated/client/client'
 // Explicit type exports for documentation
 export type {
   Account,
+  Activity,
   Country,
   DataNature,
   Invitation,
   Organization,
   ProcessingAct,
+  Processor,
   RecipientCategory,
   Session,
   TransferMechanism,
