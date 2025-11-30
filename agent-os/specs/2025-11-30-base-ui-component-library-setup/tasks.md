@@ -171,30 +171,30 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** Task Groups 1-3 (UI primitives available)
 
-- [ ] 5.0 Complete organization switcher component
-  - [ ] 5.1 Write 4-6 focused tests for OrganizationSwitcher
+- [x] 5.0 Complete organization switcher component
+  - [x] 5.1 Write 4-6 focused tests for OrganizationSwitcher
     - Test component renders current organization name
     - Test dropdown opens and shows organization list
     - Test checkmark appears on active organization
     - Test "Create New Organization" action navigates to `/create-organization`
     - Test separator line renders between org list and create action
-  - [ ] 5.2 Create `apps/web/src/components/navigation/organization-switcher.tsx`
+  - [x] 5.2 Create `apps/web/src/components/navigation/organization-switcher.tsx`
     - Mark as `'use client'` component
     - Define props interface: `currentOrg: Organization`, `organizations: Organization[]`
     - Organization type: `{ id: string, name: string }`
-  - [ ] 5.3 Implement dropdown trigger using Select pattern
+  - [x] 5.3 Implement dropdown trigger using Select pattern
     - Use Select, SelectTrigger, SelectContent, SelectItem from `@compilothq/ui`
     - Display current organization name in trigger
     - Follow styling from `packages/ui/src/components/select.tsx`
-  - [ ] 5.4 Implement organization list with checkmark indicator
+  - [x] 5.4 Implement organization list with checkmark indicator
     - Map organizations to SelectItem components
     - Show CheckIcon for active organization (via SelectPrimitive.ItemIndicator)
     - Handle organization switch via `onValueChange` callback
-  - [ ] 5.5 Add "Create New Organization" action with separator
+  - [x] 5.5 Add "Create New Organization" action with separator
     - Use SelectSeparator before the create action
     - Render "Create New Organization" as clickable item
     - Navigate to `/create-organization` route using `next/navigation` `useRouter`
-  - [ ] 5.6 Ensure organization switcher tests pass
+  - [x] 5.6 Ensure organization switcher tests pass
     - Run ONLY the 4-6 tests written in 5.1
     - Verify dropdown behavior and navigation work correctly
 
