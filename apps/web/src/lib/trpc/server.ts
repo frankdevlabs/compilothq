@@ -103,6 +103,7 @@ export const api = new Proxy(
           get(_routerTarget, procedure: string) {
             return async (...args: unknown[]) => {
               const caller = await getServerCaller()
+              // Dynamic router access via Proxy - safe as we validate before calling
               // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, security/detect-object-injection
               const routerObj = (caller as any)[router]
               if (!routerObj) {
