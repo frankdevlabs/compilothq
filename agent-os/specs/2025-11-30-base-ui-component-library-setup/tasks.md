@@ -51,33 +51,33 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** None (can run parallel to Task Group 1)
 
-- [ ] 2.0 Complete toast notification system
-  - [ ] 2.1 Write 4-6 focused tests for toast functionality
+- [x] 2.0 Complete toast notification system
+  - [x] 2.1 Write 4-6 focused tests for toast functionality
     - Test Toaster component renders without errors
     - Test success toast uses gold accent styling
     - Test error toast uses destructive red styling and 8s duration
     - Test toast with action button renders correctly
     - Test warning and info variants render with correct durations
-  - [ ] 2.2 Install sonner package in packages/ui
+  - [x] 2.2 Install sonner package in packages/ui
     - Run `pnpm add sonner` in packages/ui directory
     - Verify peer dependencies are satisfied
-  - [ ] 2.3 Create `packages/ui/src/components/sonner.tsx` wrapper
+  - [x] 2.3 Create `packages/ui/src/components/sonner.tsx` wrapper
     - Import and configure Toaster from sonner
     - Set position to `top-right` or `bottom-right` (consistent with design)
     - Configure base styling to match design system
-  - [ ] 2.4 Configure toast variant durations and styling
+  - [x] 2.4 Configure toast variant durations and styling
     - Success: 4000ms duration, gold accent (`--accent-gold`)
     - Error: 8000ms duration (persists longer), destructive red (`--destructive`)
     - Warning: 5000ms duration
     - Info: 5000ms duration
-  - [ ] 2.5 Implement action button support in toast helper
+  - [x] 2.5 Implement action button support in toast helper
     - Create typed toast helper functions: `toast.success()`, `toast.error()`, etc.
     - Support `action` prop with label and onClick for undo operations
     - Export toast helper for app-wide usage
-  - [ ] 2.6 Export sonner components from `packages/ui/src/index.ts`
+  - [x] 2.6 Export sonner components from `packages/ui/src/index.ts`
     - Add `export * from './components/sonner'`
     - Export both `Toaster` component and `toast` helper
-  - [ ] 2.7 Ensure toast system tests pass
+  - [x] 2.7 Ensure toast system tests pass
     - Run ONLY the 4-6 tests written in 2.1
     - Verify variant styling and durations are correct
 
