@@ -57,7 +57,7 @@ export async function listProcessorsByOrganization(
       ...(options?.type ? { type: options.type } : {}),
       ...(options?.isActive !== undefined ? { isActive: options.isActive } : {}),
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit + 1, // Fetch one extra to determine if there are more
     ...(options?.cursor ? { cursor: { id: options.cursor }, skip: 1 } : {}),
   })
