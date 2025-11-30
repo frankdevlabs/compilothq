@@ -16,48 +16,49 @@
 
 **Dependencies**: None
 
-- [ ] 1.0 Complete Prisma schema updates
-  - [ ] 1.1 Add new enums to schema.prisma
+- [x] 1.0 Complete Prisma schema updates
+  - [x] 1.1 Add new enums to schema.prisma
     - Add `DataProcessingActivityStatus` enum with 8 states: `DRAFT`, `UNDER_REVIEW`, `UNDER_REVISION`, `REJECTED`, `APPROVED`, `ACTIVE`, `SUSPENDED`, `ARCHIVED`
     - Add `RiskLevel` enum: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
     - Add `DPIAStatus` enum: `NOT_STARTED`, `IN_PROGRESS`, `UNDER_REVIEW`, `REQUIRES_REVISION`, `APPROVED`, `OUTDATED`
     - Add `TimeUnit` enum: `DAYS`, `MONTHS`, `YEARS`
     - Follow existing enum naming convention (PascalCase with inline comments)
     - Place in "Data Processing" section of schema (near existing ActivityStatus)
-  - [ ] 1.2 Rename Activity model to DataProcessingActivity
+  - [x] 1.2 Rename Activity model to DataProcessingActivity
     - Rename model from `Activity` to `DataProcessingActivity`
     - Rename `status` field type from `ActivityStatus` to `DataProcessingActivityStatus`
     - Update relation name in Organization model: `activities Activity[]` to `dataProcessingActivities DataProcessingActivity[]`
-  - [ ] 1.3 Add owner foreign key fields to DataProcessingActivity
+  - [x] 1.3 Add owner foreign key fields to DataProcessingActivity
     - Add `businessOwnerId String?` field
     - Add `processingOwnerId String?` field
     - Add `businessOwner User? @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)`
     - Add `processingOwner User? @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)`
     - Add corresponding back-relations on User model: `ownedActivitiesBusiness DataProcessingActivity[] @relation("BusinessOwner")` and `ownedActivitiesProcessing DataProcessingActivity[] @relation("ProcessingOwner")`
-  - [ ] 1.4 Add risk and DPIA fields
+  - [x] 1.4 Add risk and DPIA fields
     - Add `riskLevel RiskLevel?` (nullable for "not yet assessed")
     - Add `requiresDPIA Boolean?` (nullable for "not yet determined")
     - Add `dpiaStatus DPIAStatus?` (only relevant when requiresDPIA = true)
-  - [ ] 1.5 Add retention period fields
+  - [x] 1.5 Add retention period fields
     - Add `retentionPeriodValue Int?`
     - Add `retentionPeriodUnit TimeUnit?`
     - Add `retentionJustification String?`
-  - [ ] 1.6 Add review scheduling fields
+  - [x] 1.6 Add review scheduling fields
     - Add `lastReviewedAt DateTime?`
     - Add `nextReviewDate DateTime?`
     - Add `reviewFrequencyMonths Int?`
-  - [ ] 1.7 Add metadata field
+  - [x] 1.7 Add metadata field
     - Add `metadata Json?` for extensibility
-  - [ ] 1.8 Add compound indexes
+  - [x] 1.8 Add compound indexes
     - Add `@@index([organizationId, status, requiresDPIA])` for dashboard filtering
     - Add `@@index([organizationId, nextReviewDate])` for review scheduling queries
     - Add `@@index([riskLevel, dpiaStatus])` for risk/DPIA reporting
     - Keep existing `@@index([organizationId])` and `@@index([organizationId, status])`
-  - [ ] 1.9 Validate schema compiles
+  - [x] 1.9 Validate schema compiles
     - Run `npx prisma validate` to ensure schema is valid
     - Verify no type errors in schema definition
 
 **Acceptance Criteria:**
+
 - Prisma schema compiles without errors (`npx prisma validate` passes)
 - All 4 new enums defined with correct values and inline comments
 - Model renamed from Activity to DataProcessingActivity
@@ -74,26 +75,27 @@
 
 #### Task Group 2: Database Migration
 
-**Dependencies**: Task Group 1 (schema must be complete)
+**Dependencies**: Task Group 1 (schema must be complete) - COMPLETED
 
-- [ ] 2.0 Complete database migration
-  - [ ] 2.1 Generate Prisma migration
+- [x] 2.0 Complete database migration
+  - [x] 2.1 Generate Prisma migration
     - Run `npx prisma migrate dev --name rename_activity_to_data_processing_activity --create-only`
     - Review generated SQL to verify it uses ALTER/RENAME (not DROP/CREATE)
-  - [ ] 2.2 Review and adjust migration SQL if needed
+  - [x] 2.2 Review and adjust migration SQL if needed
     - Ensure enum rename: `ALTER TYPE "ActivityStatus" RENAME TO "DataProcessingActivityStatus"`
     - Ensure new enum values are added with `ALTER TYPE ... ADD VALUE`
     - Ensure table rename: `ALTER TABLE "Activity" RENAME TO "DataProcessingActivity"`
     - Ensure foreign key constraints for owner fields use `ON DELETE SET NULL`
     - Verify all new indexes are created with correct column combinations
-  - [ ] 2.3 Apply migration to development database
+  - [x] 2.3 Apply migration to development database
     - Run `npx prisma migrate dev`
     - Verify migration completes without errors
-  - [ ] 2.4 Regenerate Prisma client
+  - [x] 2.4 Regenerate Prisma client
     - Run `npx prisma generate`
     - Verify new types are available: `DataProcessingActivity`, `DataProcessingActivityStatus`, `RiskLevel`, `DPIAStatus`, `TimeUnit`
 
 **Acceptance Criteria:**
+
 - Migration file exists in `prisma/migrations/` directory
 - Migration uses RENAME operations (preserves existing data)
 - Migration runs successfully on development database
@@ -108,10 +110,10 @@
 
 #### Task Group 3: DAL Functions
 
-**Dependencies**: Task Group 2 (migration must be applied, client regenerated)
+**Dependencies**: Task Group 2 (migration must be applied, client regenerated) - COMPLETED
 
-- [ ] 3.0 Complete DAL layer
-  - [ ] 3.1 Write 6 focused tests for DAL functions
+- [x] 3.0 Complete DAL layer
+  - [x] 3.1 Write 6 focused tests for DAL functions
     - Test `createDataProcessingActivity` with required fields + new optional fields
     - Test `getDataProcessingActivityById` returns record or null
     - Test `getDataProcessingActivityByIdForOrg` enforces organization ownership
@@ -120,48 +122,49 @@
     - Test multi-tenancy isolation (org1 cannot see org2 activities)
     - Write tests in `/packages/database/__tests__/integration/dal/dataProcessingActivities.integration.test.ts`
     - Follow existing pattern from `activities.integration.test.ts`
-  - [ ] 3.2 Create dataProcessingActivities.ts DAL file
+  - [x] 3.2 Create dataProcessingActivities.ts DAL file
     - Create `/packages/database/src/dal/dataProcessingActivities.ts`
     - Import types: `DataProcessingActivity`, `DataProcessingActivityStatus`, `RiskLevel`, `DPIAStatus`, `TimeUnit`, `Prisma`
     - Include SECURITY comments documenting multi-tenancy behavior
-  - [ ] 3.3 Implement createDataProcessingActivity function
+  - [x] 3.3 Implement createDataProcessingActivity function
     - Accept all fields from spec signature (name, description, organizationId, status, riskLevel, requiresDPIA, dpiaStatus, businessOwnerId, processingOwnerId, retentionPeriodValue, retentionPeriodUnit, retentionJustification, lastReviewedAt, nextReviewDate, reviewFrequencyMonths, metadata)
     - Default status to 'DRAFT' if not provided
     - Return created `DataProcessingActivity`
-  - [ ] 3.4 Implement getDataProcessingActivityById function
+  - [x] 3.4 Implement getDataProcessingActivityById function
     - Accept `id: string`
     - Return `DataProcessingActivity | null`
-  - [ ] 3.5 Implement getDataProcessingActivityByIdForOrg function
+  - [x] 3.5 Implement getDataProcessingActivityByIdForOrg function
     - Accept `id: string` and `organizationId: string`
     - Query with both conditions for ownership verification
     - Return `DataProcessingActivity | null`
-  - [ ] 3.6 Implement listDataProcessingActivitiesByOrganization function
+  - [x] 3.6 Implement listDataProcessingActivitiesByOrganization function
     - Accept `organizationId` and optional filters: status, riskLevel, requiresDPIA, dpiaStatus, businessOwnerId, processingOwnerId, dueBefore, limit, cursor
     - Use cursor-based pagination pattern from `processors.ts` (`take: limit + 1`)
     - Return `{ items: DataProcessingActivity[], nextCursor: string | null }`
     - Always filter by organizationId for multi-tenancy
-  - [ ] 3.7 Implement updateDataProcessingActivity function
+  - [x] 3.7 Implement updateDataProcessingActivity function
     - Accept `id` and partial update data
     - Support explicit null values to clear optional fields (riskLevel, requiresDPIA, dpiaStatus, owner IDs, retention fields, review fields)
     - Return updated `DataProcessingActivity`
-  - [ ] 3.8 Implement deleteDataProcessingActivity function
+  - [x] 3.8 Implement deleteDataProcessingActivity function
     - Accept `id: string`
     - Return deleted `DataProcessingActivity`
-  - [ ] 3.9 Implement countDataProcessingActivitiesByOrganization function
+  - [x] 3.9 Implement countDataProcessingActivitiesByOrganization function
     - Accept `organizationId` and optional filters: status, requiresDPIA
     - Return `number` count for dashboard widgets
-  - [ ] 3.10 Export DAL functions from index.ts
+  - [x] 3.10 Export DAL functions from index.ts
     - Add `export * from './dal/dataProcessingActivities'` to `/packages/database/src/index.ts`
     - Add `DataProcessingActivity` to explicit type exports
-  - [ ] 3.11 Remove old activities.ts DAL file
+  - [x] 3.11 Remove old activities.ts DAL file
     - Delete `/packages/database/src/dal/activities.ts`
     - Remove `export * from './dal/activities'` from index.ts
     - Remove `Activity` from explicit type exports
-  - [ ] 3.12 Run DAL tests to verify implementation
+  - [x] 3.12 Run DAL tests to verify implementation
     - Run only the 6 tests from 3.1: `pnpm test packages/database/__tests__/integration/dal/dataProcessingActivities.integration.test.ts`
     - Verify all tests pass
 
 **Acceptance Criteria:**
+
 - All 6 DAL tests pass
 - DAL file exports all 7 functions (create, getById, getByIdForOrg, list, update, delete, count)
 - Functions type-check correctly with new model and enums
@@ -178,27 +181,28 @@
 
 #### Task Group 4: Test Review and Integration
 
-**Dependencies**: Task Group 3
+**Dependencies**: Task Group 3 - COMPLETED
 
-- [ ] 4.0 Complete test verification
-  - [ ] 4.1 Remove old activities integration test file
+- [x] 4.0 Complete test verification
+  - [x] 4.1 Remove old activities integration test file
     - Delete `/packages/database/__tests__/integration/dal/activities.integration.test.ts`
-  - [ ] 4.2 Review existing tests for gaps
+  - [x] 4.2 Review existing tests for gaps
     - Verify 6 tests from Task 3.1 cover: CRUD, pagination, filtering, multi-tenancy
     - Identify if any critical workflow is missing coverage
-  - [ ] 4.3 Add up to 4 additional tests if critical gaps exist
+  - [x] 4.3 Add up to 4 additional tests if critical gaps exist
     - Consider: owner FK cascade behavior (SetNull on user deletion)
     - Consider: dueBefore filter for review scheduling queries
     - Consider: count function accuracy
     - Consider: index usage verification (explain plan - optional)
-  - [ ] 4.4 Run all feature-specific tests
+  - [x] 4.4 Run all feature-specific tests
     - Run: `pnpm test packages/database/__tests__/integration/dal/dataProcessingActivities.integration.test.ts`
     - Verify all tests pass (expected: 6-10 tests)
-  - [ ] 4.5 Verify TypeScript compilation
+  - [x] 4.5 Verify TypeScript compilation
     - Run: `pnpm -F @compilothq/database build` or `tsc --noEmit`
     - Ensure no type errors in DAL or test files
 
 **Acceptance Criteria:**
+
 - Old activities test file removed
 - All DataProcessingActivity tests pass (6-10 tests total)
 - TypeScript compilation succeeds with no errors
@@ -214,16 +218,16 @@
 Recommended implementation sequence:
 
 ```
-Task Group 1: Prisma Schema Updates
+Task Group 1: Prisma Schema Updates ✅ COMPLETED
        |
        v
-Task Group 2: Database Migration
+Task Group 2: Database Migration ✅ COMPLETED
        |
        v
-Task Group 3: DAL Functions
+Task Group 3: DAL Functions ✅ COMPLETED
        |
        v
-Task Group 4: Test Review and Integration
+Task Group 4: Test Review and Integration ✅ COMPLETED
 ```
 
 **Total estimated effort**: 3-4 hours
@@ -232,21 +236,22 @@ Task Group 4: Test Review and Integration
 
 ## Files to Create/Modify
 
-| Action | File Path |
-|--------|-----------|
-| Modify | `/packages/database/prisma/schema.prisma` |
+| Action | File Path                                                                                                    |
+| ------ | ------------------------------------------------------------------------------------------------------------ |
+| Modify | `/packages/database/prisma/schema.prisma`                                                                    |
 | Create | `/packages/database/prisma/migrations/[timestamp]_rename_activity_to_data_processing_activity/migration.sql` |
-| Create | `/packages/database/src/dal/dataProcessingActivities.ts` |
-| Delete | `/packages/database/src/dal/activities.ts` |
-| Modify | `/packages/database/src/index.ts` |
-| Create | `/packages/database/__tests__/integration/dal/dataProcessingActivities.integration.test.ts` |
-| Delete | `/packages/database/__tests__/integration/dal/activities.integration.test.ts` |
+| Create | `/packages/database/src/dal/dataProcessingActivities.ts`                                                     |
+| Delete | `/packages/database/src/dal/activities.ts`                                                                   |
+| Modify | `/packages/database/src/index.ts`                                                                            |
+| Create | `/packages/database/__tests__/integration/dal/dataProcessingActivities.integration.test.ts`                  |
+| Delete | `/packages/database/__tests__/integration/dal/activities.integration.test.ts`                                |
 
 ---
 
 ## Out of Scope Reminder
 
 Do NOT include tasks for:
+
 - Junction tables (Purpose, DataSubject, DataCategory relationships)
 - tRPC router updates or API layer changes
 - UI components or frontend changes
@@ -263,6 +268,7 @@ Do NOT include tasks for:
 ## Reference Files
 
 Existing patterns to follow:
+
 - DAL pattern: `/packages/database/src/dal/processors.ts` (cursor pagination)
 - DAL pattern: `/packages/database/src/dal/activities.ts` (basic CRUD)
 - Test pattern: `/packages/database/__tests__/integration/dal/activities.integration.test.ts`
