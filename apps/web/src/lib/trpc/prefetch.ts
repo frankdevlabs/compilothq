@@ -15,8 +15,8 @@ import { dehydrate, QueryClient } from '@tanstack/react-query'
  * import { ActivityList } from '@/components/activities/ActivityList'
  *
  * export default async function ActivitiesPage() {
- *   const queryClient = await prefetchQuery('activity.list', async () => {
- *     return api.activity.list({ limit: 50 })
+ *   const queryClient = await prefetchQuery('dataProcessingActivity.list', async () => {
+ *     return api.dataProcessingActivity.list({ limit: 50 })
  *   })
  *
  *   return (
@@ -35,7 +35,7 @@ import { dehydrate, QueryClient } from '@tanstack/react-query'
  *
  * export function ActivityList() {
  *   // This will use the prefetched data on initial render, no loading state!
- *   const { data, isLoading } = trpc.activity.list.useQuery({ limit: 50 })
+ *   const { data, isLoading } = trpc.dataProcessingActivity.list.useQuery({ limit: 50 })
  *
  *   // data is immediately available from prefetch
  *   return <div>{data?.map(activity => ...)}</div>
@@ -55,8 +55,8 @@ import { dehydrate, QueryClient } from '@tanstack/react-query'
  *
  * @example
  * ```typescript
- * const queryClient = await prefetchQuery('activity.list', async () => {
- *   return api.activity.list({ limit: 50 })
+ * const queryClient = await prefetchQuery('dataProcessingActivity.list', async () => {
+ *   return api.dataProcessingActivity.list({ limit: 50 })
  * })
  * ```
  */
@@ -87,8 +87,8 @@ export async function prefetchQuery<TData>(
  * ```typescript
  * const queryClient = await prefetchQueries([
  *   {
- *     queryKey: 'activity.list',
- *     queryFn: () => api.activity.list({ limit: 50 }),
+ *     queryKey: 'dataProcessingActivity.list',
+ *     queryFn: () => api.dataProcessingActivity.list({ limit: 50 }),
  *   },
  *   {
  *     queryKey: 'processor.list',
@@ -128,7 +128,7 @@ export async function prefetchQueries(
  *
  * @example
  * ```typescript
- * const queryClient = await prefetchQuery('activity.list', () => api.activity.list())
+ * const queryClient = await prefetchQuery('dataProcessingActivity.list', () => api.dataProcessingActivity.list())
  * const dehydratedState = getDehydratedState(queryClient)
  *
  * return (
@@ -153,8 +153,8 @@ export function getDehydratedState(queryClient: QueryClient) {
  * import { ActivityList } from './ActivityList'
  *
  * export default async function ActivitiesPage() {
- *   const queryClient = await prefetchQuery('activity.list', () => {
- *     return api.activity.list({ limit: 50 })
+ *   const queryClient = await prefetchQuery('dataProcessingActivity.list', () => {
+ *     return api.dataProcessingActivity.list({ limit: 50 })
  *   })
  *
  *   return (
@@ -171,7 +171,7 @@ export function getDehydratedState(queryClient: QueryClient) {
  * import { trpc } from '@/lib/trpc/client'
  *
  * export function ActivityList() {
- *   const { data } = trpc.activity.list.useQuery({ limit: 50 })
+ *   const { data } = trpc.dataProcessingActivity.list.useQuery({ limit: 50 })
  *
  *   // Data is immediately available from prefetch, no loading spinner!
  *   return (

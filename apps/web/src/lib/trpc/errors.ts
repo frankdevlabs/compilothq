@@ -52,7 +52,7 @@ const DEFAULT_ERROR_MESSAGE = 'An error occurred. Please try again.'
  *
  * @example
  * ```tsx
- * const mutation = trpc.activity.create.useMutation({
+ * const mutation = trpc.dataProcessingActivity.create.useMutation({
  *   onError: (error) => {
  *     toast.error(getTRPCErrorMessage(error))
  *   }

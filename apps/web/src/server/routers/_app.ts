@@ -1,7 +1,7 @@
 import { router } from '../trpc'
-import { activityRouter } from './activity'
 import { controlRouter } from './control'
 import { dataCategoryRouter } from './dataCategory'
+import { dataProcessingActivityRouter } from './dataProcessingActivity'
 import { invitationRouter } from './invitation'
 import { organizationRouter } from './organization'
 import { processorRouter } from './processor'
@@ -9,7 +9,7 @@ import { riskRouter } from './risk'
 import { userRouter } from './user'
 
 export const appRouter = router({
-  activity: activityRouter,
+  dataProcessingActivity: dataProcessingActivityRouter,
   control: controlRouter,
   dataCategory: dataCategoryRouter,
   invitation: invitationRouter,
