@@ -307,30 +307,30 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** Task Groups 1-3 (UI primitives available)
 
-- [ ] 8.0 Complete PageContainer component
-  - [ ] 8.1 Write 4-6 focused tests for PageContainer
+- [x] 8.0 Complete PageContainer component
+  - [x] 8.1 Write 4-6 focused tests for PageContainer
     - Test PageContainer renders title as h1 element
     - Test subtitle renders below heading when provided
     - Test breadcrumbs slot renders when provided
     - Test actions slot renders right-aligned when provided
     - Test container applies p-6 padding and max-w-7xl constraint
-  - [ ] 8.2 Create `apps/web/src/components/layout/page-container.tsx`
+  - [x] 8.2 Create `apps/web/src/components/layout/page-container.tsx`
     - Props interface: `title: string`, `subtitle?: string`, `breadcrumbs?: ReactNode`, `actions?: ReactNode`, `children: ReactNode`
     - Mark as client or server component based on usage (likely server-compatible)
-  - [ ] 8.3 Implement header section with title and actions
+  - [x] 8.3 Implement header section with title and actions
     - Render `title` as `<h1>` with appropriate heading styles
     - Render optional `subtitle` as `<p>` with muted text styling below h1
     - Flex container with `justify-between` for title/actions alignment
     - Actions slot right-aligned
-  - [ ] 8.4 Implement breadcrumbs slot
+  - [x] 8.4 Implement breadcrumbs slot
     - Render `breadcrumbs` ReactNode above the title section
     - No automatic breadcrumb generation (accepts pre-built component)
     - Appropriate margin-bottom between breadcrumbs and title
-  - [ ] 8.5 Apply standardized layout styling
+  - [x] 8.5 Apply standardized layout styling
     - Container padding: `p-6` matching `(auth)/layout.tsx` main area
     - Max-width constraint: `max-w-7xl mx-auto` for responsive centering
     - Ensure children render below header section with appropriate spacing
-  - [ ] 8.6 Ensure PageContainer tests pass
+  - [x] 8.6 Ensure PageContainer tests pass
     - Run ONLY the 4-6 tests written in 8.1
     - Verify all slots render correctly
 
