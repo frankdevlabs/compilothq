@@ -228,7 +228,7 @@ describe('Component Integration Tests', () => {
     it('should allow organization switcher interaction independent of sidebar collapse state', async () => {
       // Arrange
       const user = userEvent.setup({ pointerEventsCheck: 0 })
-      const onOrgChange = vi.fn()
+      const onOrganizationChange = vi.fn()
 
       render(
         <div className="flex">
@@ -237,7 +237,7 @@ describe('Component Integration Tests', () => {
             <OrganizationSwitcher
               currentOrg={mockOrganizations[0]}
               organizations={mockOrganizations}
-              onOrgChange={onOrgChange}
+              onOrganizationChange={onOrganizationChange}
             />
           </div>
         </div>

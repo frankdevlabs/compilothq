@@ -57,6 +57,8 @@ beforeAll(() => {
 const mockSession: Session = {
   user: {
     id: 'user-1',
+    organizationId: 'org-1',
+    primaryPersona: 'DPO',
     name: 'John Doe',
     email: 'john@example.com',
     organization: {
