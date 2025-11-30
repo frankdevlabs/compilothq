@@ -32,7 +32,13 @@ test.describe('Authenticated User Redirects', () => {
     test('authenticated user with callbackUrl is redirected to that URL', async ({ page }) => {
       await setAuthCookie(page, 'DPO')
 
-      await page.goto('/login?callbackUrl=/settings')
+      // Use networkidle to ensure redirect completes before assertion
+      const response = await page.goto('/login?callbackUrl=/settings', {
+        waitUntil: 'networkidle',
+      })
+
+      // Verify successful response (not an error during redirect)
+      expect(response?.ok()).toBe(true)
 
       await expect(page).toHaveURL(/\/settings/)
     })
@@ -42,7 +48,13 @@ test.describe('Authenticated User Redirects', () => {
     }) => {
       await setAuthCookie(page, 'DPO')
 
-      await page.goto('/login?callbackUrl=https://evil.com')
+      // Use networkidle to ensure redirect completes before assertion
+      const response = await page.goto('/login?callbackUrl=https://evil.com', {
+        waitUntil: 'networkidle',
+      })
+
+      // Verify successful response (not an error during redirect)
+      expect(response?.ok()).toBe(true)
 
       await expect(page).toHaveURL(/\/dashboard/)
     })

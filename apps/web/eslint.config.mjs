@@ -1,3 +1,5 @@
+// Extend root ESLint config and add Next.js-specific rules
+import rootConfig from "../../eslint.config.mjs";
 // @ts-expect-error - eslint-config-next does not provide TypeScript definitions for these subpaths
 // ESLint v9+ flat configs are often written in .mjs to avoid type complexity
 import nextVitals from "eslint-config-next/core-web-vitals";
@@ -7,7 +9,10 @@ import reactHooks from "eslint-plugin-react-hooks";
 import vitest from "eslint-plugin-vitest";
 
 const eslintConfig = [
-  // Global ignores - must be first
+  // Start with root config (includes TypeScript strict rules + security plugin)
+  ...rootConfig,
+
+  // Override ignores for Next.js workspace
   {
     ignores: [
       ".next/**",
@@ -19,6 +24,7 @@ const eslintConfig = [
     ],
   },
 
+  // Add Next.js-specific rules
   ...nextVitals,
   ...nextTs,
 

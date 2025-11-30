@@ -54,6 +54,8 @@ model Organization {
   // Relations
   users       User[]
   invitations Invitation[]
+  activities  Activity[]
+  processors  Processor[]
 
   @@index([deletedAt])
 }
@@ -251,7 +253,55 @@ model RecipientCategory {
 // Data Processing
 // ============================================================================
 
-// Future data processing models will be added here
+// Activity status enum for lifecycle tracking
+enum ActivityStatus {
+  DRAFT       // Activity being created, not yet finalized
+  ACTIVE      // Activity in use, operational
+  ARCHIVED    // Activity no longer in use but kept for records
+}
+
+// Processing activity model for GDPR Article 30 record of processing activities
+model Activity {
+  id             String         @id @default(cuid())
+  name           String         // Activity name/title
+  description    String?        // Detailed description of the processing activity
+  organizationId String         // Foreign key to Organization
+  status         ActivityStatus @default(DRAFT) // Lifecycle status
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+}
+
+// Processor type enum for categorization
+enum ProcessorType {
+  DATA_PROCESSOR      // Third-party data processor
+  SUB_PROCESSOR       // Sub-processor engaged by another processor
+  JOINT_CONTROLLER    // Joint controller sharing responsibility
+  SERVICE_PROVIDER    // General service provider handling data
+}
+
+// Processor model for tracking third-party data processors
+model Processor {
+  id             String        @id @default(cuid())
+  name           String        // Processor name/company name
+  type           ProcessorType // Type of processor relationship
+  description    String?       // Description of services provided
+  organizationId String        // Foreign key to Organization
+  isActive       Boolean       @default(true) // Active/inactive status
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+}
 
 // ============================================================================
 // Compliance
