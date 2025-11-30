@@ -1,5 +1,6 @@
 import './globals.css'
 
+import { Toaster } from '@compilothq/ui'
 import type { Metadata } from 'next'
 import { Raleway, Ubuntu } from 'next/font/google'
 
@@ -44,6 +45,7 @@ export default async function RootLayout({
               disableTransitionOnChange={false}
             >
               {children}
+              <Toaster />
             </ThemeProvider>
           </TRPCProvider>
         </SessionProvider>

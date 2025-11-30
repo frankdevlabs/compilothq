@@ -350,19 +350,19 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** Task Group 2 (Toast system)
 
-- [ ] 9.0 Complete root layout integration
-  - [ ] 9.1 Write 2-3 focused tests for root layout integration
+- [x] 9.0 Complete root layout integration
+  - [x] 9.1 Write 2-3 focused tests for root layout integration
     - Test Toaster component renders inside ThemeProvider
     - Test toast notifications can be triggered from child components
-  - [ ] 9.2 Add Toaster to `apps/web/src/app/layout.tsx`
+  - [x] 9.2 Add Toaster to `apps/web/src/app/layout.tsx`
     - Import Toaster from `@compilothq/ui`
     - Place `<Toaster />` inside ThemeProvider, after {children}
     - Ensure Toaster respects theme (light/dark mode)
-  - [ ] 9.3 Verify toast notifications work app-wide
+  - [x] 9.3 Verify toast notifications work app-wide
     - Create simple test page or use existing page to trigger toast
     - Test all four variants: success, error, warning, info
     - Verify styling matches design tokens
-  - [ ] 9.4 Ensure root layout integration tests pass
+  - [x] 9.4 Ensure root layout integration tests pass
     - Run ONLY the 2-3 tests written in 9.1
     - Verify toasts render correctly
 
