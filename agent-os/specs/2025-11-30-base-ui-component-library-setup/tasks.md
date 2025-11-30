@@ -14,27 +14,27 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** None
 
-- [ ] 1.0 Complete skeleton loading components
-  - [ ] 1.1 Write 3-5 focused tests for Skeleton component functionality
+- [x] 1.0 Complete skeleton loading components
+  - [x] 1.1 Write 3-5 focused tests for Skeleton component functionality
     - Test Skeleton base component renders with correct muted styling
     - Test SkeletonText renders multiple paragraph lines
     - Test SkeletonCard renders card placeholder structure
     - Test animate-pulse class is applied correctly
-  - [ ] 1.2 Create `packages/ui/src/components/skeleton.tsx`
+  - [x] 1.2 Create `packages/ui/src/components/skeleton.tsx`
     - Base `Skeleton` component with `bg-muted` using `--muted: oklch(0.97 0 0)` token
     - Apply `animate-pulse` for subtle loading animation
     - Accept className and standard div props for flexibility
-  - [ ] 1.3 Create `SkeletonText` variant
+  - [x] 1.3 Create `SkeletonText` variant
     - Props: `lines?: number` (default 3) for paragraph placeholder
     - Render multiple `Skeleton` elements with varying widths
     - Last line shorter (75%) to simulate natural text ending
-  - [ ] 1.4 Create `SkeletonCard` variant
+  - [x] 1.4 Create `SkeletonCard` variant
     - Combine card structure with skeleton elements
     - Include header area, content lines, and optional action area
     - Match existing Card component proportions from `packages/ui/src/components/card.tsx`
-  - [ ] 1.5 Export skeleton components from `packages/ui/src/index.ts`
+  - [x] 1.5 Export skeleton components from `packages/ui/src/index.ts`
     - Add `export * from './components/skeleton'`
-  - [ ] 1.6 Ensure skeleton component tests pass
+  - [x] 1.6 Ensure skeleton component tests pass
     - Run ONLY the 3-5 tests written in 1.1
     - Verify components render correctly with muted styling
 
@@ -449,31 +449,31 @@ Phase 6: Verification (After all phases)
 
 ### New Files to Create
 
-| File Path | Task Group |
-|-----------|------------|
-| `packages/ui/src/components/skeleton.tsx` | 1 |
-| `packages/ui/src/components/sonner.tsx` | 2 |
-| `packages/ui/src/components/form-field.tsx` | 3 |
-| `apps/web/src/hooks/use-keyboard-shortcut.ts` | 4 |
-| `apps/web/src/components/navigation/organization-switcher.tsx` | 5 |
-| `apps/web/src/components/layout/page-container.tsx` | 8 |
+| File Path                                                      | Task Group |
+| -------------------------------------------------------------- | ---------- |
+| `packages/ui/src/components/skeleton.tsx`                      | 1          |
+| `packages/ui/src/components/sonner.tsx`                        | 2          |
+| `packages/ui/src/components/form-field.tsx`                    | 3          |
+| `apps/web/src/hooks/use-keyboard-shortcut.ts`                  | 4          |
+| `apps/web/src/components/navigation/organization-switcher.tsx` | 5          |
+| `apps/web/src/components/layout/page-container.tsx`            | 8          |
 
 ### Existing Files to Modify
 
-| File Path | Task Group |
-|-----------|------------|
-| `packages/ui/src/index.ts` | 1, 2, 3 |
-| `apps/web/src/components/navigation/sidebar.tsx` | 6 |
-| `apps/web/src/components/navigation/topbar.tsx` | 7 |
-| `apps/web/src/app/layout.tsx` | 9 |
+| File Path                                        | Task Group |
+| ------------------------------------------------ | ---------- |
+| `packages/ui/src/index.ts`                       | 1, 2, 3    |
+| `apps/web/src/components/navigation/sidebar.tsx` | 6          |
+| `apps/web/src/components/navigation/topbar.tsx`  | 7          |
+| `apps/web/src/app/layout.tsx`                    | 9          |
 
 ## Design Token Reference
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--muted` | `oklch(0.97 0 0)` | Skeleton loading backgrounds |
-| `--accent-gold` | `oklch(0.786 0.088 81.5)` | Success toasts, active states |
-| `--destructive` | `oklch(0.577 0.245 27.325)` | Error toasts, error states |
+| Token           | Value                       | Usage                         |
+| --------------- | --------------------------- | ----------------------------- |
+| `--muted`       | `oklch(0.97 0 0)`           | Skeleton loading backgrounds  |
+| `--accent-gold` | `oklch(0.786 0.088 81.5)`   | Success toasts, active states |
+| `--destructive` | `oklch(0.577 0.245 27.325)` | Error toasts, error states    |
 
 ## Out of Scope Reminders
 
