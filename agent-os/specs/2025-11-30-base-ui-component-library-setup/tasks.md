@@ -134,25 +134,25 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** None
 
-- [ ] 4.0 Complete keyboard shortcut infrastructure
-  - [ ] 4.1 Write 3-4 focused tests for useKeyboardShortcut hook
+- [x] 4.0 Complete keyboard shortcut infrastructure
+  - [x] 4.1 Write 3-4 focused tests for useKeyboardShortcut hook
     - Test hook registers keyboard event listener on mount
     - Test hook cleans up listener on unmount (no memory leaks)
     - Test Cmd/Ctrl modifier detection works cross-platform
     - Test callback fires when correct shortcut pressed
-  - [ ] 4.2 Create `apps/web/src/hooks/use-keyboard-shortcut.ts`
+  - [x] 4.2 Create `apps/web/src/hooks/use-keyboard-shortcut.ts`
     - Define shortcut config type: `{ key: string, modifiers?: ('cmd' | 'ctrl' | 'shift' | 'alt')[], callback: () => void }`
     - Implement cross-platform detection: `navigator.platform` or `navigator.userAgent` for Mac vs Windows/Linux
-  - [ ] 4.3 Implement core hook logic
+  - [x] 4.3 Implement core hook logic
     - Use `useEffect` to add/remove `keydown` event listener on `window`
     - Check modifier keys: `event.metaKey` (Cmd on Mac), `event.ctrlKey` (Ctrl on Windows/Linux)
     - Normalize key comparison (case-insensitive)
     - Call `event.preventDefault()` when shortcut matches
-  - [ ] 4.4 Add cleanup on unmount
+  - [x] 4.4 Add cleanup on unmount
     - Return cleanup function from useEffect
     - Ensure no dangling event listeners after component unmount
     - Verify with test that cleanup is called
-  - [ ] 4.5 Ensure keyboard shortcut hook tests pass
+  - [x] 4.5 Ensure keyboard shortcut hook tests pass
     - Run ONLY the 3-4 tests written in 4.1
     - Verify cross-platform modifier detection works
 
