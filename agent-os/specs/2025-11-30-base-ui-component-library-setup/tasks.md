@@ -260,34 +260,34 @@ This specification establishes foundational UI infrastructure including navigati
 
 **Dependencies:** Task Groups 4, 5 (keyboard hook, organization switcher)
 
-- [ ] 7.0 Complete topbar enhancements
-  - [ ] 7.1 Write 3-5 focused tests for enhanced TopBar
+- [x] 7.0 Complete topbar enhancements
+  - [x] 7.1 Write 3-5 focused tests for enhanced TopBar
     - Test OrganizationSwitcher renders on left side of topbar
     - Test command palette trigger button renders with shortcut hint
     - Test existing UserMenu still renders on right side
     - Test topbar maintains h-16 border-b structure
-  - [ ] 7.2 Update `apps/web/src/components/navigation/topbar.tsx` structure
+  - [x] 7.2 Update `apps/web/src/components/navigation/topbar.tsx` structure
     - Keep async server component pattern with `auth()` session fetch
     - Maintain existing left/right flex container: `flex items-center justify-between`
     - Keep `h-16 border-b` and `px-6` padding
-  - [ ] 7.3 Add OrganizationSwitcher to left side
+  - [x] 7.3 Add OrganizationSwitcher to left side
     - Import OrganizationSwitcher component
     - Position adjacent to logo in left container
     - Pass session.user.organization as current org
     - Pass organizations array (stubbed/from session for now, data fetching out of scope)
-  - [ ] 7.4 Create command palette trigger button
+  - [x] 7.4 Create command palette trigger button
     - Create client component for the trigger button (or inline)
     - Display keyboard shortcut hint: show "Cmd+K" on Mac, "Ctrl+K" on Windows/Linux
     - Use Button with `variant="ghost"` and size="sm"
     - Include Search icon from lucide-react
-  - [ ] 7.5 Wire up keyboard shortcut for command palette trigger
+  - [x] 7.5 Wire up keyboard shortcut for command palette trigger
     - Use `useKeyboardShortcut` hook from Task Group 4
     - Register Cmd/Ctrl+K shortcut
     - Stubbed callback: `console.log('Command palette triggered')` (implementation out of scope)
-  - [ ] 7.6 Ensure UserMenu remains on right side
+  - [x] 7.6 Ensure UserMenu remains on right side
     - Verify existing `{session && <UserMenu session={session} />}` pattern preserved
     - Maintain gap-4 spacing between elements
-  - [ ] 7.7 Ensure topbar enhancement tests pass
+  - [x] 7.7 Ensure topbar enhancement tests pass
     - Run ONLY the 3-5 tests written in 7.1
     - Verify component placement and structure
 
