@@ -56,6 +56,7 @@ model Organization {
   invitations              Invitation[]
   dataProcessingActivities DataProcessingActivity[]
   processors               Processor[]
+  dataSubjectCategories    DataSubjectCategory[]
 
   @@index([deletedAt])
 }
@@ -249,6 +250,37 @@ model RecipientCategory {
   updatedAt                DateTime @updatedAt
 
   @@index([name])
+}
+
+// DataSubjectCategory model for GDPR compliance
+// Classifies data subject types (employees, customers, minors, etc.) with vulnerability tracking
+model DataSubjectCategory {
+  id                   String        @id @default(cuid())
+  code                 String        // Uppercase machine identifier (EMPLOYEE, CUSTOMER, MINOR, etc.)
+  name                 String        // Human-readable display name
+  description          String?       // Detailed explanation of the category
+  category             String?       // Flexible grouping (internal, external, vulnerable, special)
+  examples             Json?         // Array of specific examples per category
+  isVulnerable         Boolean       @default(false) // Vulnerable data subject status (GDPR Article 35)
+  vulnerabilityReason  String?       // Explanation of why category is vulnerable
+  vulnerabilityArticle String?       // GDPR article reference (e.g., "Art. 35(3)(c)")
+  gdprArticle          String?       // General GDPR legal reference
+  suggestsDPIA         Boolean       @default(false) // Informational hint for DPIA recommendation
+  dpiaRationale        String?       // Explanation for DPIA recommendation
+  isActive             Boolean       @default(true) // Soft filtering flag
+  isSystemDefined      Boolean       @default(false) // Distinguishes system vs custom categories
+  organizationId       String?       // Nullable for hybrid scope (system-wide + org-specific)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  // Relations
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Indexes and constraints
+  @@unique([code, organizationId]) // Allow same code across different organizations
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([category])
 }
 
 // ============================================================================
