@@ -12,35 +12,61 @@ From roadmap:
 ### First Round Questions
 
 **Q1:** Should this model follow the existing multi-tenancy pattern with organizationId like DataProcessingActivity, or be a global reference model like DataNature?
-**Answer:** Follow the DataProcessingActivity pattern - organization-specific with organizationId. This allows each organization to define and customize their own data categories while maintaining multi-tenant isolation.
+**Answer:** Three-layer architecture:
+- `DataNature` = Global reference data (no organizationId)
+- `DataCategory` = Organization-specific (with organizationId)
+- This follows the existing pattern where Country/ProcessingAct are global reference data, while DataProcessingActivity is organization-specific.
 
 **Q2:** What is the sensitivity level hierarchy for data classification?
-**Answer:** The sensitivity hierarchy should be: PUBLIC < INTERNAL < NORMAL < CONFIDENTIAL < RESTRICTED. This provides a clear escalation path from openly shareable data to highly restricted information requiring special handling.
+**Answer:** 4 levels (NORMAL removed as it is ambiguous):
+```
+PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED
+```
+This aligns with ISO 27001 classification standards.
 
 **Q3:** How should isSpecialCategory be determined - manual entry only, or auto-derived from linked DataNature?
-**Answer:** Auto-derive from linked DataNature(s) when any has type=SPECIAL, with manual override capability. This ensures consistency with GDPR Article 9 requirements while allowing flexibility for edge cases.
+**Answer:** Auto-derive with manual override:
+- Auto-calculate: `true` if ANY linked DataNature has `type='SPECIAL'`
+- Allow manual override with mandatory justification stored in metadata JSON field
+- Conservative principle: better to over-protect data than under-protect
 
 **Q4:** What format should the examples field use for storing example data types?
-**Answer:** Simple JSON string array, matching existing patterns in the codebase (e.g., ProcessingAct.examples, RecipientCategory.examples). Example: `["email addresses", "phone numbers", "mailing addresses"]`.
+**Answer:** Simple string array using Prisma Json type:
+```prisma
+exampleFields  Json  // ["email", "phone_number", "date_of_birth"]
+```
+This is for documentation purposes and keeps the MVP simple.
 
 **Q5:** What is the relationship between DataCategory and DataNature?
-**Answer:** Many-to-many relationship via a junction table (DataCategoryDataNature). A data category can be linked to multiple data natures (e.g., "Health Records" might link to both "Health Data" and "Biometric Data" natures), and a data nature can apply to multiple categories.
+**Answer:** Many-to-many relationship via junction table (`DataCategoryDataNature`):
+- Real-world data categories don't fit into single boxes
+- Example: "Employee Wellness" category links to multiple natures:
+  - `GDPR_ART9_HEALTH`
+  - `CONTACT_INFO`
+  - `FITNESS_DATA`
 
-**Q6:** What DAL (Data Access Layer) patterns should be followed?
-**Answer:** Follow existing `dataProcessingActivities.ts` patterns with:
-- CRUD operations with organizationId scoping
-- Cursor-based pagination with configurable limits
-- Filter options for sensitivity and isSpecialCategory
-- Security comments documenting multi-tenancy enforcement
+**Q6:** What DAL (Data Access Layer) query patterns should be implemented?
+**Answer:** 7 essential patterns:
+1. `createDataCategory()` - Create with auto-detection of isSpecialCategory
+2. `getDataCategoryById()` - Fetch single category with relationships
+3. `listDataCategories()` - List with filters (sensitivity, isSpecialCategory, search)
+4. `updateDataCategory()` - Update and recalculate isSpecialCategory
+5. `deleteDataCategory()` - Remove (check for usage first)
+6. `getSpecialCategoryDataCategories()` - Get all Article 9/10 categories
+7. `getDataCategoriesBySensitivity()` - Filter by sensitivity threshold
 
 **Q7:** What testing approach should be used?
-**Answer:** Standard integration tests following existing patterns in the codebase. Test CRUD operations, multi-tenancy isolation, filter functionality, and junction table relationships.
+**Answer:** Comprehensive integration tests covering:
+- CRUD operations
+- Multi-tenancy isolation
+- Relationship integrity (cascade deletes, junction table)
+- isSpecialCategory auto-detection logic
+- Query patterns (filtering, searching, ordering)
+- Edge cases (validation, null handling, long strings)
+- Target: >80% code coverage
 
-**Q8:** What is explicitly out of scope for this S-sized spec?
-**Answer:**
-- UI components (no React components or pages)
-- tRPC routers (API layer will be added in a future spec)
-- Integration with DataProcessingActivity (junction table DataProcessingActivityDataCategory is roadmap item #13)
+**Q8:** What is explicitly out of scope for this spec?
+**Answer:** See Scope Boundaries section below for complete list.
 
 ### Existing Code to Reference
 
@@ -57,7 +83,7 @@ From roadmap:
 
 ### Follow-up Questions
 
-No follow-up questions were needed. All decisions were based on codebase research and established patterns.
+No follow-up questions were needed. All decisions were confirmed by the user.
 
 ## Visual Assets
 
@@ -73,30 +99,66 @@ N/A - This is a backend-only feature (Prisma model + DAL + tests).
 
 ### Functional Requirements
 
-- DataCategory Prisma model with:
-  - id (cuid), name, description fields
-  - organizationId for multi-tenancy with cascade delete
-  - sensitivity enum (PUBLIC, INTERNAL, NORMAL, CONFIDENTIAL, RESTRICTED)
-  - isSpecialCategory boolean (auto-derived from DataNature, with override)
-  - examples JSON array for example data types
-  - isActive boolean for soft-disable
-  - createdAt/updatedAt timestamps
-- DataCategoryDataNature junction table for many-to-many relationship
-- Indexes on:
-  - organizationId
-  - organizationId + sensitivity
-  - organizationId + isSpecialCategory
-  - sensitivity
-  - isSpecialCategory
-- DAL functions:
-  - createDataCategory
-  - getDataCategoryById
-  - getDataCategoryByIdForOrg (with ownership verification)
-  - listDataCategoriesByOrganization (with filters and pagination)
-  - updateDataCategory
-  - deleteDataCategory
-  - countDataCategoriesByOrganization
-  - Junction table management functions for DataNature linking
+**DataCategory Prisma Model:**
+- `id` - cuid primary key
+- `name` - String, required
+- `description` - String, optional
+- `organizationId` - String, required (foreign key to Organization with cascade delete)
+- `sensitivity` - SensitivityLevel enum
+- `isSpecialCategory` - Boolean (auto-derived from DataNature, with override capability)
+- `exampleFields` - Json (string array for example data fields)
+- `metadata` - Json (for manual override justification and other extensible data)
+- `isActive` - Boolean, default true
+- `createdAt` / `updatedAt` - DateTime timestamps
+
+**SensitivityLevel Enum:**
+```prisma
+enum SensitivityLevel {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+```
+
+**DataCategoryDataNature Junction Table:**
+- `id` - cuid primary key
+- `dataCategoryId` - String (foreign key to DataCategory)
+- `dataNatureId` - String (foreign key to DataNature)
+- Unique constraint on (dataCategoryId, dataNatureId)
+- Cascade delete when DataCategory is deleted
+
+**Indexes:**
+- `organizationId`
+- `organizationId` + `sensitivity` (compound)
+- `organizationId` + `isSpecialCategory` (compound)
+- `sensitivity`
+- `isSpecialCategory`
+
+**DAL Functions (7 patterns):**
+1. `createDataCategory(data)` - Create with auto-detection of isSpecialCategory based on linked DataNatures
+2. `getDataCategoryById(id, organizationId)` - Fetch single category with relationships, scoped to organization
+3. `listDataCategories(organizationId, filters)` - List with filters (sensitivity, isSpecialCategory, search), cursor-based pagination
+4. `updateDataCategory(id, organizationId, data)` - Update and recalculate isSpecialCategory
+5. `deleteDataCategory(id, organizationId)` - Remove category (check for usage first)
+6. `getSpecialCategoryDataCategories(organizationId)` - Get all Article 9/10 categories for an organization
+7. `getDataCategoriesBySensitivity(organizationId, minSensitivity)` - Filter by sensitivity threshold
+
+**isSpecialCategory Auto-Detection Logic:**
+- When creating or updating a DataCategory, check all linked DataNatures
+- If ANY linked DataNature has `type = 'SPECIAL'`, set `isSpecialCategory = true`
+- Manual override allowed: if user explicitly sets `isSpecialCategory`, store justification in `metadata.specialCategoryOverride`
+- Example metadata structure:
+```json
+{
+  "specialCategoryOverride": {
+    "overridden": true,
+    "justification": "Category contains aggregated anonymized health statistics only",
+    "overriddenAt": "2025-11-30T12:00:00Z",
+    "overriddenBy": "user_id"
+  }
+}
+```
 
 ### Reusability Opportunities
 
@@ -108,28 +170,32 @@ N/A - This is a backend-only feature (Prisma model + DAL + tests).
 ### Scope Boundaries
 
 **In Scope:**
-
-- Prisma schema additions (DataCategory model, SensitivityLevel enum, junction table)
-- Database migration
-- DAL functions with full CRUD support
-- Cursor-based pagination with filters
-- Integration tests for DAL functions
-- Auto-derivation logic for isSpecialCategory based on linked DataNatures
+- DataCategory Prisma model
+- DataNature model (already exists - no changes needed)
+- SensitivityLevel enum
+- DataCategoryDataNature junction table
+- All 7 DAL functions listed above
+- Comprehensive integration tests (>80% coverage target)
+- Seed data for DataNatures (Article 9/10 special categories)
+- Database migrations
 
 **Out of Scope:**
-
-- UI components (React components, pages, forms)
-- tRPC routers and API endpoints
-- DataProcessingActivityDataCategory junction table (roadmap item #13)
-- Seed data for common data categories (can be added later)
-- Validation schemas in @compilothq/validation package
+- UI Components (React components, pages, forms)
+- tRPC Routers (API layer)
+- Validation Schemas (@compilothq/validation package)
+- Junction to DataProcessingActivity (Spec #13 on roadmap)
+- Data Discovery Automation (Spec #44)
+- DPIA Auto-Trigger Logic (Spec #33-34)
+- Document Generation (Spec #38-41)
+- Smart Suggestions/AI Features (Spec #48)
 
 ### Technical Considerations
 
-- Follow existing Prisma schema organization (add under Reference Data or new Data Classification section)
+- Follow existing Prisma schema organization (add under Data Classification section)
 - Maintain consistent naming conventions (DataCategory, not PersonalDataCategory)
 - Use cuid() for primary keys per existing pattern
 - Ensure cascade delete from Organization to DataCategory
 - Junction table should have unique constraint on (dataCategoryId, dataNatureId)
 - DAL should export all functions from packages/database/src/dal/index.ts
 - Tests should use the existing test infrastructure (Vitest)
+- Security comments documenting multi-tenancy enforcement in all DAL functions
