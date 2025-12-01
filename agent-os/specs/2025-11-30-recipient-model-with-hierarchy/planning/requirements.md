@@ -1,151 +1,432 @@
 # Spec Requirements: Recipient Model with Hierarchy
 
-## Initial Description
+## Critical Naming Convention
 
-Implement a Recipient model with hierarchical support to track data recipients in the GDPR compliance system. Recipients represent entities that receive personal data, including internal departments, processors, sub-processors, controllers, public authorities, and third parties.
+- `Organization` = Existing tenant model (SVn, customer accounts) - **DO NOT CHANGE**
+- `ExternalOrganization` = **NEW** model for external entities (Recruitee, LinkedIn, Belastingdienst)
+- `Recipient` = **RENAMED** from `Processor` (roles that external organizations play)
+
+---
 
 ## Requirements Discussion
 
-### First Round Questions
+### Q1: Processor vs Recipient Relationship
 
-**Q1:** Should the Recipient model be separate from or integrated with the existing Processor model?
-**Answer:** The `Recipient` model is SEPARATE from the existing `Processor` model. Recipient represents data recipients broadly (internal departments, public authorities, etc.), while Processor tracks third-party processing relationships specifically.
+**Question:** Should the Recipient model be separate from the existing Processor, or should it replace/extend it?
 
-**Q2:** Should Recipient have a reference to the Vendor model?
-**Answer:** DEFER vendorId to a future spec. For now, add an optional `processorId` field to link to the existing Processor model when applicable.
+**Answer:** **Rename Processor → Recipient** and create separate **ExternalOrganization** model.
 
-**Q3:** What scope should the hierarchy support - only sub-processors, or any recipient type?
-**Answer:** ANY recipient type can have a parent via `parentRecipientId` (e.g., internal departments can have parent departments, sub-processors can chain to processors).
+The key insight is the conceptual separation between:
+- **Legal entity** (ExternalOrganization) - the actual company/authority
+- **Role** (Recipient) - the role that entity plays in a specific processing context
 
-**Q4:** Should the model include multi-tenancy support?
-**Answer:** YES - include `organizationId` for multi-tenancy support, consistent with other models.
+**Rationale:**
+- Same organization can play different roles (LinkedIn as PROCESSOR for recruitment, JOINT_CONTROLLER for advertising)
+- Different compliance requirements per role (Art. 28 DPA vs Art. 26 JCA)
+- Agreements are with organizations, not roles
+- Enables data quality (organization details maintained once)
 
-**Q5:** How strict should type-based validation be for parent-child relationships?
-**Answer:** FLEXIBLE validation at the application layer (not strict database constraints). The schema allows any combination, but business logic can enforce rules like "only SUB_PROCESSOR should typically have a parentRecipientId pointing to a PROCESSOR."
+### Q2: Vendor Reference (ExternalOrganization)
 
-**Q6:** Should there be a depth limit on the hierarchy?
-**Answer:** NO hard depth limit. Implement circular reference prevention at the application layer.
+**Question:** Should we create a new Vendor model, reference the existing Processor model, or defer?
 
-**Q7:** What query patterns should the DAL support?
-**Answer:**
-- Get all children (direct sub-recipients)
-- Get all descendants (recursive)
-- Get parent chain (ancestors to root)
-- Find recipients by type
-- Find root recipients (no parent)
+**Answer:** **Create new `ExternalOrganization` model** as part of this spec.
 
-**Q8:** What should be excluded from this spec?
-**Answer:**
-- UI components
-- tRPC procedures
-- DataProcessingActivity junction tables (roadmap item #13)
+The `externalOrganizationId` in Recipient should reference this new model (nullable for INTERNAL_DEPARTMENT type).
 
-### Existing Code to Reference
+**Rationale:**
+- `Organization` = tenant (your existing model)
+- `ExternalOrganization` = external vendors/partners/authorities (new)
+- Links to existing `Country` model for transfer assessment via `headquartersCountryId`
+- Enables agreement management at organization level
 
-**Similar Features Identified:**
-- Feature: Processor model - Path: Existing Prisma schema (for relationship patterns)
-- Feature: Other multi-tenant models - Path: Prisma schema (for organizationId pattern)
-- Components to potentially reuse: Self-referential relation patterns if any exist
-- Backend logic to reference: Existing DAL patterns in the codebase
+### Q3: Hierarchy Scope
 
-### Follow-up Questions
+**Question:** Should hierarchy be limited to processor-type recipients only, or can any recipient type have a parent?
 
-No follow-up questions required - user provided comprehensive decisions.
+**Answer:** **Allow hierarchy for TWO types only** with different semantics:
 
-## Visual Assets
+| Type | Can Have Parent | Allowed Parent Types | Max Depth | Hierarchy Type |
+|------|-----------------|---------------------|-----------|----------------|
+| SUB_PROCESSOR | Yes | PROCESSOR, SUB_PROCESSOR | 5 | PROCESSOR_CHAIN |
+| INTERNAL_DEPARTMENT | Yes | INTERNAL_DEPARTMENT | 10 | ORGANIZATIONAL |
+| All others | No | - | 0 | - |
 
-### Files Provided:
+**Rationale:**
+- GDPR Art. 28(2) explicitly addresses sub-processing chains
+- Internal departments need organizational structure for accountability
+- Other types (JOINT_CONTROLLER, PUBLIC_AUTHORITY, etc.) don't have hierarchical relationships
 
-No visual assets provided.
+### Q4: Multi-tenancy
 
-### Visual Insights:
+**Question:** Should the Recipient model have organizationId for multi-tenancy support?
 
-N/A - This is a backend/data model spec with no UI components.
+**Answer:** **Already properly handled** - use existing `organizationId` field for tenant scope.
 
-## Requirements Summary
+- `organizationId` in Recipient = FK to `Organization` (the tenant)
+- `externalOrganizationId` in Recipient = FK to `ExternalOrganization` (the vendor)
 
-### Functional Requirements
+No changes needed to multi-tenancy approach.
 
-- Create Recipient model with hierarchical self-referential relationship
-- Support 7 recipient types: INTERNAL_DEPARTMENT, PROCESSOR, SUB_PROCESSOR, INDEPENDENT_CONTROLLER, JOINT_CONTROLLER, PUBLIC_AUTHORITY, THIRD_PARTY
-- Link recipients to organizations for multi-tenancy
-- Optional link to existing Processor model via processorId
-- Support unlimited hierarchy depth with circular reference prevention
-- Provide DAL functions for hierarchical queries
+### Q5: Business Rules & Validation
 
-### Schema Specification
+**Question:** Should type-based validation be strict database constraints or flexible application layer enforcement?
+
+**Answer:** **Application layer enforcement** with configurable rules per RecipientType.
+
+Provide both hard errors (blocking) and soft warnings (guidance) to support progressive compliance improvement.
+
+**Validation Rules by Type:**
+
+| Type | Requires ExternalOrg | Required Agreements | Can Have Parent | Max Depth |
+|------|---------------------|---------------------|-----------------|-----------|
+| PROCESSOR | Yes | DPA | No | 0 |
+| SUB_PROCESSOR | Yes | (via parent) | Yes | 5 |
+| JOINT_CONTROLLER | Yes | JCA | No | 0 |
+| SERVICE_PROVIDER | Yes | - | No | 0 |
+| SEPARATE_CONTROLLER | Yes | - | No | 0 |
+| PUBLIC_AUTHORITY | Yes | - | No | 0 |
+| INTERNAL_DEPARTMENT | No | - | Yes | 10 |
+
+### Q6: Circular Reference Prevention
+
+**Question:** Should we enforce max depth and prevent circular references?
+
+**Answer:** **Yes** - enforce max depth (5 for processor chains, 10 for internal) and check circular references on every parent change.
+
+**Implementation:**
+- Iterative depth checking for create/update operations
+- Recursive CTEs for tree queries
+- Database constraint to prevent self-reference (`id != parentRecipientId`)
+
+### Q7: Query Patterns to Test
+
+**Answer:** Implement and test **15 comprehensive query patterns**:
+
+1. Get direct children
+2. Get full descendant tree (recursive CTE)
+3. Get ancestor chain
+4. Get recipients by type
+5. Find orphaned recipients (data quality)
+6. Get recipients for activity
+7. Find recipients missing required agreements
+8. Get third-country recipients
+9. Get recipient statistics (dashboard)
+10. Find duplicate external organizations
+11. Get expiring agreements
+12. Find unlinked recipients
+13. Assess cross-border transfers
+14. Check hierarchy health
+15. Audit recipient access
+
+### Q8: Explicit Exclusions
+
+**Exclude from this spec:**
+
+1. UI Components - Forms, tables, visualizations
+2. tRPC Procedures - API layer (basic signatures only)
+3. Junction Table - RecipientDataProcessingActivity (roadmap #13)
+4. Full Agreement Model - Include shell interface only
+5. Transfer Mechanism Logic - Assignment/validation
+6. Notification System - Expiring agreements infrastructure
+7. Import/Export - Data portability features
+8. Audit Logging - Infrastructure (cross-cutting concern)
+9. Document Generation - DPIAs, RoPA exports
+10. Questionnaire Integration - Separate workflow
+
+---
+
+## Schema Specification
+
+### ExternalOrganization Model (NEW)
 
 ```prisma
-model Recipient {
-  id                String        @id @default(cuid())
-  name              String
-  type              RecipientType
-  description       String?
+model ExternalOrganization {
+  id                    String   @id @default(cuid())
+  legalName             String   // "Recruitee B.V."
+  tradingName           String?  // "Recruitee"
 
-  // Relationships
-  organizationId    String
-  organization      Organization  @relation(...)
-  processorId       String?       // Optional link to Processor model
-  processor         Processor?    @relation(...)
-  parentRecipientId String?       // Self-referential for hierarchy
-  parentRecipient   Recipient?    @relation("RecipientHierarchy", ...)
-  childRecipients   Recipient[]   @relation("RecipientHierarchy")
+  // Registration
+  jurisdiction          String?   // Country code
+  registrationNumber    String?   // KvK, Company House, etc.
+  vatNumber             String?
 
-  // Audit timestamps
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  // Location (links to existing Country model)
+  headquartersCountryId String?
+  operatingCountries    String[]  // Array of country codes
 
-  @@index([type])
-  @@index([parentRecipientId])
-  @@index([organizationId])
-}
+  // Contact
+  website               String?
+  contactEmail          String?
+  contactPhone          String?
 
-enum RecipientType {
-  INTERNAL_DEPARTMENT
-  PROCESSOR
-  SUB_PROCESSOR
-  INDEPENDENT_CONTROLLER
-  JOINT_CONTROLLER
-  PUBLIC_AUTHORITY
-  THIRD_PARTY
+  // Classification
+  isPublicAuthority     Boolean   @default(false)
+  sector                String?
+
+  // Metadata
+  notes                 String?   @db.Text
+  metadata              Json?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  headquartersCountry   Country?  @relation(fields: [headquartersCountryId], references: [id])
+  recipients            Recipient[]
+  agreements            Agreement[]
+
+  @@index([legalName])
+  @@index([tradingName])
+  @@index([headquartersCountryId])
 }
 ```
 
-### Query Patterns to Implement
+### Recipient Model (RENAMED from Processor)
 
-1. **getChildren(recipientId)** - Get all direct child recipients
-2. **getDescendants(recipientId)** - Get all descendants recursively
-3. **getAncestors(recipientId)** - Get parent chain up to root
-4. **findByType(organizationId, type)** - Find recipients by type
-5. **findRootRecipients(organizationId)** - Find recipients with no parent
+```prisma
+enum RecipientType {
+  PROCESSOR           // Art. 28 - Data processor
+  SUB_PROCESSOR       // Art. 28(2) - Sub-processor
+  JOINT_CONTROLLER    // Art. 26 - Joint controller
+  SERVICE_PROVIDER    // General service provider
+  SEPARATE_CONTROLLER // Independent controller receiving data (NEW)
+  PUBLIC_AUTHORITY    // Government/regulatory body (NEW)
+  INTERNAL_DEPARTMENT // Internal recipient (NEW)
+}
 
-### Reusability Opportunities
+enum HierarchyType {
+  PROCESSOR_CHAIN     // For sub-processor hierarchies
+  ORGANIZATIONAL      // For internal department hierarchies
+  GROUPING            // For logical grouping (future)
+}
 
-- Follow existing Prisma model patterns for relations
-- Use existing multi-tenancy pattern with organizationId
-- Reference existing DAL structure for service layer organization
+model Recipient {
+  id                      String        @id @default(cuid())
+  name                    String        // Display name for this role
+  type                    RecipientType
 
-### Scope Boundaries
+  // Tenant context (existing multi-tenancy)
+  organizationId          String        // FK to Organization (tenant)
 
-**In Scope:**
-- Prisma schema update with Recipient model
-- RecipientType enum definition
-- Database migration
-- DAL (Data Access Layer) with CRUD operations
-- DAL hierarchical query functions
-- Unit tests for hierarchical queries
-- Circular reference prevention logic
+  // External organization link (null for INTERNAL_DEPARTMENT)
+  externalOrganizationId  String?       // FK to ExternalOrganization
 
-**Out of Scope:**
-- UI components (no frontend work)
-- tRPC procedures (API layer deferred)
-- DataProcessingActivity junction tables (roadmap item #13)
-- Vendor model integration (future spec)
+  // Purpose and context
+  purpose                 String?       // Why do they receive data?
+  description             String?
 
-### Technical Considerations
+  // Hierarchy support
+  parentRecipientId       String?       // Self-referential FK
+  hierarchyType           HierarchyType?
 
-- Self-referential relation using Prisma's relation syntax
-- Indexes on type, parentRecipientId, and organizationId for query performance
-- Recursive queries may need optimization for deep hierarchies
-- Circular reference detection required before creating/updating parent relationships
-- Must maintain referential integrity with Organization and Processor models
+  // Activity linking (temporary until roadmap #13)
+  activityIds             String[]      @default([])
+
+  // Status
+  isActive                Boolean       @default(true)
+
+  // Timestamps
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  // Relations
+  organization            Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  externalOrganization    ExternalOrganization?  @relation(fields: [externalOrganizationId], references: [id], onDelete: SetNull)
+  parentRecipient         Recipient?             @relation("RecipientHierarchy", fields: [parentRecipientId], references: [id], onDelete: SetNull)
+  children                Recipient[]            @relation("RecipientHierarchy")
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([organizationId, type])
+  @@index([externalOrganizationId])
+  @@index([parentRecipientId])
+}
+```
+
+### Agreement Model (Shell Interface)
+
+```prisma
+enum AgreementType {
+  DPA                       // Data Processing Agreement (Art. 28)
+  JOINT_CONTROLLER_AGREEMENT // Joint Controller Agreement (Art. 26)
+  SCC                       // Standard Contractual Clauses
+  BCR                       // Binding Corporate Rules
+  DPF                       // Data Privacy Framework
+  NDA                       // Non-Disclosure Agreement
+}
+
+enum AgreementStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  ACTIVE
+  EXPIRING_SOON
+  EXPIRED
+  TERMINATED
+}
+
+model Agreement {
+  id                      String          @id @default(cuid())
+  externalOrganizationId  String
+  type                    AgreementType
+  status                  AgreementStatus @default(DRAFT)
+  signedDate              DateTime?
+  expiryDate              DateTime?
+
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  externalOrganization    ExternalOrganization @relation(fields: [externalOrganizationId], references: [id], onDelete: Cascade)
+
+  @@index([externalOrganizationId])
+  @@index([type])
+  @@index([status])
+  @@index([expiryDate])
+}
+```
+
+---
+
+## Validation Rules
+
+### Hierarchy Rules Configuration
+
+```typescript
+interface HierarchyRules {
+  canHaveParent: boolean;
+  allowedParentTypes: RecipientType[];
+  maxDepth: number;
+  hierarchyType: HierarchyType | null;
+}
+
+const HIERARCHY_RULES: Record<RecipientType, HierarchyRules> = {
+  PROCESSOR: {
+    canHaveParent: false,
+    allowedParentTypes: [],
+    maxDepth: 0,
+    hierarchyType: null,
+  },
+  SUB_PROCESSOR: {
+    canHaveParent: true,
+    allowedParentTypes: ['PROCESSOR', 'SUB_PROCESSOR'],
+    maxDepth: 5,
+    hierarchyType: 'PROCESSOR_CHAIN',
+  },
+  JOINT_CONTROLLER: {
+    canHaveParent: false,
+    allowedParentTypes: [],
+    maxDepth: 0,
+    hierarchyType: null,
+  },
+  SERVICE_PROVIDER: {
+    canHaveParent: false,
+    allowedParentTypes: [],
+    maxDepth: 0,
+    hierarchyType: null,
+  },
+  SEPARATE_CONTROLLER: {
+    canHaveParent: false,
+    allowedParentTypes: [],
+    maxDepth: 0,
+    hierarchyType: null,
+  },
+  PUBLIC_AUTHORITY: {
+    canHaveParent: false,
+    allowedParentTypes: [],
+    maxDepth: 0,
+    hierarchyType: null,
+  },
+  INTERNAL_DEPARTMENT: {
+    canHaveParent: true,
+    allowedParentTypes: ['INTERNAL_DEPARTMENT'],
+    maxDepth: 10,
+    hierarchyType: 'ORGANIZATIONAL',
+  },
+};
+```
+
+---
+
+## Deliverables
+
+### In Scope
+
+1. **ExternalOrganization model** - New model for external legal entities
+2. **Recipient model** - Renamed from Processor with expanded types
+3. **RecipientType enum** - 7 values (3 new: SEPARATE_CONTROLLER, PUBLIC_AUTHORITY, INTERNAL_DEPARTMENT)
+4. **HierarchyType enum** - 3 values for categorizing hierarchies
+5. **Agreement model interface** - Basic shell structure
+6. **Database migrations** - Schema changes with data migration
+7. **DAL functions** - CRUD + 15 query patterns
+8. **Validation service** - Type-based rules with errors/warnings
+9. **Circular reference prevention** - Depth checking + cycle detection
+10. **Test factories** - For all new models
+11. **Unit tests** - For hierarchical queries and validation
+
+### Out of Scope
+
+1. UI components
+2. Full tRPC implementation (basic signatures OK)
+3. RecipientDataProcessingActivity junction table (roadmap #13)
+4. Full Agreement workflow (draft → sign → manage)
+5. Transfer mechanism assignment logic
+6. Notification system infrastructure
+7. Import/export functionality
+8. Audit logging infrastructure
+9. Document generation (DPIA, RoPA)
+10. Questionnaire integration
+
+---
+
+## Migration Strategy
+
+### Rename Processor → Recipient
+
+1. Create new RecipientType enum with expanded values
+2. Create ExternalOrganization model
+3. Migrate existing Processor data:
+   - Create ExternalOrganization records from Processor names
+   - Map ProcessorType → RecipientType
+   - Populate externalOrganizationId references
+4. Rename Processor table to Recipient
+5. Add new columns (purpose, hierarchyType, activityIds, isActive)
+6. Create Agreement shell table
+
+### Data Migration Example
+
+```typescript
+// ProcessorType → RecipientType mapping
+const TYPE_MAPPING = {
+  'DATA_PROCESSOR': 'PROCESSOR',
+  'SUB_PROCESSOR': 'SUB_PROCESSOR',
+  'JOINT_CONTROLLER': 'JOINT_CONTROLLER',
+  'SERVICE_PROVIDER': 'SERVICE_PROVIDER',
+};
+```
+
+---
+
+## GDPR Compliance Alignment
+
+- **Art. 4(9)**: Definition of recipient (all types covered)
+- **Art. 26**: Joint controllers (JOINT_CONTROLLER type)
+- **Art. 28**: Processors and sub-processors (PROCESSOR, SUB_PROCESSOR types)
+- **Art. 28(2)**: Sub-processor chains (hierarchy support)
+- **Art. 30**: Records of processing activities (recipient tracking)
+- **Art. 44-49**: Third-country transfers (ExternalOrganization + Country link)
+
+---
+
+## Visual Assets
+
+No visual assets provided (backend/data model spec).
+
+---
+
+## Related Roadmap Items
+
+- **#13**: RecipientDataProcessingActivity junction table (depends on this spec)
+- Future: Agreement Management UI
+- Future: Recipient Hierarchy Visualization
+- Future: DPIA Generation
+- Future: Transfer Assessment Workflow
