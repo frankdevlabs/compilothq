@@ -30,9 +30,11 @@ export * from './dal/dataNatures'
 export * from './dal/dataProcessingActivities'
 export * from './dal/devSessions'
 export * from './dal/invitations'
+export * from './dal/legalBases'
 export * from './dal/organizations'
 export * from './dal/processingActs'
 export * from './dal/processors'
+export * from './dal/purposes'
 export * from './dal/recipientCategories'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
@@ -55,9 +57,11 @@ export type {
   DataNature,
   DataProcessingActivity,
   Invitation,
+  LegalBasis,
   Organization,
   ProcessingAct,
   Processor,
+  Purpose,
   RecipientCategory,
   Session,
   TransferMechanism,

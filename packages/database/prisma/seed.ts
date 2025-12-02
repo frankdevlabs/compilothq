@@ -6,6 +6,7 @@ import { PrismaClient } from '../generated/client/client'
 import { seedCountries } from './seeds/countries'
 import { seedDataNatures } from './seeds/dataNatures'
 import { seedDevUsers } from './seeds/devUsers'
+import { seedLegalBases } from './seeds/legalBases'
 import { seedOrganizations } from './seeds/organizations'
 import { seedProcessingActs } from './seeds/processingActs'
 import { seedRecipientCategories } from './seeds/recipientCategories'
@@ -28,6 +29,7 @@ async function main() {
     const processingActsCount = await seedProcessingActs(prisma)
     const transferMechanismsCount = await seedTransferMechanisms(prisma)
     const recipientCategoriesCount = await seedRecipientCategories(prisma)
+    const legalBasesCount = await seedLegalBases(prisma)
 
     // Seed organizations and users (organizations must be seeded before users)
     const organizationsCount = await seedOrganizations(prisma)
@@ -42,6 +44,7 @@ async function main() {
       processingActsCount +
       transferMechanismsCount +
       recipientCategoriesCount +
+      legalBasesCount +
       organizationsCount +
       usersCount +
       devUsersCount
@@ -52,6 +55,7 @@ async function main() {
     console.log(`Processing Acts: ${processingActsCount}`)
     console.log(`Transfer Mechanisms: ${transferMechanismsCount}`)
     console.log(`Recipient Categories: ${recipientCategoriesCount}`)
+    console.log(`Legal Bases: ${legalBasesCount}`)
     console.log(`Organizations: ${organizationsCount}`)
     console.log(`Users: ${usersCount}`)
     console.log(`Development Users: ${devUsersCount}`)

@@ -53,6 +53,22 @@ export {
   RecipientCategoryFactory,
 } from './recipient-category-factory'
 
+// LegalBasis factories
+export {
+  createConsentLegalBasisFactory,
+  createContractLegalBasisFactory,
+  createLegitimateInterestsLegalBasisFactory,
+  LegalBasisFactory,
+} from './legal-basis-factory'
+
+// Purpose factories
+export {
+  createAnalyticsPurposeFactory,
+  createCustomerServicePurposeFactory,
+  createMarketingPurposeFactory,
+  PurposeFactory,
+} from './purpose-factory'
+
 // Organization factories
 export {
   cleanupTestOrganizations,

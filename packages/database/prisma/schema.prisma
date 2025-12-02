@@ -16,66 +16,67 @@ datasource db {
 
 // User persona enum for role-based access control
 enum UserPersona {
-  DPO              // Data Protection Officer - highest authority for GDPR compliance
-  PRIVACY_OFFICER  // Privacy Manager/Officer - day-to-day privacy operations
-  BUSINESS_OWNER   // Business stakeholder/project manager - submits processing activities
-  IT_ADMIN         // IT Manager/System Administrator - technical system management
-  SECURITY_TEAM    // Information Security Officer - security assessments
-  LEGAL_TEAM       // Legal Counsel - legal review and contract assessment
+  DPO // Data Protection Officer - highest authority for GDPR compliance
+  PRIVACY_OFFICER // Privacy Manager/Officer - day-to-day privacy operations
+  BUSINESS_OWNER // Business stakeholder/project manager - submits processing activities
+  IT_ADMIN // IT Manager/System Administrator - technical system management
+  SECURITY_TEAM // Information Security Officer - security assessments
+  LEGAL_TEAM // Legal Counsel - legal review and contract assessment
 }
 
 // Organization lifecycle status enum
 enum OrganizationStatus {
-  ACTIVE     // Fully operational organization with all features enabled
-  TRIAL      // Organization in trial period
-  SUSPENDED  // Temporarily disabled organization
-  CANCELLED  // Permanently deactivated organization
+  ACTIVE // Fully operational organization with all features enabled
+  TRIAL // Organization in trial period
+  SUSPENDED // Temporarily disabled organization
+  CANCELLED // Permanently deactivated organization
 }
 
 // Invitation status enum for team invitation workflow
 enum InvitationStatus {
-  PENDING   // Invitation sent, awaiting acceptance
-  ACCEPTED  // Invitation accepted, user joined organization
-  EXPIRED   // Invitation expired (7 days)
+  PENDING // Invitation sent, awaiting acceptance
+  ACCEPTED // Invitation accepted, user joined organization
+  EXPIRED // Invitation expired (7 days)
   CANCELLED // Invitation cancelled by sender
 }
 
 // Organization model with soft delete support
 model Organization {
-  id        String              @id @default(cuid())
-  name      String              // Organization display name
-  slug      String              @unique // URL-safe identifier
-  settings  Json?               // Nullable unstructured settings object
-  status    OrganizationStatus  // Lifecycle tracking
-  deletedAt DateTime?           // Soft delete timestamp
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id        String             @id @default(cuid())
+  name      String // Organization display name
+  slug      String             @unique // URL-safe identifier
+  settings  Json? // Nullable unstructured settings object
+  status    OrganizationStatus // Lifecycle tracking
+  deletedAt DateTime? // Soft delete timestamp
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 
   // Relations
   users                    User[]
   invitations              Invitation[]
   dataProcessingActivities DataProcessingActivity[]
   processors               Processor[]
+  purposes                 Purpose[]
 
   @@index([deletedAt])
 }
 
 // User model with NextAuth.js v5 compatibility
 model User {
-  id             String       @id @default(cuid())
-  name           String       // Required, non-nullable user name
-  email          String       @unique
-  emailVerified  DateTime?    // NextAuth.js email verification timestamp
-  image          String?      // Profile picture URL
-  organizationId String?      // Foreign key to Organization (optional during signup)
-  primaryPersona UserPersona  @default(BUSINESS_OWNER) // Required role with default
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id             String      @id @default(cuid())
+  name           String // Required, non-nullable user name
+  email          String      @unique
+  emailVerified  DateTime? // NextAuth.js email verification timestamp
+  image          String? // Profile picture URL
+  organizationId String? // Foreign key to Organization (optional during signup)
+  primaryPersona UserPersona @default(BUSINESS_OWNER) // Required role with default
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   // Relations
   organization              Organization?            @relation(fields: [organizationId], references: [id])
-  accounts                  Account[]                // OAuth provider accounts
-  sessions                  Session[]                // Database sessions
+  accounts                  Account[] // OAuth provider accounts
+  sessions                  Session[] // Database sessions
   invitationsSent           Invitation[]             @relation("InvitationsSent")
   ownedActivitiesBusiness   DataProcessingActivity[] @relation("BusinessOwner")
   ownedActivitiesProcessing DataProcessingActivity[] @relation("ProcessingOwner")
@@ -167,13 +168,52 @@ enum TransferMechanismCategory {
   NONE
 }
 
+enum PurposeCategory {
+  MARKETING // Marketing communications, campaigns, analytics
+  ANALYTICS // Business intelligence, usage analytics
+  CUSTOMER_SERVICE // Support, helpdesk, customer relations
+  HR // Recruitment, payroll, performance management
+  LEGAL_COMPLIANCE // Legal obligations, regulatory compliance
+  SECURITY // Fraud prevention, security monitoring
+  PRODUCT_DELIVERY // Core service delivery, contract fulfillment
+  RESEARCH_DEVELOPMENT // Product research, innovation
+  FINANCIAL // Billing, payments, accounting
+  OTHER // Catch-all for edge cases
+}
+
+enum PurposeScope {
+  INTERNAL // Only used within organization
+  EXTERNAL // Shared with external parties
+  BOTH // Used internally and externally
+}
+
+enum LegalBasisType {
+  CONSENT // Article 6(1)(a) - freely given, specific, informed
+  CONTRACT // Article 6(1)(b) - necessary for contract performance
+  LEGAL_OBLIGATION // Article 6(1)(c) - compliance with legal duty
+  VITAL_INTERESTS // Article 6(1)(d) - protection of life
+  PUBLIC_TASK // Article 6(1)(e) - public interest or official authority
+  LEGITIMATE_INTERESTS // Article 6(1)(f) - legitimate interests not overridden by rights
+}
+
+enum RegulatoryFramework {
+  GDPR // EU General Data Protection Regulation
+  UK_GDPR // UK GDPR (post-Brexit)
+  LGPD // Brazilian Lei Geral de Proteção de Dados
+  CCPA // California Consumer Privacy Act
+  PIPEDA // Canadian Personal Information Protection
+  POPIA // South African Protection of Personal Information Act
+  PDPA_SG // Singapore Personal Data Protection Act
+  OTHER // Extensibility for new regulations
+}
+
 // Country reference model for GDPR compliance tracking
 model Country {
   id          String   @id @default(cuid())
   name        String
   isoCode     String   @unique
   isoCode3    String?  @unique
-  gdprStatus  Json     // Array of: "EU", "EEA", "EFTA", "Third Country", "Adequate"
+  gdprStatus  Json // Array of: "EU", "EEA", "EFTA", "Third Country", "Adequate"
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -185,14 +225,14 @@ model Country {
 
 // Data nature types for classifying personal data categories
 model DataNature {
-  id          String          @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   description String
   type        DataNatureType
   gdprArticle String
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   @@index([name])
   @@index([type])
@@ -203,7 +243,7 @@ model ProcessingAct {
   id           String   @id @default(cuid())
   name         String
   description  String
-  examples     Json     // Array of example strings
+  examples     Json // Array of example strings
   requiresDPA  Boolean  @default(false)
   triggersDPIA Boolean  @default(false)
   gdprArticle  String
@@ -216,22 +256,55 @@ model ProcessingAct {
 
 // Transfer mechanisms for cross-border data transfers
 model TransferMechanism {
-  id                     String                     @id @default(cuid())
-  code                   String                     @unique
-  name                   String
-  description            String
-  typicalUseCase         String
-  gdprArticle            String
-  category               TransferMechanismCategory
-  isDerogation           Boolean
-  requiresAdequacy       Boolean
-  requiresDocumentation  Boolean
-  isActive               Boolean                    @default(true)
-  createdAt              DateTime                   @default(now())
-  updatedAt              DateTime                   @updatedAt
+  id                    String                    @id @default(cuid())
+  code                  String                    @unique
+  name                  String
+  description           String
+  typicalUseCase        String
+  gdprArticle           String
+  category              TransferMechanismCategory
+  isDerogation          Boolean
+  requiresAdequacy      Boolean
+  requiresDocumentation Boolean
+  isActive              Boolean                   @default(true)
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
 
   @@index([name])
   @@index([category])
+}
+
+// Legal basis for processing personal data (GDPR Article 6)
+model LegalBasis {
+  id          String              @id @default(cuid())
+  type        LegalBasisType // Legal basis type from Article 6(1)
+  name        String // Human-readable name
+  description String // Detailed description of the legal basis
+  framework   RegulatoryFramework @default(GDPR) // Primary regulatory framework
+
+  // Article references
+  articleReference     String // Human-readable reference (e.g., "Article 6(1)(a)")
+  articleDetails       Json? // Optional structured article data
+  applicableFrameworks Json? // Optional array of additional frameworks
+
+  // Consent requirement flags
+  requiresConsent         Boolean @default(false) // Requires consent to be collected
+  requiresExplicitConsent Boolean @default(false) // Requires explicit consent (Art 9)
+  requiresOptIn           Boolean @default(false) // Must be opt-in vs opt-out
+  withdrawalSupported     Boolean @default(false) // Consent can be withdrawn
+
+  // Assessment requirement flags
+  requiresLIA           Boolean @default(false) // Requires Legitimate Interest Assessment
+  requiresBalancingTest Boolean @default(false) // Requires balancing test
+
+  // Additional fields
+  usageGuidance String? // Implementation guidance text
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+  @@index([framework])
 }
 
 // Recipient categories for data sharing classification
@@ -239,7 +312,7 @@ model RecipientCategory {
   id                       String   @id @default(cuid())
   code                     String   @unique
   name                     String
-  examples                 Json     // Array of specific recipient type examples
+  examples                 Json // Array of specific recipient type examples
   commonReasons            String
   requiresDPA              Boolean  @default(false)
   requiresImpactAssessment Boolean  @default(false)
@@ -257,52 +330,52 @@ model RecipientCategory {
 
 // Data processing activity status enum for lifecycle tracking
 enum DataProcessingActivityStatus {
-  DRAFT           // Being created, not yet submitted
-  UNDER_REVIEW    // Submitted for DPO/Privacy Officer review
-  UNDER_REVISION  // Returned for changes by reviewer
-  REJECTED        // Permanently rejected
-  APPROVED        // Approved but not yet in production
-  ACTIVE          // In production use
-  SUSPENDED       // Temporarily paused
-  ARCHIVED        // End of life, historical record
+  DRAFT // Being created, not yet submitted
+  UNDER_REVIEW // Submitted for DPO/Privacy Officer review
+  UNDER_REVISION // Returned for changes by reviewer
+  REJECTED // Permanently rejected
+  APPROVED // Approved but not yet in production
+  ACTIVE // In production use
+  SUSPENDED // Temporarily paused
+  ARCHIVED // End of life, historical record
 }
 
 // Risk level enum for processing activity assessment
 enum RiskLevel {
-  LOW      // Low risk to data subjects
-  MEDIUM   // Medium risk requiring monitoring
-  HIGH     // High risk requiring additional safeguards
+  LOW // Low risk to data subjects
+  MEDIUM // Medium risk requiring monitoring
+  HIGH // High risk requiring additional safeguards
   CRITICAL // Critical risk requiring immediate action
 }
 
 // DPIA status enum for Data Protection Impact Assessment tracking
 enum DPIAStatus {
-  NOT_STARTED       // Required but not begun
-  IN_PROGRESS       // Being conducted
-  UNDER_REVIEW      // Submitted for DPO review
+  NOT_STARTED // Required but not begun
+  IN_PROGRESS // Being conducted
+  UNDER_REVIEW // Submitted for DPO review
   REQUIRES_REVISION // Returned for changes
-  APPROVED          // DPO approved
-  OUTDATED          // Needs refresh due to changes
+  APPROVED // DPO approved
+  OUTDATED // Needs refresh due to changes
 }
 
 // Time unit enum for retention period specification
 enum TimeUnit {
-  DAYS   // Retention measured in days
+  DAYS // Retention measured in days
   MONTHS // Retention measured in months
-  YEARS  // Retention measured in years
+  YEARS // Retention measured in years
 }
 
 // Processing activity model for GDPR Article 30 record of processing activities
 model DataProcessingActivity {
-  id             String                        @id @default(cuid())
-  name           String                        // Activity name/title
-  description    String?                       // Detailed description of the processing activity
-  organizationId String                        // Foreign key to Organization
-  status         DataProcessingActivityStatus  @default(DRAFT) // Lifecycle status
+  id             String                       @id @default(cuid())
+  name           String // Activity name/title
+  description    String? // Detailed description of the processing activity
+  organizationId String // Foreign key to Organization
+  status         DataProcessingActivityStatus @default(DRAFT) // Lifecycle status
 
   // Risk and DPIA
-  riskLevel    RiskLevel?  // Risk assessment level (null = not yet assessed)
-  requiresDPIA Boolean?    // DPIA requirement determination (null = not yet determined)
+  riskLevel    RiskLevel? // Risk assessment level (null = not yet assessed)
+  requiresDPIA Boolean? // DPIA requirement determination (null = not yet determined)
   dpiaStatus   DPIAStatus? // DPIA assessment status (only relevant when requiresDPIA = true)
 
   // Owners (FK to User)
@@ -310,14 +383,14 @@ model DataProcessingActivity {
   processingOwnerId String? // Processing owner responsible for implementation
 
   // Retention
-  retentionPeriodValue   Int?     // Numeric value for retention period (e.g., 7)
+  retentionPeriodValue   Int? // Numeric value for retention period (e.g., 7)
   retentionPeriodUnit    TimeUnit? // Unit of time for retention period
-  retentionJustification String?  // Legal or business rationale for retention period
+  retentionJustification String? // Legal or business rationale for retention period
 
   // Review scheduling
   lastReviewedAt        DateTime? // Timestamp of most recent review
   nextReviewDate        DateTime? // Scheduled date for next review
-  reviewFrequencyMonths Int?      // Review frequency in months (null = ad-hoc/as-needed)
+  reviewFrequencyMonths Int? // Review frequency in months (null = ad-hoc/as-needed)
 
   // Metadata
   metadata Json? // Extensible metadata field for custom attributes
@@ -341,19 +414,19 @@ model DataProcessingActivity {
 
 // Processor type enum for categorization
 enum ProcessorType {
-  DATA_PROCESSOR      // Third-party data processor
-  SUB_PROCESSOR       // Sub-processor engaged by another processor
-  JOINT_CONTROLLER    // Joint controller sharing responsibility
-  SERVICE_PROVIDER    // General service provider handling data
+  DATA_PROCESSOR // Third-party data processor
+  SUB_PROCESSOR // Sub-processor engaged by another processor
+  JOINT_CONTROLLER // Joint controller sharing responsibility
+  SERVICE_PROVIDER // General service provider handling data
 }
 
 // Processor model for tracking third-party data processors
 model Processor {
   id             String        @id @default(cuid())
-  name           String        // Processor name/company name
+  name           String // Processor name/company name
   type           ProcessorType // Type of processor relationship
-  description    String?       // Description of services provided
-  organizationId String        // Foreign key to Organization
+  description    String? // Description of services provided
+  organizationId String // Foreign key to Organization
   isActive       Boolean       @default(true) // Active/inactive status
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -369,4 +442,24 @@ model Processor {
 // Compliance
 // ============================================================================
 
-// Future compliance models will be added here
+// Purpose model for tracking data processing purposes
+model Purpose {
+  id             String          @id @default(cuid())
+  name           String // Purpose name
+  description    String? // Detailed description of the purpose
+  category       PurposeCategory // Purpose category classification
+  scope          PurposeScope // Internal, external, or both
+  organizationId String // Foreign key to Organization
+
+  // Audit fields
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([organizationId, category])
+}
