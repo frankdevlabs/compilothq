@@ -29,6 +29,7 @@ export * from './dal/countries'
 export * from './dal/dataCategories'
 export * from './dal/dataNatures'
 export * from './dal/dataProcessingActivities'
+export * from './dal/dataSubjectCategories'
 export * from './dal/devSessions'
 export * from './dal/invitations'
 export * from './dal/legalBases'
@@ -59,6 +60,7 @@ export type {
   DataCategoryDataNature,
   DataNature,
   DataProcessingActivity,
+  DataSubjectCategory,
   Invitation,
   LegalBasis,
   Organization,
