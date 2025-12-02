@@ -28,6 +28,7 @@ Implement the DataSubjectCategory model for the GDPR compliance platform, enabli
 
 **Q7:** Should we include seed data?
 **Answer:** Yes, comprehensive GDPR-based seed data including:
+
 - Internal: EMPLOYEE, JOB_APPLICANT, CONTRACTOR
 - External: CUSTOMER, PROSPECT, SUPPLIER, WEBSITE_VISITOR, NEWSLETTER_SUBSCRIBER
 - Vulnerable: MINOR, PATIENT, STUDENT, ELDERLY, ASYLUM_SEEKER
