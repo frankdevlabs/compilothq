@@ -57,6 +57,8 @@ model Organization {
   dataProcessingActivities DataProcessingActivity[]
   processors               Processor[]
   purposes                 Purpose[]
+  dataSubjectCategories    DataSubjectCategory[]
+  dataCategories           DataCategory[]
 
   @@index([deletedAt])
 }
@@ -161,6 +163,13 @@ enum DataNatureType {
   NON_SPECIAL
 }
 
+enum SensitivityLevel {
+  PUBLIC       // Publicly available data
+  INTERNAL     // Internal use only
+  CONFIDENTIAL // Confidential business data
+  RESTRICTED   // Highly restricted sensitive data
+}
+
 enum TransferMechanismCategory {
   ADEQUACY
   SAFEGUARD
@@ -233,6 +242,9 @@ model DataNature {
   isActive    Boolean        @default(true)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+
+  // Relations
+  dataCategoryLinks DataCategoryDataNature[]
 
   @@index([name])
   @@index([type])
@@ -322,6 +334,84 @@ model RecipientCategory {
   updatedAt                DateTime @updatedAt
 
   @@index([name])
+}
+
+// DataSubjectCategory model for GDPR compliance
+// Classifies data subject types (employees, customers, minors, etc.) with vulnerability tracking
+model DataSubjectCategory {
+  id                   String        @id @default(cuid())
+  code                 String        // Uppercase machine identifier (EMPLOYEE, CUSTOMER, MINOR, etc.)
+  name                 String        // Human-readable display name
+  description          String?       // Detailed explanation of the category
+  category             String?       // Flexible grouping (internal, external, vulnerable, special)
+  examples             Json?         // Array of specific examples per category
+  isVulnerable         Boolean       @default(false) // Vulnerable data subject status (GDPR Article 35)
+  vulnerabilityReason  String?       // Explanation of why category is vulnerable
+  vulnerabilityArticle String?       // GDPR article reference (e.g., "Art. 35(3)(c)")
+  gdprArticle          String?       // General GDPR legal reference
+  suggestsDPIA         Boolean       @default(false) // Informational hint for DPIA recommendation
+  dpiaRationale        String?       // Explanation for DPIA recommendation
+  isActive             Boolean       @default(true) // Soft filtering flag
+  isSystemDefined      Boolean       @default(false) // Distinguishes system vs custom categories
+  organizationId       String?       // Nullable for hybrid scope (system-wide + org-specific)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  // Relations
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Indexes and constraints
+  @@unique([code, organizationId]) // Allow same code across different organizations
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([category])
+}
+
+// ============================================================================
+// Data Classification
+// ============================================================================
+
+// Data category model for classifying personal data with sensitivity levels
+model DataCategory {
+  id               String           @id @default(cuid())
+  name             String           // Organization-specific category name
+  description      String?          // Detailed category description
+  organizationId   String           // Foreign key to Organization
+  sensitivity      SensitivityLevel // Sensitivity classification level
+  isSpecialCategory Boolean         // Auto-derived from linked DataNatures with manual override
+  exampleFields    Json?            // String array for example data fields
+  metadata         Json?            // Override justification and extensible data
+  isActive         Boolean          @default(true) // Soft-delete pattern
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Relations
+  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  dataNatures  DataCategoryDataNature[]
+
+  // Indexes
+  @@index([organizationId])
+  @@index([organizationId, sensitivity])
+  @@index([organizationId, isSpecialCategory])
+  @@index([sensitivity])
+  @@index([isSpecialCategory])
+}
+
+// Junction table for DataCategory to DataNature many-to-many relationship
+model DataCategoryDataNature {
+  id             String   @id @default(cuid())
+  dataCategoryId String   // Foreign key to DataCategory
+  dataNatureId   String   // Foreign key to DataNature
+  createdAt      DateTime @default(now())
+
+  // Relations
+  dataCategory DataCategory @relation(fields: [dataCategoryId], references: [id], onDelete: Cascade)
+  dataNature   DataNature   @relation(fields: [dataNatureId], references: [id], onDelete: Restrict)
+
+  // Constraints
+  @@unique([dataCategoryId, dataNatureId])
+  @@index([dataCategoryId])
+  @@index([dataNatureId])
 }
 
 // ============================================================================

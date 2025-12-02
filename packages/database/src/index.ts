@@ -26,6 +26,7 @@ export default prisma
 
 // Export all DAL functions
 export * from './dal/countries'
+export * from './dal/dataCategories'
 export * from './dal/dataNatures'
 export * from './dal/dataProcessingActivities'
 export * from './dal/devSessions'
@@ -54,6 +55,8 @@ export * from '../generated/client/client'
 export type {
   Account,
   Country,
+  DataCategory,
+  DataCategoryDataNature,
   DataNature,
   DataProcessingActivity,
   Invitation,

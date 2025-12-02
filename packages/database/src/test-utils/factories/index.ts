@@ -69,6 +69,13 @@ export {
   PurposeFactory,
 } from './purpose-factory'
 
+// DataSubjectCategory factories
+export {
+  createOrganizationDataSubjectCategoryFactory,
+  createVulnerableDataSubjectCategoryFactory,
+  DataSubjectCategoryFactory,
+} from './data-subject-category-factory'
+
 // Organization factories
 export {
   cleanupTestOrganizations,
