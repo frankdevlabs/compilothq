@@ -209,20 +209,6 @@ ALTER TABLE "Agreement"
   ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- ============================================================================
--- Step 7: Fix DataProcessingActivity Constraint/Index Names
--- ============================================================================
-
--- Rename primary key constraint
-ALTER TABLE "DataProcessingActivity" RENAME CONSTRAINT "Activity_pkey" TO "DataProcessingActivity_pkey";
-
--- Rename foreign key constraint
-ALTER TABLE "DataProcessingActivity" RENAME CONSTRAINT "Activity_organizationId_fkey" TO "DataProcessingActivity_organizationId_fkey";
-
--- Rename indexes
-ALTER INDEX "Activity_organizationId_idx" RENAME TO "DataProcessingActivity_organizationId_idx";
-ALTER INDEX "Activity_organizationId_status_idx" RENAME TO "DataProcessingActivity_organizationId_status_idx";
-
--- ============================================================================
 -- Migration Complete
 -- ============================================================================
 -- Summary:
@@ -236,4 +222,6 @@ ALTER INDEX "Activity_organizationId_status_idx" RENAME TO "DataProcessingActivi
 -- ✅ Created Agreement table
 -- ✅ Created all indexes
 -- ✅ Added all foreign key constraints
--- ✅ Fixed DataProcessingActivity constraint/index names
+--
+-- Note: DataProcessingActivity constraint/index renames were already performed
+-- by migration 20251202203143, so Step 7 was removed to prevent conflicts.
