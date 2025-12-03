@@ -22,17 +22,20 @@ import {
   getDescendantTree,
 } from '../../../src/dal/recipients'
 import type { Country, Organization } from '../../../src/index'
-import { prisma } from '../../../src/index'
 import {
   cleanupTestAgreements,
+  cleanupTestCountries,
   cleanupTestExternalOrganizations,
   cleanupTestOrganizations,
   cleanupTestRecipients,
+  createAdequateCountryFactory,
+  createEUCountryFactory,
   createTestAgreement,
   createTestExternalOrganization,
   createTestOrganization,
   createTestRecipient,
   createTestRecipientHierarchy,
+  createThirdCountryFactory,
 } from '../../../src/test-utils/factories'
 import {
   validateRecipientData,
@@ -61,45 +64,23 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
     org1 = testOrg1
     org2 = testOrg2
 
-    // Create test countries for transfer assessment
-    euCountry = await prisma.country.create({
-      data: {
-        name: 'Netherlands',
-        isoCode: 'NL',
-        isoCode3: 'NLD',
-        gdprStatus: ['EU', 'EEA'],
-        isActive: true,
-      },
+    // Create test countries using factories (generates unique ISO codes)
+    euCountry = await createEUCountryFactory().create({
+      name: 'Netherlands (Test Workflows)',
     })
 
-    thirdCountry = await prisma.country.create({
-      data: {
-        name: 'United States',
-        isoCode: 'US',
-        isoCode3: 'USA',
-        gdprStatus: ['Third Country'],
-        isActive: true,
-      },
+    thirdCountry = await createThirdCountryFactory().create({
+      name: 'United States (Test Workflows)',
     })
 
-    adequateCountry = await prisma.country.create({
-      data: {
-        name: 'Canada',
-        isoCode: 'CA',
-        isoCode3: 'CAN',
-        gdprStatus: ['Adequate'],
-        isActive: true,
-      },
+    adequateCountry = await createAdequateCountryFactory().create({
+      name: 'Canada (Test Workflows)',
     })
   })
 
   afterAll(async () => {
     await cleanupTestOrganizations([org1.id, org2.id])
-    await prisma.country.deleteMany({
-      where: {
-        id: { in: [euCountry.id, thirdCountry.id, adequateCountry.id] },
-      },
-    })
+    await cleanupTestCountries([euCountry.id, thirdCountry.id, adequateCountry.id])
   })
 
   describe('Workflow 1: End-to-end processor chain creation with validation', () => {
@@ -486,10 +467,10 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
         // Assert - Should identify all 3 countries in chain
         expect(transferAssessment).toHaveLength(3)
 
-        const countryNames = transferAssessment.map((t) => t.country.name)
-        expect(countryNames).toContain('Netherlands')
-        expect(countryNames).toContain('United States')
-        expect(countryNames).toContain('Canada')
+        const countryIds = transferAssessment.map((t) => t.country.id)
+        expect(countryIds).toContain(euCountry.id)
+        expect(countryIds).toContain(thirdCountry.id)
+        expect(countryIds).toContain(adequateCountry.id)
 
         // Assert - Verify depth information
         const euTransfer = transferAssessment.find((t) => t.country.id === euCountry.id)

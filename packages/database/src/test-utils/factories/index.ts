@@ -17,10 +17,12 @@ export { Factory } from './base-factory'
 
 // Country factories
 export {
+  cleanupTestCountries,
   CountryFactory,
   createAdequateCountryFactory,
   createEEACountryFactory,
   createEUCountryFactory,
+  createThirdCountryFactory,
 } from './country-factory'
 
 // DataNature factories

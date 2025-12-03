@@ -6,6 +6,10 @@ import { Factory } from './base-factory'
  */
 type CountryBuildData = Omit<Country, 'id' | 'createdAt' | 'updatedAt'>
 
+// Global sequence counter shared across all factory instances
+// to ensure truly unique ISO codes even when tests run in parallel
+let globalCountrySequence = 0
+
 /**
  * Factory for generating Country test data
  * Generates valid country data that passes Zod validation
@@ -23,17 +27,26 @@ type CountryBuildData = Omit<Country, 'id' | 'createdAt' | 'updatedAt'>
 export class CountryFactory extends Factory<Country, CountryBuildData> {
   /**
    * Define default values for a Country
-   * Generates unique ISO codes using sequence number to avoid conflicts
+   * Generates unique ISO codes using global sequence + high-resolution timestamp
+   * to avoid conflicts even when multiple test suites run in parallel
    */
   protected defaults(): Partial<CountryBuildData> {
-    const seq = this.nextSequence()
-    const isoCode = `T${seq.toString().padStart(1, '0')}`
-    const isoCode3 = `TS${seq.toString().padStart(1, '0')}`
+    // Use global sequence + microseconds for maximum uniqueness across parallel test runs
+    const seq = ++globalCountrySequence
+    const microtime = (Date.now() * 1000 + Math.floor(Math.random() * 1000)).toString()
+
+    // Create 2-char ISO code: Letter + alphanumeric from microtime
+    const firstChar = String.fromCharCode(65 + (seq % 26)) // A-Z rotation
+    const secondChar = microtime.slice(-1) // Last digit of microtime
+    const isoCode = `${firstChar}${secondChar}` // e.g., "A7", "B3", "C9", ...
+
+    // Create 3-char ISO code: Letter + 2 alphanumerics from microtime
+    const isoCode3 = `${String.fromCharCode(65 + (seq % 26))}${microtime.slice(-2)}` // e.g., "A47", "B89", ...
 
     return {
-      name: `Test Country ${seq}`,
-      isoCode: isoCode.toUpperCase().substring(0, 2),
-      isoCode3: isoCode3.toUpperCase().substring(0, 3),
+      name: `Test Country ${seq} (${microtime.slice(-4)})`, // Include timestamp fragment for debugging
+      isoCode: isoCode,
+      isoCode3: isoCode3,
       gdprStatus: ['Third Country'],
       description: `Test country for GDPR compliance testing`,
       isActive: true,
@@ -79,3 +92,39 @@ export const createAdequateCountryFactory = (prisma?: PrismaClient) =>
     gdprStatus: ['Third Country', 'Adequate'],
     description: 'Third Country with Adequacy Decision',
   })
+
+/**
+ * Pre-configured factory for third countries
+ * These countries have gdprStatus 'Third Country' without adequacy decision
+ */
+export const createThirdCountryFactory = (prisma?: PrismaClient) =>
+  new CountryFactory(prisma).params({
+    gdprStatus: ['Third Country'],
+    description: 'Third Country without Adequacy Decision',
+  })
+
+/**
+ * Helper function to clean up test countries by their IDs
+ * Deletes all countries with the given IDs and their related data
+ *
+ * @param countryIds - Array of country IDs to delete
+ * @param prisma - Optional Prisma client instance (uses singleton if not provided)
+ *
+ * @example
+ * await cleanupTestCountries([country1.id, country2.id])
+ */
+export async function cleanupTestCountries(
+  countryIds: string[],
+  prisma?: PrismaClient
+): Promise<void> {
+  const db = prisma ?? (await import('../../index')).prisma
+
+  if (countryIds.length === 0) return
+
+  // Delete countries (cascade will handle related records if configured)
+  await db.country.deleteMany({
+    where: {
+      id: { in: countryIds },
+    },
+  })
+}

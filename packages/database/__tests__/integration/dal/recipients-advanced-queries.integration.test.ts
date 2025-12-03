@@ -19,7 +19,13 @@ import type {
   Organization,
 } from '../../../src/index'
 import { prisma } from '../../../src/index'
-import { cleanupTestOrganizations, createTestOrganization } from '../../../src/test-utils/factories'
+import {
+  cleanupTestCountries,
+  cleanupTestOrganizations,
+  createEUCountryFactory,
+  createTestOrganization,
+  createThirdCountryFactory,
+} from '../../../src/test-utils/factories'
 import {
   cleanupTestExternalOrganizations,
   createTestExternalOrganization,
@@ -72,25 +78,13 @@ describe('Recipients DAL - Advanced Query Patterns Integration Tests', () => {
     org1 = testOrg1
     org2 = testOrg2
 
-    // Create test countries
-    euCountry = await prisma.country.create({
-      data: {
-        name: 'Netherlands',
-        isoCode: 'NL',
-        isoCode3: 'NLD',
-        gdprStatus: ['EU', 'EEA'],
-        isActive: true,
-      },
+    // Create test countries using factories (generates unique ISO codes)
+    euCountry = await createEUCountryFactory().create({
+      name: 'Netherlands (Test)',
     })
 
-    thirdCountry = await prisma.country.create({
-      data: {
-        name: 'United States',
-        isoCode: 'US',
-        isoCode3: 'USA',
-        gdprStatus: ['Third Country'], // Not in EU/EEA/Adequate
-        isActive: true,
-      },
+    thirdCountry = await createThirdCountryFactory().create({
+      name: 'United States (Test)',
     })
 
     // Create external organizations with different profiles
@@ -127,11 +121,7 @@ describe('Recipients DAL - Advanced Query Patterns Integration Tests', () => {
     // Cleanup shared test data
     await cleanupTestOrganizations([org1.id, org2.id])
     await cleanupTestExternalOrganizations([externalOrg1.id, externalOrg2.id, externalOrg3.id])
-    await prisma.country.deleteMany({
-      where: {
-        id: { in: [euCountry.id, thirdCountry.id] },
-      },
-    })
+    await cleanupTestCountries([euCountry.id, thirdCountry.id])
   })
 
   describe('getRecipientsByType', () => {
@@ -278,7 +268,7 @@ describe('Recipients DAL - Advanced Query Patterns Integration Tests', () => {
       expect(foundRecipient).toBeDefined()
       expect(foundRecipient?.country).toBeDefined()
       expect(foundRecipient?.country.id).toBe(thirdCountry.id)
-      expect(foundRecipient?.country.name).toBe('United States')
+      expect(foundRecipient?.country.name).toBe(thirdCountry.name) // Match the factory-generated name
     })
   })
 
@@ -374,9 +364,9 @@ describe('Recipients DAL - Advanced Query Patterns Integration Tests', () => {
 
       // Assert - Should identify both countries in chain
       expect(transfers.length).toBeGreaterThanOrEqual(2)
-      const countries = transfers.map((t) => t.country.isoCode)
-      expect(countries).toContain('NL') // Root processor
-      expect(countries).toContain('US') // Sub-processor
+      const countryIds = transfers.map((t) => t.country.id)
+      expect(countryIds).toContain(euCountry.id) // Root processor
+      expect(countryIds).toContain(thirdCountry.id) // Sub-processor
     })
   })
 
