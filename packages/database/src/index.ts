@@ -26,13 +26,17 @@ export default prisma
 
 // Export all DAL functions
 export * from './dal/countries'
+export * from './dal/dataCategories'
 export * from './dal/dataNatures'
 export * from './dal/dataProcessingActivities'
+export * from './dal/dataSubjectCategories'
 export * from './dal/devSessions'
 export * from './dal/externalOrganizations'
 export * from './dal/invitations'
+export * from './dal/legalBases'
 export * from './dal/organizations'
 export * from './dal/processingActs'
+export * from './dal/purposes'
 export * from './dal/recipientCategories'
 export * from './dal/recipients'
 export * from './dal/transferMechanisms'
@@ -57,12 +61,17 @@ export type {
   Account,
   Agreement,
   Country,
+  DataCategory,
+  DataCategoryDataNature,
   DataNature,
   DataProcessingActivity,
+  DataSubjectCategory,
   ExternalOrganization,
   Invitation,
+  LegalBasis,
   Organization,
   ProcessingAct,
+  Purpose,
   Recipient,
   RecipientCategory,
   Session,
