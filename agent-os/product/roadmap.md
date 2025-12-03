@@ -36,7 +36,7 @@
 
 11. [ ] Purpose & Legal Basis Models — Implement Purpose model with name, description, category classification, internal/external flags, and audit timestamps for documenting processing objectives; implement LegalBasis model with name, description, regulatory framework (GDPR, LGPD, etc.), article references, consent requirement flags, and audit timestamps supporting all six GDPR legal bases; create migrations and test to enable legal compliance validation and purpose limitation tracking. `S`
 
-12. [ ] Recipient Model with Hierarchy — Implement Recipient model with name, RecipientType enum (INTERNAL_DEPARTMENT, PROCESSOR, SUB_PROCESSOR, INDEPENDENT_CONTROLLER, JOINT_CONTROLLER, PUBLIC_AUTHORITY, THIRD_PARTY), description, optional vendorId reference for processor recipients, self-referential parentRecipientId for sub-processor chains, and audit timestamps; add indexes on type and parentRecipientId; create migrations and test hierarchical queries to enable recipient tracking with sub-processor visibility. `S`
+12. [x] Recipient Model with Hierarchy — Implement Recipient model with name, RecipientType enum (INTERNAL_DEPARTMENT, PROCESSOR, SUB_PROCESSOR, INDEPENDENT_CONTROLLER, JOINT_CONTROLLER, PUBLIC_AUTHORITY, THIRD_PARTY), description, optional vendorId reference for processor recipients, self-referential parentRecipientId for sub-processor chains, and audit timestamps; add indexes on type and parentRecipientId; create migrations and test hierarchical queries to enable recipient tracking with sub-processor visibility. `S`
 
 **Milestone 3: Core Entity Models** ✓ Primary compliance entities defined
 

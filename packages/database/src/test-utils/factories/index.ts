@@ -69,3 +69,19 @@ export {
   createTestUsersByPersona,
   type UserFactoryOptions,
 } from './userFactory'
+
+// ExternalOrganization factories
+export {
+  cleanupTestExternalOrganizations,
+  createTestExternalOrganization,
+} from './externalOrganizationFactory'
+
+// Agreement factories
+export { cleanupTestAgreements, createTestAgreement } from './agreementFactory'
+
+// Recipient factories
+export {
+  cleanupTestRecipients,
+  createTestRecipient,
+  createTestRecipientHierarchy,
+} from './recipientFactory'

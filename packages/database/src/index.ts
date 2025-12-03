@@ -29,13 +29,17 @@ export * from './dal/countries'
 export * from './dal/dataNatures'
 export * from './dal/dataProcessingActivities'
 export * from './dal/devSessions'
+export * from './dal/externalOrganizations'
 export * from './dal/invitations'
 export * from './dal/organizations'
 export * from './dal/processingActs'
-export * from './dal/processors'
 export * from './dal/recipientCategories'
+export * from './dal/recipients'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
+
+// Export validation functions
+export * from './validation/recipientHierarchyValidation'
 
 // NOTE: Server-only utilities (tokens) are NOT exported from the main index
 // to avoid bundling Node.js modules (crypto) in Edge Runtime (middleware).
@@ -51,16 +55,32 @@ export * from '../generated/client/client'
 // Explicit type exports for documentation
 export type {
   Account,
+  Agreement,
   Country,
   DataNature,
   DataProcessingActivity,
+  ExternalOrganization,
   Invitation,
   Organization,
   ProcessingAct,
-  Processor,
+  Recipient,
   RecipientCategory,
   Session,
   TransferMechanism,
   User,
   VerificationToken,
 } from '../generated/client/client'
+
+// Export custom types from DAL (not in Prisma schema)
+export type {
+  CrossBorderTransferAssessment,
+  DuplicateOrganizationGroup,
+  ExpiringAgreement,
+  HierarchyHealthReport,
+  RecipientMissingAgreement,
+  RecipientStatistics,
+  ThirdCountryRecipient,
+} from './dal/recipients'
+
+// Export validation types
+export type { HierarchyRules, ValidationResult } from './validation/recipientHierarchyValidation'

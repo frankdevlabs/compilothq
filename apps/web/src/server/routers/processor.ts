@@ -1,11 +1,11 @@
 import {
-  createProcessor as createProcessorDAL,
-  deleteProcessor as deleteProcessorDAL,
-  getProcessorById,
-  listProcessorsByOrganization,
-  updateProcessor as updateProcessorDAL,
+  createRecipient,
+  deleteRecipient,
+  getRecipientByIdForOrg,
+  listRecipientsByOrganization,
+  updateRecipient,
 } from '@compilothq/database'
-import { ProcessorCreateSchema, ProcessorFiltersSchema } from '@compilothq/validation'
+import { RecipientCreateSchema, RecipientFiltersSchema } from '@compilothq/validation'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
@@ -17,8 +17,8 @@ export const processorRouter = router({
    * List all processors for the current organization
    * Supports cursor-based pagination and filtering by type and isActive status
    */
-  list: orgProcedure.input(ProcessorFiltersSchema.optional()).query(async ({ ctx, input }) => {
-    return await listProcessorsByOrganization(ctx.organizationId, input)
+  list: orgProcedure.input(RecipientFiltersSchema.optional()).query(async ({ ctx, input }) => {
+    return await listRecipientsByOrganization(ctx.organizationId, input)
   }),
 
   /**
@@ -26,35 +26,32 @@ export const processorRouter = router({
    * Verifies processor belongs to current organization
    */
   getById: orgProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
-    const processor = await getProcessorById(input.id)
+    const recipient = await getRecipientByIdForOrg(input.id, ctx.organizationId)
 
-    if (!processor) {
+    if (!recipient) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'Processor not found',
       })
     }
 
-    if (processor.organizationId !== ctx.organizationId) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Processor does not belong to your organization',
-      })
-    }
-
-    return processor
+    return recipient
   }),
 
   /**
    * Create a new processor
    * Processor is automatically scoped to the current organization
    */
-  create: orgProcedure.input(ProcessorCreateSchema).mutation(async ({ ctx, input }) => {
+  create: orgProcedure.input(RecipientCreateSchema).mutation(async ({ ctx, input }) => {
     return await handlePrismaError(
-      createProcessorDAL({
+      createRecipient({
         name: input.name,
         type: input.type,
         description: input.description ?? undefined,
+        purpose: input.purpose ?? undefined,
+        externalOrganizationId: input.externalOrganizationId ?? undefined,
+        parentRecipientId: input.parentRecipientId ?? undefined,
+        hierarchyType: input.hierarchyType ?? undefined,
         organizationId: ctx.organizationId,
         isActive: input.isActive,
       })
@@ -71,27 +68,27 @@ export const processorRouter = router({
         id: z.string(),
         name: z.string().min(1).optional(),
         type: z
-          .enum(['DATA_PROCESSOR', 'SUB_PROCESSOR', 'JOINT_CONTROLLER', 'SERVICE_PROVIDER'])
+          .enum(['PROCESSOR', 'SUB_PROCESSOR', 'JOINT_CONTROLLER', 'SERVICE_PROVIDER'])
           .optional(),
         description: z.string().optional().nullable(),
+        purpose: z.string().optional().nullable(),
+        externalOrganizationId: z.string().uuid().optional().nullable(),
+        parentRecipientId: z.string().uuid().optional().nullable(),
+        hierarchyType: z
+          .enum(['PROCESSOR_CHAIN', 'ORGANIZATIONAL', 'GROUPING'])
+          .optional()
+          .nullable(),
         isActive: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify processor belongs to this organization
-      const processor = await getProcessorById(input.id)
+      // Verify recipient belongs to this organization
+      const recipient = await getRecipientByIdForOrg(input.id, ctx.organizationId)
 
-      if (!processor) {
+      if (!recipient) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Processor not found',
-        })
-      }
-
-      if (processor.organizationId !== ctx.organizationId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Processor does not belong to your organization',
         })
       }
 
@@ -99,9 +96,13 @@ export const processorRouter = router({
       const { id, ...updateData } = input
 
       return await handlePrismaError(
-        updateProcessorDAL(id, {
+        updateRecipient(id, {
           ...updateData,
           description: updateData.description ?? undefined,
+          purpose: updateData.purpose ?? undefined,
+          externalOrganizationId: updateData.externalOrganizationId ?? undefined,
+          parentRecipientId: updateData.parentRecipientId ?? undefined,
+          hierarchyType: updateData.hierarchyType ?? undefined,
         })
       )
     }),
@@ -111,23 +112,16 @@ export const processorRouter = router({
    * Verifies processor belongs to current organization before deletion
    */
   delete: orgProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    // Verify processor belongs to this organization
-    const processor = await getProcessorById(input.id)
+    // Verify recipient belongs to this organization
+    const recipient = await getRecipientByIdForOrg(input.id, ctx.organizationId)
 
-    if (!processor) {
+    if (!recipient) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'Processor not found',
       })
     }
 
-    if (processor.organizationId !== ctx.organizationId) {
-      throw new TRPCError({
-        code: 'FORBIDDEN',
-        message: 'Processor does not belong to your organization',
-      })
-    }
-
-    return await handlePrismaError(deleteProcessorDAL(input.id))
+    return await handlePrismaError(deleteRecipient(input.id))
   }),
 })
