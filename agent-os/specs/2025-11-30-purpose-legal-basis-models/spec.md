@@ -111,7 +111,7 @@ Implement Purpose and LegalBasis database models with supporting enums, migratio
 - createMany with skipDuplicates for idempotent seeding
 - Console log with count summary
 
-**Integration Test Pattern (__tests__/integration/seed-data.test.ts)**
+**Integration Test Pattern (**tests**/integration/seed-data.test.ts)**
 
 - Use vitest describe/it/expect pattern
 - beforeAll for setup, afterAll for cleanup

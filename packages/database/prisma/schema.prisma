@@ -55,7 +55,7 @@ model Organization {
   users                    User[]
   invitations              Invitation[]
   dataProcessingActivities DataProcessingActivity[]
-  processors               Processor[]
+  recipients               Recipient[]
   purposes                 Purpose[]
   dataSubjectCategories    DataSubjectCategory[]
   dataCategories           DataCategory[]
@@ -227,6 +227,9 @@ model Country {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relations
+  externalOrganizations ExternalOrganization[]
 
   @@index([name])
   @@index([isoCode])
@@ -502,30 +505,157 @@ model DataProcessingActivity {
   @@index([riskLevel, dpiaStatus])
 }
 
-// Processor type enum for categorization
-enum ProcessorType {
-  DATA_PROCESSOR // Third-party data processor
-  SUB_PROCESSOR // Sub-processor engaged by another processor
-  JOINT_CONTROLLER // Joint controller sharing responsibility
-  SERVICE_PROVIDER // General service provider handling data
+// ============================================================================
+// Recipients & External Organizations
+// ============================================================================
+
+// Recipient type enum for GDPR compliance categorization
+enum RecipientType {
+  PROCESSOR           // Art. 28 - Data processor (requires DPA)
+  SUB_PROCESSOR       // Art. 28(2) - Sub-processor in chain
+  JOINT_CONTROLLER    // Art. 26 - Joint controller (requires JCA)
+  SERVICE_PROVIDER    // General service provider
+  SEPARATE_CONTROLLER // Independent controller receiving data
+  PUBLIC_AUTHORITY    // Government/regulatory body
+  INTERNAL_DEPARTMENT // Internal recipient (no external org)
 }
 
-// Processor model for tracking third-party data processors
-model Processor {
-  id             String        @id @default(cuid())
-  name           String // Processor name/company name
-  type           ProcessorType // Type of processor relationship
-  description    String? // Description of services provided
-  organizationId String // Foreign key to Organization
-  isActive       Boolean       @default(true) // Active/inactive status
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+// Hierarchy type enum for recipient hierarchy categorization
+enum HierarchyType {
+  PROCESSOR_CHAIN // For sub-processor hierarchies (Art. 28(2))
+  ORGANIZATIONAL  // For internal department hierarchies
+  GROUPING        // For logical grouping (future use)
+}
+
+// External organization model for tracking external legal entities
+model ExternalOrganization {
+  id                    String   @id @default(cuid())
+  legalName             String   // Official legal name (e.g., "Recruitee B.V.")
+  tradingName           String?  // Trading/brand name (e.g., "Recruitee")
+
+  // Registration details
+  jurisdiction          String?  // Country of incorporation
+  registrationNumber    String?  // Company registration number (KvK, Company House, etc.)
+  vatNumber             String?  // VAT/Tax identification number
+
+  // Location tracking
+  headquartersCountryId String?  // FK to Country model
+  operatingCountries    String[] @default([]) // Array of country codes
+
+  // Contact information
+  website               String?
+  contactEmail          String?
+  contactPhone          String?
+
+  // Classification
+  isPublicAuthority     Boolean  @default(false) // For Art. 49 derogation eligibility
+  sector                String?  // Industry sector
+
+  // Additional information
+  notes                 String?  @db.Text
+  metadata              Json?    // Extensible metadata
+
+  // Timestamps
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  headquartersCountry   Country?    @relation(fields: [headquartersCountryId], references: [id], onDelete: SetNull)
+  recipients            Recipient[]
+  agreements            Agreement[]
+
+  @@index([legalName])
+  @@index([tradingName])
+  @@index([headquartersCountryId])
+}
+
+// Recipient model for tracking all recipients of personal data
+model Recipient {
+  id                     String         @id @default(cuid())
+  name                   String         // Display name for this recipient role
+  type                   RecipientType  // Type of recipient relationship
+
+  // Tenant context
+  organizationId         String         // FK to Organization (tenant)
+
+  // External organization link (null for INTERNAL_DEPARTMENT)
+  externalOrganizationId String?        // FK to ExternalOrganization
+
+  // Purpose and description
+  purpose                String?        // Why do they receive personal data?
+  description            String?        // Description of services/role
+
+  // Hierarchy support
+  parentRecipientId      String?        // Self-referential FK for hierarchy
+  hierarchyType          HierarchyType? // Type of hierarchy relationship
+
+  // Activity linking (temporary until RecipientDataProcessingActivity junction table)
+  activityIds            String[]       @default([])
+
+  // Status
+  isActive               Boolean        @default(true)
+
+  // Timestamps
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  // Relations
+  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  externalOrganization   ExternalOrganization?   @relation(fields: [externalOrganizationId], references: [id], onDelete: SetNull)
+  parentRecipient        Recipient?              @relation("RecipientHierarchy", fields: [parentRecipientId], references: [id], onDelete: SetNull)
+  children               Recipient[]             @relation("RecipientHierarchy")
 
   @@index([organizationId])
   @@index([organizationId, isActive])
+  @@index([organizationId, type])
+  @@index([externalOrganizationId])
+  @@index([parentRecipientId])
+}
+
+// ============================================================================
+// Agreements
+// ============================================================================
+
+// Agreement type enum for contract categorization
+enum AgreementType {
+  DPA                       // Data Processing Agreement (Art. 28)
+  JOINT_CONTROLLER_AGREEMENT // Joint Controller Agreement (Art. 26)
+  SCC                       // Standard Contractual Clauses
+  BCR                       // Binding Corporate Rules
+  DPF                       // Data Privacy Framework
+  NDA                       // Non-Disclosure Agreement
+}
+
+// Agreement status enum for lifecycle tracking
+enum AgreementStatus {
+  DRAFT             // Being drafted
+  PENDING_SIGNATURE // Sent for signature
+  ACTIVE            // Signed and active
+  EXPIRING_SOON     // Approaching expiry date
+  EXPIRED           // Past expiry date
+  TERMINATED        // Terminated early
+}
+
+// Agreement model shell for tracking legal agreements with external organizations
+model Agreement {
+  id                     String          @id @default(cuid())
+  externalOrganizationId String          // FK to ExternalOrganization
+  type                   AgreementType   // Type of agreement
+  status                 AgreementStatus @default(DRAFT) // Lifecycle status
+  signedDate             DateTime?       // Date agreement was signed
+  expiryDate             DateTime?       // Date agreement expires
+
+  // Timestamps
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  // Relations
+  externalOrganization   ExternalOrganization @relation(fields: [externalOrganizationId], references: [id], onDelete: Cascade)
+
+  @@index([externalOrganizationId])
+  @@index([type])
+  @@index([status])
+  @@index([expiryDate])
 }
 
 // ============================================================================

@@ -68,7 +68,7 @@ describe('Processor Router', () => {
       // Create multiple processors
       await caller.create({
         name: 'Processor 1',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         description: 'Test processor 1',
       })
       await caller.create({
@@ -106,15 +106,15 @@ describe('Processor Router', () => {
       // Create processors
       await caller.create({
         name: 'Processor A',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
       await caller.create({
         name: 'Processor B',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
       await caller.create({
         name: 'Processor C',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
 
       // List with limit
@@ -130,7 +130,7 @@ describe('Processor Router', () => {
       // Create processors of different types
       await caller.create({
         name: 'Data Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
       await caller.create({
         name: 'Sub Processor',
@@ -138,10 +138,10 @@ describe('Processor Router', () => {
       })
 
       // Filter by type
-      const dataProcessors = await caller.list({ type: 'DATA_PROCESSOR' })
+      const dataProcessors = await caller.list({ type: 'PROCESSOR' })
 
       expect(dataProcessors.items.length).toBeGreaterThan(0)
-      expect(dataProcessors.items.every((p) => p.type === 'DATA_PROCESSOR')).toBe(true)
+      expect(dataProcessors.items.every((p) => p.type === 'PROCESSOR')).toBe(true)
     })
 
     it('should filter processors by isActive status', async () => {
@@ -151,7 +151,7 @@ describe('Processor Router', () => {
       // Create active and inactive processors
       const active = await caller.create({
         name: 'Active Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
       })
       await caller.update({
@@ -175,7 +175,7 @@ describe('Processor Router', () => {
       // Create a processor
       const created = await caller.create({
         name: 'Test Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         description: 'Test description',
         isActive: true,
       })
@@ -186,7 +186,7 @@ describe('Processor Router', () => {
       expect(processor).toBeDefined()
       expect(processor.id).toBe(created.id)
       expect(processor.name).toBe('Test Processor')
-      expect(processor.type).toBe('DATA_PROCESSOR')
+      expect(processor.type).toBe('PROCESSOR')
       expect(processor.description).toBe('Test description')
       expect(processor.isActive).toBe(true)
       expect(processor.organizationId).toBe(testOrg.id)
@@ -202,13 +202,13 @@ describe('Processor Router', () => {
       })
     })
 
-    it('should throw FORBIDDEN if processor belongs to different organization', async () => {
+    it('should throw NOT_FOUND if processor belongs to different organization', async () => {
       // Create processor for testOrg
       const ctx = createTestContext(testUser)
       const caller = processorRouter.createCaller(ctx)
       const created = await caller.create({
         name: 'Test Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
 
       // Try to access it from otherOrg
@@ -217,7 +217,7 @@ describe('Processor Router', () => {
 
       await expect(otherCaller.getById({ id: created.id })).rejects.toThrow(TRPCError)
       await expect(otherCaller.getById({ id: created.id })).rejects.toMatchObject({
-        code: 'FORBIDDEN',
+        code: 'NOT_FOUND',
       })
     })
   })
@@ -251,7 +251,7 @@ describe('Processor Router', () => {
 
       const processor = await caller.create({
         name: 'Default Active Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
 
       expect(processor).toBeDefined()
@@ -281,7 +281,7 @@ describe('Processor Router', () => {
       // Create a processor
       const created = await caller.create({
         name: 'Original Name',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         description: 'Original description',
         isActive: true,
       })
@@ -301,13 +301,13 @@ describe('Processor Router', () => {
       expect(updated.organizationId).toBe(testOrg.id)
     })
 
-    it('should throw FORBIDDEN when updating processor from different organization', async () => {
+    it('should throw NOT_FOUND when updating processor from different organization', async () => {
       // Create processor for testOrg
       const ctx = createTestContext(testUser)
       const caller = processorRouter.createCaller(ctx)
       const created = await caller.create({
         name: 'Test Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
 
       // Try to update from otherOrg
@@ -326,7 +326,7 @@ describe('Processor Router', () => {
           name: 'Hacked Name',
         })
       ).rejects.toMatchObject({
-        code: 'FORBIDDEN',
+        code: 'NOT_FOUND',
       })
     })
   })
@@ -339,7 +339,7 @@ describe('Processor Router', () => {
       // Create a processor
       const created = await caller.create({
         name: 'Processor to Delete',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         description: 'Will be deleted',
       })
 
@@ -352,13 +352,13 @@ describe('Processor Router', () => {
       await expect(caller.getById({ id: created.id })).rejects.toThrow(TRPCError)
     })
 
-    it('should throw FORBIDDEN when deleting processor from different organization', async () => {
+    it('should throw NOT_FOUND when deleting processor from different organization', async () => {
       // Create processor for testOrg
       const ctx = createTestContext(testUser)
       const caller = processorRouter.createCaller(ctx)
       const created = await caller.create({
         name: 'Test Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
 
       // Try to delete from otherOrg
@@ -367,7 +367,7 @@ describe('Processor Router', () => {
 
       await expect(otherCaller.delete({ id: created.id })).rejects.toThrow(TRPCError)
       await expect(otherCaller.delete({ id: created.id })).rejects.toMatchObject({
-        code: 'FORBIDDEN',
+        code: 'NOT_FOUND',
       })
     })
   })
@@ -379,7 +379,7 @@ describe('Processor Router', () => {
       const caller = processorRouter.createCaller(ctx)
       const testOrgProcessor = await caller.create({
         name: 'Test Org Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
 
       // Create processor for otherOrg
@@ -387,7 +387,7 @@ describe('Processor Router', () => {
       const otherCaller = processorRouter.createCaller(otherCtx)
       const otherOrgProcessor = await otherCaller.create({
         name: 'Other Org Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
       })
 
       // List processors for testOrg - should NOT include otherOrg processor
@@ -402,10 +402,10 @@ describe('Processor Router', () => {
 
       // Verify cross-org access is blocked
       await expect(caller.getById({ id: otherOrgProcessor.id })).rejects.toMatchObject({
-        code: 'FORBIDDEN',
+        code: 'NOT_FOUND',
       })
       await expect(otherCaller.getById({ id: testOrgProcessor.id })).rejects.toMatchObject({
-        code: 'FORBIDDEN',
+        code: 'NOT_FOUND',
       })
     })
   })

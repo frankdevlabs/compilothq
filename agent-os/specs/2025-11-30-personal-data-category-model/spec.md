@@ -117,6 +117,7 @@ export async function createDataCategory(data: {
   dataNatureIds?: string[] // IDs to link
 }): Promise<DataCategory>
 ```
+
 - Auto-calculate isSpecialCategory from linked DataNatures unless manually overridden
 - If manual override with isSpecialCategory=false when natures suggest true, require justification in metadata
 - Create junction table entries for dataNatureIds if provided
@@ -129,6 +130,7 @@ export async function getDataCategoryById(
   organizationId: string
 ): Promise<DataCategoryWithRelations | null>
 ```
+
 - SECURITY: Enforce organization ownership by requiring organizationId match
 - Include DataNatures via junction table in response
 - Return null if not found or wrong organization
@@ -148,6 +150,7 @@ export async function listDataCategories(
   }
 ): Promise<{ items: DataCategoryWithRelations[]; nextCursor: string | null }>
 ```
+
 - Always scope by organizationId for multi-tenancy
 - Support cursor-based pagination with configurable limit (default 50)
 - Search filter uses case-insensitive contains on name field
@@ -170,6 +173,7 @@ export async function updateDataCategory(
   }
 ): Promise<DataCategory>
 ```
+
 - SECURITY: Verify organizationId ownership before update
 - When dataNatureIds provided, delete existing junction entries and create new ones
 - Recalculate isSpecialCategory after dataNatureIds change unless manually overridden
@@ -177,11 +181,9 @@ export async function updateDataCategory(
 **deleteDataCategory**
 
 ```typescript
-export async function deleteDataCategory(
-  id: string,
-  organizationId: string
-): Promise<DataCategory>
+export async function deleteDataCategory(id: string, organizationId: string): Promise<DataCategory>
 ```
+
 - SECURITY: Verify organizationId ownership before delete
 - Junction table entries cascade delete automatically
 - Return deleted record for confirmation
@@ -193,6 +195,7 @@ export async function getSpecialCategoryDataCategories(
   organizationId: string
 ): Promise<DataCategoryWithRelations[]>
 ```
+
 - Convenience function for Article 9/10 compliance views
 - Returns all categories where isSpecialCategory = true and isActive = true
 - Include linked DataNatures in response
@@ -205,6 +208,7 @@ export async function getDataCategoriesBySensitivity(
   minSensitivity: SensitivityLevel
 ): Promise<DataCategoryWithRelations[]>
 ```
+
 - Filter by minimum sensitivity threshold using ordered comparison
 - Sensitivity order: PUBLIC=0, INTERNAL=1, CONFIDENTIAL=2, RESTRICTED=3
 - Returns categories at or above the specified sensitivity level

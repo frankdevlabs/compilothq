@@ -17,10 +17,12 @@ export { Factory } from './base-factory'
 
 // Country factories
 export {
+  cleanupTestCountries,
   CountryFactory,
   createAdequateCountryFactory,
   createEEACountryFactory,
   createEUCountryFactory,
+  createThirdCountryFactory,
 } from './country-factory'
 
 // DataNature factories
@@ -92,3 +94,19 @@ export {
   createTestUsersByPersona,
   type UserFactoryOptions,
 } from './userFactory'
+
+// ExternalOrganization factories
+export {
+  cleanupTestExternalOrganizations,
+  createTestExternalOrganization,
+} from './externalOrganizationFactory'
+
+// Agreement factories
+export { cleanupTestAgreements, createTestAgreement } from './agreementFactory'
+
+// Recipient factories
+export {
+  cleanupTestRecipients,
+  createTestRecipient,
+  createTestRecipientHierarchy,
+} from './recipientFactory'

@@ -5,6 +5,7 @@
 Implement the DataCategory model for classifying personal data with sensitivity levels, special category detection, and GDPR compliance tracking. This corresponds to roadmap item #10.
 
 From roadmap:
+
 > Implement DataCategory model with name, description, sensitivity levels (PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED, NORMAL), special category flags (isSpecialCategory) for Article 9 data, example data fields array, references to DataNature for automatic GDPR classification, and audit timestamps; add indexes on sensitivity and isSpecialCategory; create migrations and test to enable automatic special category data detection and legal basis validation.
 
 ## Requirements Discussion
@@ -13,32 +14,39 @@ From roadmap:
 
 **Q1:** Should this model follow the existing multi-tenancy pattern with organizationId like DataProcessingActivity, or be a global reference model like DataNature?
 **Answer:** Three-layer architecture:
+
 - `DataNature` = Global reference data (no organizationId)
 - `DataCategory` = Organization-specific (with organizationId)
 - This follows the existing pattern where Country/ProcessingAct are global reference data, while DataProcessingActivity is organization-specific.
 
 **Q2:** What is the sensitivity level hierarchy for data classification?
 **Answer:** 4 levels (NORMAL removed as it is ambiguous):
+
 ```
 PUBLIC < INTERNAL < CONFIDENTIAL < RESTRICTED
 ```
+
 This aligns with ISO 27001 classification standards.
 
 **Q3:** How should isSpecialCategory be determined - manual entry only, or auto-derived from linked DataNature?
 **Answer:** Auto-derive with manual override:
+
 - Auto-calculate: `true` if ANY linked DataNature has `type='SPECIAL'`
 - Allow manual override with mandatory justification stored in metadata JSON field
 - Conservative principle: better to over-protect data than under-protect
 
 **Q4:** What format should the examples field use for storing example data types?
 **Answer:** Simple string array using Prisma Json type:
+
 ```prisma
 exampleFields  Json  // ["email", "phone_number", "date_of_birth"]
 ```
+
 This is for documentation purposes and keeps the MVP simple.
 
 **Q5:** What is the relationship between DataCategory and DataNature?
 **Answer:** Many-to-many relationship via junction table (`DataCategoryDataNature`):
+
 - Real-world data categories don't fit into single boxes
 - Example: "Employee Wellness" category links to multiple natures:
   - `GDPR_ART9_HEALTH`
@@ -47,6 +55,7 @@ This is for documentation purposes and keeps the MVP simple.
 
 **Q6:** What DAL (Data Access Layer) query patterns should be implemented?
 **Answer:** 7 essential patterns:
+
 1. `createDataCategory()` - Create with auto-detection of isSpecialCategory
 2. `getDataCategoryById()` - Fetch single category with relationships
 3. `listDataCategories()` - List with filters (sensitivity, isSpecialCategory, search)
@@ -57,6 +66,7 @@ This is for documentation purposes and keeps the MVP simple.
 
 **Q7:** What testing approach should be used?
 **Answer:** Comprehensive integration tests covering:
+
 - CRUD operations
 - Multi-tenancy isolation
 - Relationship integrity (cascade deletes, junction table)
@@ -100,6 +110,7 @@ N/A - This is a backend-only feature (Prisma model + DAL + tests).
 ### Functional Requirements
 
 **DataCategory Prisma Model:**
+
 - `id` - cuid primary key
 - `name` - String, required
 - `description` - String, optional
@@ -112,6 +123,7 @@ N/A - This is a backend-only feature (Prisma model + DAL + tests).
 - `createdAt` / `updatedAt` - DateTime timestamps
 
 **SensitivityLevel Enum:**
+
 ```prisma
 enum SensitivityLevel {
   PUBLIC
@@ -122,6 +134,7 @@ enum SensitivityLevel {
 ```
 
 **DataCategoryDataNature Junction Table:**
+
 - `id` - cuid primary key
 - `dataCategoryId` - String (foreign key to DataCategory)
 - `dataNatureId` - String (foreign key to DataNature)
@@ -129,6 +142,7 @@ enum SensitivityLevel {
 - Cascade delete when DataCategory is deleted
 
 **Indexes:**
+
 - `organizationId`
 - `organizationId` + `sensitivity` (compound)
 - `organizationId` + `isSpecialCategory` (compound)
@@ -136,6 +150,7 @@ enum SensitivityLevel {
 - `isSpecialCategory`
 
 **DAL Functions (7 patterns):**
+
 1. `createDataCategory(data)` - Create with auto-detection of isSpecialCategory based on linked DataNatures
 2. `getDataCategoryById(id, organizationId)` - Fetch single category with relationships, scoped to organization
 3. `listDataCategories(organizationId, filters)` - List with filters (sensitivity, isSpecialCategory, search), cursor-based pagination
@@ -145,10 +160,12 @@ enum SensitivityLevel {
 7. `getDataCategoriesBySensitivity(organizationId, minSensitivity)` - Filter by sensitivity threshold
 
 **isSpecialCategory Auto-Detection Logic:**
+
 - When creating or updating a DataCategory, check all linked DataNatures
 - If ANY linked DataNature has `type = 'SPECIAL'`, set `isSpecialCategory = true`
 - Manual override allowed: if user explicitly sets `isSpecialCategory`, store justification in `metadata.specialCategoryOverride`
 - Example metadata structure:
+
 ```json
 {
   "specialCategoryOverride": {
@@ -170,6 +187,7 @@ enum SensitivityLevel {
 ### Scope Boundaries
 
 **In Scope:**
+
 - DataCategory Prisma model
 - DataNature model (already exists - no changes needed)
 - SensitivityLevel enum
@@ -180,6 +198,7 @@ enum SensitivityLevel {
 - Database migrations
 
 **Out of Scope:**
+
 - UI Components (React components, pages, forms)
 - tRPC Routers (API layer)
 - Validation Schemas (@compilothq/validation package)

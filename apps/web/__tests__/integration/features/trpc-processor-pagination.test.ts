@@ -62,7 +62,7 @@ describe('Integration: Processor Cursor Pagination', () => {
     for (let i = 0; i < 10; i++) {
       const processor = await caller.create({
         name: `Pagination Test Processor ${i + 1}`,
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         description: `Pagination test ${i + 1}`,
       })
       createdProcessors.push(processor)
@@ -99,9 +99,9 @@ describe('Integration: Processor Cursor Pagination', () => {
     // Create processors with different types (sequentially to ensure consistent order)
     const filterTestProcessors = []
     for (const config of [
-      { name: 'Filter Data Processor 1', type: 'DATA_PROCESSOR' as const },
-      { name: 'Filter Data Processor 2', type: 'DATA_PROCESSOR' as const },
-      { name: 'Filter Data Processor 3', type: 'DATA_PROCESSOR' as const },
+      { name: 'Filter Data Processor 1', type: 'PROCESSOR' as const },
+      { name: 'Filter Data Processor 2', type: 'PROCESSOR' as const },
+      { name: 'Filter Data Processor 3', type: 'PROCESSOR' as const },
       { name: 'Filter Sub Processor 1', type: 'SUB_PROCESSOR' as const },
       { name: 'Filter Sub Processor 2', type: 'SUB_PROCESSOR' as const },
       { name: 'Filter Joint Controller 1', type: 'JOINT_CONTROLLER' as const },
@@ -112,29 +112,29 @@ describe('Integration: Processor Cursor Pagination', () => {
 
     // Track the IDs of processors we just created (only DATA_PROCESSOR types)
     const ourDataProcessorIds = filterTestProcessors
-      .filter((p) => p.type === 'DATA_PROCESSOR')
+      .filter((p) => p.type === 'PROCESSOR')
       .map((p) => p.id)
 
     expect(ourDataProcessorIds).toHaveLength(3)
 
     // Paginate through DATA_PROCESSOR types only
     const dataProcessorsPage1 = await caller.list({
-      type: 'DATA_PROCESSOR',
+      type: 'PROCESSOR',
       limit: 2,
     })
 
     expect(dataProcessorsPage1.items.length).toBeLessThanOrEqual(2)
-    expect(dataProcessorsPage1.items.every((p) => p.type === 'DATA_PROCESSOR')).toBe(true)
+    expect(dataProcessorsPage1.items.every((p) => p.type === 'PROCESSOR')).toBe(true)
 
     if (dataProcessorsPage1.nextCursor) {
       const dataProcessorsPage2 = await caller.list({
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         limit: 2,
         cursor: dataProcessorsPage1.nextCursor,
       })
 
       expect(dataProcessorsPage2.items.length).toBeGreaterThan(0)
-      expect(dataProcessorsPage2.items.every((p) => p.type === 'DATA_PROCESSOR')).toBe(true)
+      expect(dataProcessorsPage2.items.every((p) => p.type === 'PROCESSOR')).toBe(true)
 
       // Verify no overlap between page 1 and page 2
       const page1Ids = dataProcessorsPage1.items.map((p) => p.id)
@@ -151,17 +151,17 @@ describe('Integration: Processor Cursor Pagination', () => {
     await Promise.all([
       caller.create({
         name: 'Active Pagination Processor 1',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
       }),
       caller.create({
         name: 'Active Pagination Processor 2',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
       }),
       caller.create({
         name: 'Active Pagination Processor 3',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
       }),
     ])
@@ -170,12 +170,12 @@ describe('Integration: Processor Cursor Pagination', () => {
     await Promise.all([
       caller.create({
         name: 'Inactive Pagination Processor 1',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: false,
       }),
       caller.create({
         name: 'Inactive Pagination Processor 2',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: false,
       }),
     ])
@@ -208,8 +208,8 @@ describe('Integration: Processor Cursor Pagination', () => {
 
     // Create exactly 2 processors with unique names for this test
     await Promise.all([
-      caller.create({ name: 'Empty Cursor Processor A', type: 'DATA_PROCESSOR' }),
-      caller.create({ name: 'Empty Cursor Processor B', type: 'DATA_PROCESSOR' }),
+      caller.create({ name: 'Empty Cursor Processor A', type: 'PROCESSOR' }),
+      caller.create({ name: 'Empty Cursor Processor B', type: 'PROCESSOR' }),
     ])
 
     // Request more than available with high limit
@@ -231,22 +231,22 @@ describe('Integration: Processor Cursor Pagination', () => {
     await Promise.all([
       caller.create({
         name: 'Combined Active Data Processor 1',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
       }),
       caller.create({
         name: 'Combined Active Data Processor 2',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
       }),
       caller.create({
         name: 'Combined Active Data Processor 3',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
       }),
       caller.create({
         name: 'Combined Inactive Data Processor',
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: false,
       }),
       caller.create({
@@ -258,25 +258,25 @@ describe('Integration: Processor Cursor Pagination', () => {
 
     // Filter by both type and isActive status
     const filtered = await caller.list({
-      type: 'DATA_PROCESSOR',
+      type: 'PROCESSOR',
       isActive: true,
       limit: 2,
     })
 
     expect(filtered.items.length).toBeLessThanOrEqual(2)
-    expect(filtered.items.every((p) => p.type === 'DATA_PROCESSOR')).toBe(true)
+    expect(filtered.items.every((p) => p.type === 'PROCESSOR')).toBe(true)
     expect(filtered.items.every((p) => p.isActive === true)).toBe(true)
 
     // If there's a next page, verify filtering continues
     if (filtered.nextCursor) {
       const nextPage = await caller.list({
-        type: 'DATA_PROCESSOR',
+        type: 'PROCESSOR',
         isActive: true,
         limit: 2,
         cursor: filtered.nextCursor,
       })
 
-      expect(nextPage.items.every((p) => p.type === 'DATA_PROCESSOR')).toBe(true)
+      expect(nextPage.items.every((p) => p.type === 'PROCESSOR')).toBe(true)
       expect(nextPage.items.every((p) => p.isActive === true)).toBe(true)
     }
   })
