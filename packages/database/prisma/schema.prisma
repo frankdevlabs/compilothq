@@ -59,6 +59,8 @@ model Organization {
   purposes                 Purpose[]
   dataSubjectCategories    DataSubjectCategory[]
   dataCategories           DataCategory[]
+  externalOrganizations    ExternalOrganization[]
+  agreements               Agreement[]
 
   @@index([deletedAt])
 }
@@ -530,6 +532,7 @@ enum HierarchyType {
 // External organization model for tracking external legal entities
 model ExternalOrganization {
   id                    String   @id @default(cuid())
+  organizationId        String   // FK to Organization (tenant context)
   legalName             String   // Official legal name (e.g., "Recruitee B.V.")
   tradingName           String?  // Trading/brand name (e.g., "Recruitee")
 
@@ -560,12 +563,14 @@ model ExternalOrganization {
   updatedAt             DateTime @updatedAt
 
   // Relations
-  headquartersCountry   Country?    @relation(fields: [headquartersCountryId], references: [id], onDelete: SetNull)
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  headquartersCountry   Country?     @relation(fields: [headquartersCountryId], references: [id], onDelete: SetNull)
   recipients            Recipient[]
   agreements            Agreement[]
 
-  @@index([legalName])
-  @@index([tradingName])
+  @@index([organizationId])
+  @@index([organizationId, legalName])
+  @@index([organizationId, tradingName])
   @@index([headquartersCountryId])
 }
 
@@ -639,6 +644,7 @@ enum AgreementStatus {
 // Agreement model shell for tracking legal agreements with external organizations
 model Agreement {
   id                     String          @id @default(cuid())
+  organizationId         String          // FK to Organization (tenant context)
   externalOrganizationId String          // FK to ExternalOrganization
   type                   AgreementType   // Type of agreement
   status                 AgreementStatus @default(DRAFT) // Lifecycle status
@@ -650,12 +656,15 @@ model Agreement {
   updatedAt              DateTime        @updatedAt
 
   // Relations
+  organization           Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   externalOrganization   ExternalOrganization @relation(fields: [externalOrganizationId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
+  @@index([organizationId, externalOrganizationId])
+  @@index([organizationId, type])
+  @@index([organizationId, status])
+  @@index([organizationId, expiryDate])
   @@index([externalOrganizationId])
-  @@index([type])
-  @@index([status])
-  @@index([expiryDate])
 }
 
 // ============================================================================
