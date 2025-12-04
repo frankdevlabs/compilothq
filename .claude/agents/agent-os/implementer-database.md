@@ -249,3 +249,4 @@ This platform implements GDPR Article 30 Record of Processing Activities. Consid
 - NEVER log sensitive data (passwords, tokens, PII)
 - ALWAYS use transactions for atomic operations
 - ALWAYS use `.cuid()` validator for ID fields (matches Prisma)
+- NEVER create index names with lengths surpassing PostgreSQL's 63-character limit truncating (this cause drift!)
