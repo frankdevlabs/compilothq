@@ -25,6 +25,7 @@ if (process.env['NODE_ENV'] !== 'production') {
 export default prisma
 
 // Export all DAL functions
+export * from './dal/agreements'
 export * from './dal/countries'
 export * from './dal/dataCategories'
 export * from './dal/dataNatures'
@@ -84,7 +85,6 @@ export type {
 export type {
   CrossBorderTransferAssessment,
   DuplicateOrganizationGroup,
-  ExpiringAgreement,
   HierarchyHealthReport,
   RecipientMissingAgreement,
   RecipientStatistics,
