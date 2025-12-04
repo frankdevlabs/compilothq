@@ -455,8 +455,8 @@ export async function findOrphanedRecipients(organizationId: string): Promise<Re
  * Q6: Get recipients for a specific data processing activity
  * SECURITY: Always filters by organizationId to enforce multi-tenancy
  *
- * Temporary solution using activityIds array until RecipientDataProcessingActivity
- * junction table is implemented (roadmap #13).
+ * Uses DataProcessingActivityRecipient junction table to find all recipients
+ * linked to a specific activity.
  *
  * @param organizationId - The organization ID for multi-tenancy enforcement
  * @param activityId - The data processing activity ID
@@ -472,8 +472,10 @@ export async function getRecipientsForActivity(
   return await prisma.recipient.findMany({
     where: {
       organizationId,
-      activityIds: {
-        has: activityId,
+      activities: {
+        some: {
+          activityId,
+        },
       },
     },
     orderBy: [{ createdAt: 'desc' }],

@@ -363,7 +363,8 @@ model DataSubjectCategory {
   updatedAt            DateTime @updatedAt
 
   // Relations
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization?                          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  activities   DataProcessingActivityDataSubject[]
 
   // Indexes and constraints
   @@unique([code, organizationId]) // Allow same code across different organizations
@@ -391,8 +392,9 @@ model DataCategory {
   updatedAt         DateTime         @updatedAt
 
   // Relations
-  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization                        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   dataNatures  DataCategoryDataNature[]
+  activities   DataProcessingActivityDataCategory[]
 
   // Indexes
   @@index([organizationId])
@@ -495,9 +497,13 @@ model DataProcessingActivity {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  businessOwner   User?        @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
-  processingOwner User?        @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)
+  organization    Organization                           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  businessOwner   User?                                  @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
+  processingOwner User?                                  @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)
+  purposes        DataProcessingActivityPurpose[]
+  dataSubjects    DataProcessingActivityDataSubject[]
+  dataCategories  DataProcessingActivityDataCategory[]
+  recipients      DataProcessingActivityRecipient[]
 
   // Indexes
   @@index([organizationId])
@@ -505,6 +511,78 @@ model DataProcessingActivity {
   @@index([organizationId, status, requiresDPIA])
   @@index([organizationId, nextReviewDate])
   @@index([riskLevel, dpiaStatus])
+}
+
+// Junction table for DataProcessingActivity to Purpose many-to-many relationship
+model DataProcessingActivityPurpose {
+  id         String   @id @default(cuid())
+  activityId String // Foreign key to DataProcessingActivity
+  purposeId  String // Foreign key to Purpose
+  createdAt  DateTime @default(now())
+
+  // Relations
+  activity DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  purpose  Purpose                @relation(fields: [purposeId], references: [id], onDelete: Restrict)
+
+  // Constraints
+  @@unique([activityId, purposeId])
+  @@index([activityId])
+  @@index([purposeId])
+}
+
+// Junction table for DataProcessingActivity to DataSubjectCategory many-to-many relationship
+model DataProcessingActivityDataSubject {
+  id                    String   @id @default(cuid())
+  activityId            String // Foreign key to DataProcessingActivity
+  dataSubjectCategoryId String // Foreign key to DataSubjectCategory
+  createdAt             DateTime @default(now())
+
+  // Relations
+  activity           DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  dataSubjectCategory DataSubjectCategory    @relation(fields: [dataSubjectCategoryId], references: [id], onDelete: Restrict)
+
+  // Constraints
+  @@unique([activityId, dataSubjectCategoryId])
+  @@index([activityId])
+  @@index([dataSubjectCategoryId])
+}
+
+// Junction table for DataProcessingActivity to DataCategory many-to-many relationship
+model DataProcessingActivityDataCategory {
+  id             String   @id @default(cuid())
+  activityId     String // Foreign key to DataProcessingActivity
+  dataCategoryId String // Foreign key to DataCategory
+  createdAt      DateTime @default(now())
+
+  // Relations
+  activity     DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  dataCategory DataCategory           @relation(fields: [dataCategoryId], references: [id], onDelete: Restrict)
+
+  // Constraints
+  @@unique([activityId, dataCategoryId])
+  @@index([activityId])
+  @@index([dataCategoryId])
+}
+
+// Junction table for DataProcessingActivity to Recipient many-to-many relationship
+// NOTE: This junction table may be extended in Roadmap item 15 to support third-country transfer tracking.
+// Potential future fields: involvesThirdCountryTransfer (Boolean), transferBasis (enum reference)
+// Rationale: GDPR Article 30(1)(d) requires documenting transfers to third countries or international organizations.
+// Decision deferred until DataTransfer model architecture is designed.
+model DataProcessingActivityRecipient {
+  id          String   @id @default(cuid())
+  activityId  String // Foreign key to DataProcessingActivity
+  recipientId String // Foreign key to Recipient
+  createdAt   DateTime @default(now())
+
+  // Relations
+  activity  DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  recipient Recipient              @relation(fields: [recipientId], references: [id], onDelete: Restrict)
+
+  // Constraints
+  @@unique([activityId, recipientId])
+  @@index([activityId])
+  @@index([recipientId])
 }
 
 // ============================================================================
@@ -563,10 +641,10 @@ model ExternalOrganization {
   updatedAt             DateTime @updatedAt
 
   // Relations
-  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  headquartersCountry   Country?     @relation(fields: [headquartersCountryId], references: [id], onDelete: SetNull)
-  recipients            Recipient[]
-  agreements            Agreement[]
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  headquartersCountry Country?     @relation(fields: [headquartersCountryId], references: [id], onDelete: SetNull)
+  recipients          Recipient[]
+  agreements          Agreement[]
 
   @@index([organizationId])
   @@index([organizationId, legalName])
@@ -594,9 +672,6 @@ model Recipient {
   parentRecipientId      String?        // Self-referential FK for hierarchy
   hierarchyType          HierarchyType? // Type of hierarchy relationship
 
-  // Activity linking (temporary until RecipientDataProcessingActivity junction table)
-  activityIds            String[]       @default([])
-
   // Status
   isActive               Boolean        @default(true)
 
@@ -605,10 +680,11 @@ model Recipient {
   updatedAt              DateTime       @updatedAt
 
   // Relations
-  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  externalOrganization   ExternalOrganization?   @relation(fields: [externalOrganizationId], references: [id], onDelete: SetNull)
-  parentRecipient        Recipient?              @relation("RecipientHierarchy", fields: [parentRecipientId], references: [id], onDelete: SetNull)
-  children               Recipient[]             @relation("RecipientHierarchy")
+  organization         Organization                     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  externalOrganization ExternalOrganization?            @relation(fields: [externalOrganizationId], references: [id], onDelete: SetNull)
+  parentRecipient      Recipient?                       @relation("RecipientHierarchy", fields: [parentRecipientId], references: [id], onDelete: SetNull)
+  children             Recipient[]                      @relation("RecipientHierarchy")
+  activities           DataProcessingActivityRecipient[]
 
   @@index([organizationId])
   @@index([organizationId, isActive])
@@ -656,8 +732,8 @@ model Agreement {
   updatedAt              DateTime        @updatedAt
 
   // Relations
-  organization           Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  externalOrganization   ExternalOrganization @relation(fields: [externalOrganizationId], references: [id], onDelete: Cascade)
+  organization         Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  externalOrganization ExternalOrganization @relation(fields: [externalOrganizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
   @@index([organizationId, externalOrganizationId])
@@ -686,7 +762,8 @@ model Purpose {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization                    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  activities   DataProcessingActivityPurpose[]
 
   @@index([organizationId])
   @@index([organizationId, isActive])
