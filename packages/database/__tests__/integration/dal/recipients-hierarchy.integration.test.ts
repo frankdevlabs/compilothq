@@ -9,11 +9,9 @@ import {
   getDirectChildren,
 } from '../../../src/dal/recipients'
 import type { ExternalOrganization, Organization, Recipient } from '../../../src/index'
+import { prisma } from '../../../src/index'
 import { cleanupTestOrganizations, createTestOrganization } from '../../../src/test-utils/factories'
-import {
-  cleanupTestExternalOrganizations,
-  createTestExternalOrganization,
-} from '../../../src/test-utils/factories/externalOrganizationFactory'
+import { createTestExternalOrganization } from '../../../src/test-utils/factories/externalOrganizationFactory'
 
 /**
  * Recipients DAL - Hierarchy Operations Integration Tests
@@ -54,17 +52,17 @@ describe('Recipients DAL - Hierarchy Operations Integration Tests', () => {
     org1 = testOrg1
     org2 = testOrg2
 
-    // Create shared external organization
+    // Create shared external organization (tenant-bound to org1)
     externalOrg1 = await createTestExternalOrganization({
+      organizationId: org1.id,
       legalName: 'Hierarchy Test Vendor Inc.',
       tradingName: 'TestVendor',
     })
   })
 
   afterAll(async () => {
-    // Cleanup shared test data
+    // Cleanup shared test data (external org cascades with organization)
     await cleanupTestOrganizations([org1.id, org2.id])
-    await cleanupTestExternalOrganizations([externalOrg1.id])
   })
 
   describe('getDirectChildren', () => {
@@ -132,7 +130,7 @@ describe('Recipients DAL - Hierarchy Operations Integration Tests', () => {
     })
 
     it('should enforce multi-tenancy - not return children from different organization', async () => {
-      // Arrange - Create parent in org1, child in org2
+      // Arrange - Create parent in org1
       const org1Parent = await createRecipient({
         name: 'Org1 Parent',
         type: 'PROCESSOR',
@@ -140,14 +138,24 @@ describe('Recipients DAL - Hierarchy Operations Integration Tests', () => {
         externalOrganizationId: externalOrg1.id,
       })
 
-      // Create child in org2 (should never happen in real system, but testing enforcement)
-      const org2Child = await createRecipient({
-        name: 'Org2 Child',
-        type: 'SUB_PROCESSOR',
-        organizationId: org2.id,
-        externalOrganizationId: externalOrg1.id,
-        parentRecipientId: org1Parent.id,
-        hierarchyType: 'PROCESSOR_CHAIN',
+      // Create external org for org2
+      const externalOrg2 = await prisma.externalOrganization.create({
+        data: {
+          organizationId: org2.id,
+          legalName: 'Test Org2 External',
+        },
+      })
+
+      // Create child in org2 (using Prisma directly to bypass validation for testing)
+      const org2Child = await prisma.recipient.create({
+        data: {
+          name: 'Org2 Child',
+          type: 'SUB_PROCESSOR',
+          organizationId: org2.id,
+          externalOrganizationId: externalOrg2.id,
+          parentRecipientId: org1Parent.id,
+          hierarchyType: 'PROCESSOR_CHAIN',
+        },
       })
 
       // Act - Try to get children for org1Parent in org1 context

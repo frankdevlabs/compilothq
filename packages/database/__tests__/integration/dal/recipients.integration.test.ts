@@ -10,10 +10,7 @@ import {
 } from '../../../src/dal/recipients'
 import type { ExternalOrganization, Organization, RecipientType } from '../../../src/index'
 import { cleanupTestOrganizations, createTestOrganization } from '../../../src/test-utils/factories'
-import {
-  cleanupTestExternalOrganizations,
-  createTestExternalOrganization,
-} from '../../../src/test-utils/factories/externalOrganizationFactory'
+import { createTestExternalOrganization } from '../../../src/test-utils/factories/externalOrganizationFactory'
 
 /**
  * Recipients DAL - Core CRUD Integration Tests
@@ -32,8 +29,9 @@ describe('Recipients DAL - Core CRUD Integration Tests', () => {
   // Shared test organizations
   let org1: Organization
   let org2: Organization
-  let externalOrg1: ExternalOrganization
-  let externalOrg2: ExternalOrganization
+  let externalOrg1: ExternalOrganization // For org1
+  let externalOrg1Alt: ExternalOrganization // Second external org for org1 (for hierarchy tests)
+  let externalOrg2: ExternalOrganization // For org2
 
   beforeAll(async () => {
     // Create shared test organizations
@@ -49,21 +47,30 @@ describe('Recipients DAL - Core CRUD Integration Tests', () => {
     org1 = testOrg1
     org2 = testOrg2
 
-    // Create shared external organizations
+    // Create shared external organizations (tenant-bound)
+    // org1 gets 2 external orgs for hierarchy testing
     externalOrg1 = await createTestExternalOrganization({
+      organizationId: org1.id,
       legalName: 'AWS Cloud Services Inc.',
       tradingName: 'AWS',
     })
-    externalOrg2 = await createTestExternalOrganization({
+    externalOrg1Alt = await createTestExternalOrganization({
+      organizationId: org1.id,
       legalName: 'Google Ireland Limited',
       tradingName: 'Google',
+    })
+
+    // org2 gets 1 external org for multi-tenancy testing
+    externalOrg2 = await createTestExternalOrganization({
+      organizationId: org2.id,
+      legalName: 'Microsoft Corporation',
+      tradingName: 'Microsoft',
     })
   })
 
   afterAll(async () => {
-    // Cleanup shared test data
+    // Cleanup shared test data (cascade deletes external orgs via Organization)
     await cleanupTestOrganizations([org1.id, org2.id])
-    await cleanupTestExternalOrganizations([externalOrg1.id, externalOrg2.id])
   })
 
   describe('createRecipient', () => {
@@ -118,12 +125,12 @@ describe('Recipients DAL - Core CRUD Integration Tests', () => {
         externalOrganizationId: externalOrg1.id,
       })
 
-      // Act - Create sub-processor with parent
+      // Act - Create sub-processor with parent (using different external org for org1)
       const result = await createRecipient({
         name: 'Sub-Processor',
         type: 'SUB_PROCESSOR',
         organizationId: org1.id,
-        externalOrganizationId: externalOrg2.id,
+        externalOrganizationId: externalOrg1Alt.id,
         parentRecipientId: parent.id,
         hierarchyType: 'PROCESSOR_CHAIN',
       })
@@ -443,6 +450,36 @@ describe('Recipients DAL - Core CRUD Integration Tests', () => {
       // Assert - org1 recipient should not be in org2 list
       expect(org2Recipients.every((recipient) => recipient.organizationId === org2.id)).toBe(true)
       expect(org2Recipients.some((recipient) => recipient.id === org1Recipient.id)).toBe(false)
+    })
+  })
+
+  describe('cross-tenant validation for external organizations', () => {
+    it('should allow linking recipient to external org in same tenant', async () => {
+      // Act - Create recipient with external org in same tenant (org1)
+      const result = await createRecipient({
+        name: 'Valid Cross-Reference',
+        type: 'PROCESSOR',
+        organizationId: org1.id,
+        externalOrganizationId: externalOrg1.id,
+      })
+
+      // Assert - Should succeed
+      expect(result).toBeDefined()
+      expect(result.organizationId).toBe(org1.id)
+      expect(result.externalOrganizationId).toBe(externalOrg1.id)
+    })
+
+    it('should prevent linking recipient to external org in different tenant', async () => {
+      // Act & Assert - Try to link org1 recipient to org2's external org
+      // This should fail at the database level due to FK constraint
+      await expect(
+        createRecipient({
+          name: 'Invalid Cross-Tenant Reference',
+          type: 'PROCESSOR',
+          organizationId: org1.id,
+          externalOrganizationId: externalOrg2.id, // Belongs to org2!
+        })
+      ).rejects.toThrow()
     })
   })
 })

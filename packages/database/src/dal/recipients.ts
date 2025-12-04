@@ -1,5 +1,4 @@
 import type {
-  Agreement,
   Country,
   ExternalOrganization,
   HierarchyType,
@@ -23,6 +22,22 @@ export async function createRecipient(data: {
   hierarchyType?: HierarchyType | null
   isActive?: boolean
 }): Promise<Recipient> {
+  // SECURITY: Validate that external organization belongs to the same tenant
+  if (data.externalOrganizationId) {
+    const externalOrg = await prisma.externalOrganization.findUnique({
+      where: { id: data.externalOrganizationId },
+      select: { organizationId: true },
+    })
+
+    if (!externalOrg) {
+      throw new Error('ExternalOrganization not found')
+    }
+
+    if (externalOrg.organizationId !== data.organizationId) {
+      throw new Error('ExternalOrganization belongs to a different organization (tenant isolation)')
+    }
+  }
+
   return await prisma.recipient.create({
     data: {
       name: data.name,
@@ -765,48 +780,6 @@ export async function findDuplicateExternalOrgs(): Promise<DuplicateOrganization
   }
 
   return duplicates
-}
-
-/**
- * Type for expiring agreements
- */
-export type ExpiringAgreement = Agreement & {
-  externalOrganization: ExternalOrganization
-}
-
-/**
- * Q11: Get expiring agreements
- * SECURITY: No organizationId filter - Agreements are global via ExternalOrganization
- *
- * Finds active agreements expiring within specified days threshold.
- * Used for proactive agreement renewal management.
- *
- * @param daysThreshold - Number of days ahead to check (default: 30)
- * @returns Promise<ExpiringAgreement[]> - Agreements expiring soon
- *
- * @example
- * const expiring = await getExpiringAgreements(30)
- * // Returns agreements expiring in next 30 days
- */
-export async function getExpiringAgreements(daysThreshold = 30): Promise<ExpiringAgreement[]> {
-  const thresholdDate = new Date()
-  thresholdDate.setDate(thresholdDate.getDate() + daysThreshold)
-
-  return await prisma.agreement.findMany({
-    where: {
-      status: 'ACTIVE',
-      expiryDate: {
-        not: null,
-        lte: thresholdDate,
-      },
-    },
-    include: {
-      externalOrganization: true,
-    },
-    orderBy: {
-      expiryDate: 'asc',
-    },
-  })
 }
 
 /**

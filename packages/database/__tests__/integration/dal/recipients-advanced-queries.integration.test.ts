@@ -26,10 +26,7 @@ import {
   createTestOrganization,
   createThirdCountryFactory,
 } from '../../../src/test-utils/factories'
-import {
-  cleanupTestExternalOrganizations,
-  createTestExternalOrganization,
-} from '../../../src/test-utils/factories/externalOrganizationFactory'
+import { createTestExternalOrganization } from '../../../src/test-utils/factories/externalOrganizationFactory'
 
 /**
  * Recipients DAL - Advanced Query Patterns Integration Tests
@@ -87,20 +84,23 @@ describe('Recipients DAL - Advanced Query Patterns Integration Tests', () => {
       name: 'United States (Test)',
     })
 
-    // Create external organizations with different profiles
+    // Create external organizations with different profiles (all for org1)
     externalOrg1 = await createTestExternalOrganization({
+      organizationId: org1.id,
       legalName: 'AWS Cloud Services Inc.',
       tradingName: 'AWS',
       headquartersCountryId: euCountry.id,
     })
 
     externalOrg2 = await createTestExternalOrganization({
+      organizationId: org1.id,
       legalName: 'Google Ireland Limited',
       tradingName: 'Google',
       headquartersCountryId: euCountry.id,
     })
 
     externalOrg3 = await createTestExternalOrganization({
+      organizationId: org1.id,
       legalName: 'Microsoft Corporation',
       tradingName: 'Microsoft',
       headquartersCountryId: thirdCountry.id,
@@ -109,6 +109,7 @@ describe('Recipients DAL - Advanced Query Patterns Integration Tests', () => {
     // Create DPA for externalOrg1
     await prisma.agreement.create({
       data: {
+        organizationId: org1.id,
         externalOrganizationId: externalOrg1.id,
         type: 'DPA' as AgreementType,
         status: 'ACTIVE' as AgreementStatus,
@@ -118,9 +119,8 @@ describe('Recipients DAL - Advanced Query Patterns Integration Tests', () => {
   })
 
   afterAll(async () => {
-    // Cleanup shared test data
+    // Cleanup shared test data (external orgs cascade-delete with organizations)
     await cleanupTestOrganizations([org1.id, org2.id])
-    await cleanupTestExternalOrganizations([externalOrg1.id, externalOrg2.id, externalOrg3.id])
     await cleanupTestCountries([euCountry.id, thirdCountry.id])
   })
 

@@ -74,9 +74,10 @@ describe('Processor to Recipient Migration', () => {
   })
 
   it('should create ExternalOrganization from Processor names and link correctly', async () => {
-    // Arrange - Create ExternalOrganization
+    // Arrange - Create ExternalOrganization (tenant-bound)
     const externalOrg = await prisma.externalOrganization.create({
       data: {
+        organizationId: testOrg.id,
         legalName: 'Test Vendor B.V.',
         tradingName: 'Test Vendor',
         isPublicAuthority: false,

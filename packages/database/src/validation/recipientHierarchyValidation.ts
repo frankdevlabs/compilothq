@@ -345,3 +345,43 @@ export function getHierarchyTypeForRecipient(type: RecipientType): HierarchyType
   const rules = HIERARCHY_RULES[type]
   return rules.hierarchyType
 }
+
+/**
+ * Validate recipient and external organization belong to same tenant
+ *
+ * SECURITY: Prevents cross-tenant data leakage when linking Recipients to ExternalOrganizations
+ *
+ * Ensures that when a Recipient references an ExternalOrganization, both entities
+ * belong to the same organization (tenant), preventing unauthorized access to
+ * external organization data from other tenants.
+ *
+ * @param recipientOrganizationId - Organization ID of the recipient
+ * @param externalOrganizationId - ExternalOrganization ID to link
+ * @returns ValidationResult - Contains isValid flag and any errors/warnings
+ *
+ * @example
+ * const result = await validateRecipientExternalOrgTenant('org-id', 'ext-org-id')
+ * if (!result.isValid) {
+ *   console.error('Validation failed:', result.errors)
+ * }
+ */
+export async function validateRecipientExternalOrgTenant(
+  recipientOrganizationId: string,
+  externalOrganizationId: string
+): Promise<ValidationResult> {
+  const errors: string[] = []
+  const warnings: string[] = []
+
+  const externalOrg = await prisma.externalOrganization.findUnique({
+    where: { id: externalOrganizationId },
+    select: { organizationId: true },
+  })
+
+  if (!externalOrg) {
+    errors.push(`ExternalOrganization with ID ${externalOrganizationId} not found`)
+  } else if (externalOrg.organizationId !== recipientOrganizationId) {
+    errors.push('ExternalOrganization belongs to a different organization')
+  }
+
+  return { isValid: errors.length === 0, errors, warnings }
+}
