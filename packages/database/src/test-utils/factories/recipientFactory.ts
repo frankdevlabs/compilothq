@@ -66,7 +66,6 @@ export async function createTestRecipient(
     description: string
     parentRecipientId: string
     hierarchyType: HierarchyType
-    activityIds: string[]
     isActive: boolean
   }> = {}
 ): Promise<Recipient> {
@@ -83,7 +82,6 @@ export async function createTestRecipient(
     description: overrides.description ?? null,
     parentRecipientId: overrides.parentRecipientId ?? null,
     hierarchyType: overrides.hierarchyType ?? null,
-    activityIds: overrides.activityIds ?? [],
     isActive: overrides.isActive ?? true,
     // externalOrganizationId is required for all types except INTERNAL_DEPARTMENT
     externalOrganizationId:

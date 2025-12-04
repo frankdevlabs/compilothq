@@ -30,6 +30,7 @@ export * from './dal/countries'
 export * from './dal/dataCategories'
 export * from './dal/dataNatures'
 export * from './dal/dataProcessingActivities'
+export * from './dal/dataProcessingActivityJunctions'
 export * from './dal/dataSubjectCategories'
 export * from './dal/devSessions'
 export * from './dal/externalOrganizations'
@@ -82,6 +83,7 @@ export type {
 } from '../generated/client/client'
 
 // Export custom types from DAL (not in Prisma schema)
+export type { DataProcessingActivityWithComponents } from './dal/dataProcessingActivityJunctions'
 export type {
   CrossBorderTransferAssessment,
   DuplicateOrganizationGroup,
