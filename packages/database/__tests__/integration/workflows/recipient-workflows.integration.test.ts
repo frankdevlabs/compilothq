@@ -87,24 +87,29 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
     it('should create a 4-level processor chain with validation at each step', async () => {
       // Arrange - Create external organizations for the chain
       const processorOrg = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Main Processor Ltd',
         headquartersCountryId: euCountry.id,
       })
       const subProcessor1Org = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Sub-Processor 1 Inc',
         headquartersCountryId: euCountry.id,
       })
       const subProcessor2Org = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Sub-Processor 2 GmbH',
         headquartersCountryId: thirdCountry.id,
       })
       const subProcessor3Org = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Sub-Processor 3 LLC',
         headquartersCountryId: thirdCountry.id,
       })
 
       // Create DPA for main processor
       const dpa = await createTestAgreement({
+        organizationId: org1.id,
         externalOrganizationId: processorOrg.id,
         type: 'DPA',
         status: 'ACTIVE',
@@ -218,6 +223,7 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
     it('should prevent creation of processor chain exceeding max depth of 5', async () => {
       // Arrange - Create 6-level chain (should fail at level 6)
       const externalOrg = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Chain Depth Test Org',
       })
 
@@ -337,20 +343,24 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
     it('should detect recipients missing required agreements and track remediation', async () => {
       // Arrange - Create processor WITHOUT DPA
       const processorOrgNoDPA = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Processor Without DPA',
       })
 
       // Create joint controller WITHOUT JCA
       const jointControllerOrgNoJCA = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Joint Controller Without JCA',
       })
 
       // Create processor WITH DPA
       const processorOrgWithDPA = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Processor With DPA',
       })
 
       const dpa = await createTestAgreement({
+        organizationId: org1.id,
         externalOrganizationId: processorOrgWithDPA.id,
         type: 'DPA',
         status: 'ACTIVE',
@@ -387,6 +397,7 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
 
         // Act - Step 2: Remediate by creating DPA for processor1
         const newDPA = await createTestAgreement({
+          organizationId: org1.id,
           externalOrganizationId: processorOrgNoDPA.id,
           type: 'DPA',
           status: 'ACTIVE',
@@ -425,14 +436,17 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
     it('should assess cross-border transfers in complex processor chain', async () => {
       // Arrange - Create chain with mixed country locations
       const euOrg = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'EU Processor',
         headquartersCountryId: euCountry.id,
       })
       const usOrg = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'US Sub-Processor',
         headquartersCountryId: thirdCountry.id,
       })
       const canadaOrg = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Canada Sub-Processor',
         headquartersCountryId: adequateCountry.id,
       })
@@ -495,6 +509,7 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
     it('should detect multiple types of hierarchy violations in single health check', async () => {
       // Arrange - Create scenario with multiple violations
       const externalOrg = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Health Check Test Org',
       })
 
@@ -554,6 +569,7 @@ describe('Recipient Workflows - End-to-End Integration Tests', () => {
     it('should maintain strict tenant isolation across all hierarchy operations', async () => {
       // Arrange - Create identical structures in both orgs
       const externalOrg = await createTestExternalOrganization({
+        organizationId: org1.id,
         legalName: 'Multi-Tenant Test Org',
       })
 

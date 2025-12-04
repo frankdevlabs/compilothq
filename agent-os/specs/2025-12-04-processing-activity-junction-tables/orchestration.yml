@@ -1,0 +1,11 @@
+task_groups:
+  - name: Database Schema Layer
+    claude_code_subagent: implementer-database
+  - name: Data Access Layer (DAL)
+    claude_code_subagent: implementer-database
+  - name: Validation Layer
+    claude_code_subagent: implementer-database
+  - name: Integration Testing
+    claude_code_subagent: implementer-database
+  - name: Data & Code Cleanup
+    claude_code_subagent: implementer-database

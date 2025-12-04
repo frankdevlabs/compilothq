@@ -1,14 +1,14 @@
 /**
  * Integration tests for ExternalOrganization DAL functions
  *
- * Tests core CRUD operations for the global ExternalOrganization entity.
+ * Tests core CRUD operations for the tenant-bound ExternalOrganization entity.
  * ExternalOrganization represents external legal entities (vendors, partners, authorities)
- * and is not scoped to any organization (global entity).
+ * and is scoped to organizations (multi-tenancy).
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { Country } from '../../../src/index'
+import type { Country, Organization } from '../../../src/index'
 import {
   createExternalOrganization,
   deleteExternalOrganization,
@@ -17,12 +17,27 @@ import {
   prisma,
   updateExternalOrganization,
 } from '../../../src/index'
+import { cleanupTestOrganizations, createTestOrganization } from '../../../src/test-utils'
 
 describe('ExternalOrganization DAL', () => {
   let testCountry: Country
-  const createdExternalOrgIds: string[] = []
+  let testOrg: Organization
+  let testOrg2: Organization // For multi-tenancy tests
 
   beforeAll(async () => {
+    // Create test organizations
+    const { org: org1 } = await createTestOrganization({
+      name: 'Test Org 1',
+      slug: `test-org-1-${Date.now()}`,
+    })
+    testOrg = org1
+
+    const { org: org2 } = await createTestOrganization({
+      name: 'Test Org 2',
+      slug: `test-org-2-${Date.now()}`,
+    })
+    testOrg2 = org2
+
     // Create a test country for FK relationships
     testCountry = await prisma.country.create({
       data: {
@@ -35,16 +50,8 @@ describe('ExternalOrganization DAL', () => {
   })
 
   afterAll(async () => {
-    // Clean up all created external organizations
-    if (createdExternalOrgIds.length > 0) {
-      await prisma.externalOrganization.deleteMany({
-        where: {
-          id: {
-            in: createdExternalOrgIds,
-          },
-        },
-      })
-    }
+    // Clean up test organizations (cascade deletes external orgs)
+    await cleanupTestOrganizations([testOrg.id, testOrg2.id])
 
     // Clean up test country
     await prisma.country.delete({
@@ -59,17 +66,17 @@ describe('ExternalOrganization DAL', () => {
       const legalName = `Test Corp ${Date.now()}`
 
       const result = await createExternalOrganization({
+        organizationId: testOrg.id,
         legalName,
       })
 
       expect(result).toBeDefined()
       expect(result.id).toBeDefined()
+      expect(result.organizationId).toBe(testOrg.id)
       expect(result.legalName).toBe(legalName)
       expect(result.tradingName).toBeNull()
       expect(result.isPublicAuthority).toBe(false)
       expect(result.createdAt).toBeInstanceOf(Date)
-
-      createdExternalOrgIds.push(result.id)
     })
 
     it('should create external organization with all optional fields', async () => {
@@ -77,6 +84,7 @@ describe('ExternalOrganization DAL', () => {
       const tradingName = 'Full Test'
 
       const result = await createExternalOrganization({
+        organizationId: testOrg.id,
         legalName,
         tradingName,
         jurisdiction: 'NL',
@@ -94,6 +102,7 @@ describe('ExternalOrganization DAL', () => {
       })
 
       expect(result).toBeDefined()
+      expect(result.organizationId).toBe(testOrg.id)
       expect(result.legalName).toBe(legalName)
       expect(result.tradingName).toBe(tradingName)
       expect(result.jurisdiction).toBe('NL')
@@ -108,32 +117,45 @@ describe('ExternalOrganization DAL', () => {
       expect(result.sector).toBe('Technology')
       expect(result.notes).toBe('Test notes')
       expect(result.metadata).toEqual({ custom: 'data' })
-
-      createdExternalOrgIds.push(result.id)
     })
   })
 
   describe('getExternalOrganizationById', () => {
-    it('should retrieve external organization by ID', async () => {
+    it('should retrieve external organization by ID with correct organizationId', async () => {
       // Arrange - Create test organization
       const org = await createExternalOrganization({
+        organizationId: testOrg.id,
         legalName: `Get Test Corp ${Date.now()}`,
         headquartersCountryId: testCountry.id,
       })
-      createdExternalOrgIds.push(org.id)
 
       // Act
-      const result = await getExternalOrganizationById(org.id)
+      const result = await getExternalOrganizationById(org.id, testOrg.id)
 
       // Assert
       expect(result).toBeDefined()
       expect(result?.id).toBe(org.id)
+      expect(result?.organizationId).toBe(testOrg.id)
       expect(result?.legalName).toBe(org.legalName)
     })
 
     it('should return null for non-existent ID', async () => {
-      const result = await getExternalOrganizationById('non-existent-id')
+      const result = await getExternalOrganizationById('non-existent-id', testOrg.id)
 
+      expect(result).toBeNull()
+    })
+
+    it('should return null when accessing with wrong organizationId (multi-tenancy)', async () => {
+      // Arrange - Create external org for testOrg
+      const org = await createExternalOrganization({
+        organizationId: testOrg.id,
+        legalName: `Tenant Test Corp ${Date.now()}`,
+      })
+
+      // Act - Try to access with testOrg2's ID
+      const result = await getExternalOrganizationById(org.id, testOrg2.id)
+
+      // Assert - Should return null (access denied)
       expect(result).toBeNull()
     })
   })
@@ -143,32 +165,56 @@ describe('ExternalOrganization DAL', () => {
       // Create test data for list operations
       const baseTime = Date.now()
       for (let i = 0; i < 3; i++) {
-        const org = await createExternalOrganization({
+        await createExternalOrganization({
+          organizationId: testOrg.id,
           legalName: `List Test Corp ${baseTime}-${i}`,
           isPublicAuthority: i === 0, // First one is public authority
           headquartersCountryId: i === 1 ? testCountry.id : undefined,
         })
-        createdExternalOrgIds.push(org.id)
       }
+
+      // Create one for testOrg2 for isolation testing
+      await createExternalOrganization({
+        organizationId: testOrg2.id,
+        legalName: `Org2 Corp ${baseTime}`,
+      })
     })
 
-    it('should list external organizations with default pagination', async () => {
-      const result = await listExternalOrganizations({})
+    it('should list external organizations for specific organization', async () => {
+      const result = await listExternalOrganizations(testOrg.id, {})
 
       expect(result).toBeDefined()
       expect(result.items).toBeInstanceOf(Array)
       expect(result.items.length).toBeGreaterThan(0)
       expect(result.nextCursor).toBeDefined()
+
+      // Verify all results belong to testOrg
+      result.items.forEach((item) => {
+        expect(item.organizationId).toBe(testOrg.id)
+      })
+    })
+
+    it('should not return external organizations from other organizations (multi-tenancy)', async () => {
+      const org1Result = await listExternalOrganizations(testOrg.id, {})
+      const org2Result = await listExternalOrganizations(testOrg2.id, {})
+
+      // Verify no overlap
+      const org1Ids = org1Result.items.map((item) => item.id)
+      const org2Ids = org2Result.items.map((item) => item.id)
+
+      org1Ids.forEach((id) => {
+        expect(org2Ids).not.toContain(id)
+      })
     })
 
     it('should paginate results with cursor', async () => {
-      const firstPage = await listExternalOrganizations({ limit: 2 })
+      const firstPage = await listExternalOrganizations(testOrg.id, { limit: 2 })
 
       expect(firstPage.items).toHaveLength(2)
       expect(firstPage.nextCursor).not.toBeNull()
 
       // Get second page using cursor
-      const secondPage = await listExternalOrganizations({
+      const secondPage = await listExternalOrganizations(testOrg.id, {
         limit: 2,
         cursor: firstPage.nextCursor!,
       })
@@ -181,12 +227,12 @@ describe('ExternalOrganization DAL', () => {
 
     it('should filter by legalName', async () => {
       const searchName = `Unique Corp ${Date.now()}`
-      const org = await createExternalOrganization({
+      await createExternalOrganization({
+        organizationId: testOrg.id,
         legalName: searchName,
       })
-      createdExternalOrgIds.push(org.id)
 
-      const result = await listExternalOrganizations({
+      const result = await listExternalOrganizations(testOrg.id, {
         legalName: searchName,
       })
 
@@ -195,13 +241,14 @@ describe('ExternalOrganization DAL', () => {
     })
 
     it('should filter by isPublicAuthority', async () => {
-      const result = await listExternalOrganizations({
+      const result = await listExternalOrganizations(testOrg.id, {
         isPublicAuthority: true,
       })
 
       expect(result.items.length).toBeGreaterThan(0)
       result.items.forEach((org) => {
         expect(org.isPublicAuthority).toBe(true)
+        expect(org.organizationId).toBe(testOrg.id)
       })
     })
   })
@@ -210,18 +257,19 @@ describe('ExternalOrganization DAL', () => {
     it('should update external organization fields', async () => {
       // Arrange
       const org = await createExternalOrganization({
+        organizationId: testOrg.id,
         legalName: `Update Test Corp ${Date.now()}`,
       })
-      createdExternalOrgIds.push(org.id)
 
       // Act
-      const updated = await updateExternalOrganization(org.id, {
+      const updated = await updateExternalOrganization(org.id, testOrg.id, {
         tradingName: 'Updated Trading Name',
         website: 'https://updated.example.com',
       })
 
       // Assert
       expect(updated.id).toBe(org.id)
+      expect(updated.organizationId).toBe(testOrg.id)
       expect(updated.legalName).toBe(org.legalName) // Unchanged
       expect(updated.tradingName).toBe('Updated Trading Name')
       expect(updated.website).toBe('https://updated.example.com')
@@ -230,14 +278,14 @@ describe('ExternalOrganization DAL', () => {
     it('should handle explicit null for optional fields', async () => {
       // Arrange
       const org = await createExternalOrganization({
+        organizationId: testOrg.id,
         legalName: `Null Test Corp ${Date.now()}`,
         tradingName: 'Original Trading Name',
         website: 'https://original.example.com',
       })
-      createdExternalOrgIds.push(org.id)
 
       // Act - Clear optional fields
-      const updated = await updateExternalOrganization(org.id, {
+      const updated = await updateExternalOrganization(org.id, testOrg.id, {
         tradingName: null,
         website: null,
       })
@@ -246,30 +294,57 @@ describe('ExternalOrganization DAL', () => {
       expect(updated.tradingName).toBeNull()
       expect(updated.website).toBeNull()
     })
+
+    it('should throw error when updating with wrong organizationId (multi-tenancy)', async () => {
+      // Arrange - Create external org for testOrg
+      const org = await createExternalOrganization({
+        organizationId: testOrg.id,
+        legalName: `Protected Corp ${Date.now()}`,
+      })
+
+      // Act & Assert - Try to update with testOrg2's ID
+      await expect(
+        updateExternalOrganization(org.id, testOrg2.id, {
+          tradingName: 'Hacked Name',
+        })
+      ).rejects.toThrow('ExternalOrganization not found or does not belong to organization')
+    })
   })
 
   describe('deleteExternalOrganization', () => {
     it('should delete external organization', async () => {
       // Arrange
       const org = await createExternalOrganization({
+        organizationId: testOrg.id,
         legalName: `Delete Test Corp ${Date.now()}`,
       })
 
       // Act
-      const deleted = await deleteExternalOrganization(org.id)
+      const deleted = await deleteExternalOrganization(org.id, testOrg.id)
 
       // Assert
       expect(deleted.id).toBe(org.id)
 
       // Verify deletion
-      const found = await getExternalOrganizationById(org.id)
+      const found = await getExternalOrganizationById(org.id, testOrg.id)
       expect(found).toBeNull()
+    })
 
-      // Remove from cleanup list since already deleted
-      const index = createdExternalOrgIds.indexOf(org.id)
-      if (index > -1) {
-        createdExternalOrgIds.splice(index, 1)
-      }
+    it('should throw error when deleting with wrong organizationId (multi-tenancy)', async () => {
+      // Arrange - Create external org for testOrg
+      const org = await createExternalOrganization({
+        organizationId: testOrg.id,
+        legalName: `Protected Delete Corp ${Date.now()}`,
+      })
+
+      // Act & Assert - Try to delete with testOrg2's ID
+      await expect(deleteExternalOrganization(org.id, testOrg2.id)).rejects.toThrow(
+        'ExternalOrganization not found or does not belong to organization'
+      )
+
+      // Verify it still exists
+      const found = await getExternalOrganizationById(org.id, testOrg.id)
+      expect(found).not.toBeNull()
     })
   })
 })

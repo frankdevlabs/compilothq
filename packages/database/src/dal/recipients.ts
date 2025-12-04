@@ -1,5 +1,4 @@
 import type {
-  Agreement,
   Country,
   ExternalOrganization,
   HierarchyType,
@@ -23,6 +22,22 @@ export async function createRecipient(data: {
   hierarchyType?: HierarchyType | null
   isActive?: boolean
 }): Promise<Recipient> {
+  // SECURITY: Validate that external organization belongs to the same tenant
+  if (data.externalOrganizationId) {
+    const externalOrg = await prisma.externalOrganization.findUnique({
+      where: { id: data.externalOrganizationId },
+      select: { organizationId: true },
+    })
+
+    if (!externalOrg) {
+      throw new Error('ExternalOrganization not found')
+    }
+
+    if (externalOrg.organizationId !== data.organizationId) {
+      throw new Error('ExternalOrganization belongs to a different organization (tenant isolation)')
+    }
+  }
+
   return await prisma.recipient.create({
     data: {
       name: data.name,
@@ -440,8 +455,8 @@ export async function findOrphanedRecipients(organizationId: string): Promise<Re
  * Q6: Get recipients for a specific data processing activity
  * SECURITY: Always filters by organizationId to enforce multi-tenancy
  *
- * Temporary solution using activityIds array until RecipientDataProcessingActivity
- * junction table is implemented (roadmap #13).
+ * Uses DataProcessingActivityRecipient junction table to find all recipients
+ * linked to a specific activity.
  *
  * @param organizationId - The organization ID for multi-tenancy enforcement
  * @param activityId - The data processing activity ID
@@ -457,8 +472,10 @@ export async function getRecipientsForActivity(
   return await prisma.recipient.findMany({
     where: {
       organizationId,
-      activityIds: {
-        has: activityId,
+      activities: {
+        some: {
+          activityId,
+        },
       },
     },
     orderBy: [{ createdAt: 'desc' }],
@@ -765,48 +782,6 @@ export async function findDuplicateExternalOrgs(): Promise<DuplicateOrganization
   }
 
   return duplicates
-}
-
-/**
- * Type for expiring agreements
- */
-export type ExpiringAgreement = Agreement & {
-  externalOrganization: ExternalOrganization
-}
-
-/**
- * Q11: Get expiring agreements
- * SECURITY: No organizationId filter - Agreements are global via ExternalOrganization
- *
- * Finds active agreements expiring within specified days threshold.
- * Used for proactive agreement renewal management.
- *
- * @param daysThreshold - Number of days ahead to check (default: 30)
- * @returns Promise<ExpiringAgreement[]> - Agreements expiring soon
- *
- * @example
- * const expiring = await getExpiringAgreements(30)
- * // Returns agreements expiring in next 30 days
- */
-export async function getExpiringAgreements(daysThreshold = 30): Promise<ExpiringAgreement[]> {
-  const thresholdDate = new Date()
-  thresholdDate.setDate(thresholdDate.getDate() + daysThreshold)
-
-  return await prisma.agreement.findMany({
-    where: {
-      status: 'ACTIVE',
-      expiryDate: {
-        not: null,
-        lte: thresholdDate,
-      },
-    },
-    include: {
-      externalOrganization: true,
-    },
-    orderBy: {
-      expiryDate: 'asc',
-    },
-  })
 }
 
 /**

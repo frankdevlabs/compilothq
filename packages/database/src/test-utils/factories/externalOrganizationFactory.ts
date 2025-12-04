@@ -2,10 +2,11 @@
  * Test factory for ExternalOrganization entities
  *
  * ExternalOrganization represents external legal entities (vendors, partners, authorities)
- * and is a global entity (not scoped to any organization).
+ * and is a TENANT-BOUND entity scoped to organizations.
  *
  * Usage:
  *   const externalOrg = await createTestExternalOrganization({
+ *     organizationId: 'org-id',
  *     legalName: 'Custom Legal Name',
  *   })
  */
@@ -18,11 +19,12 @@ let sequenceNumber = 0
 /**
  * Create a test external organization with sensible defaults
  *
- * @param overrides - Optional partial ExternalOrganization data to override defaults
+ * @param overrides - Optional partial ExternalOrganization data to override defaults (organizationId required)
  * @returns Promise<ExternalOrganization>
  */
 export async function createTestExternalOrganization(
   overrides: Partial<{
+    organizationId: string
     legalName: string
     tradingName: string
     jurisdiction: string
@@ -36,7 +38,7 @@ export async function createTestExternalOrganization(
     isPublicAuthority: boolean
     sector: string
     notes: string
-  }> = {}
+  }> & { organizationId: string } // organizationId is required
 ): Promise<ExternalOrganization> {
   sequenceNumber++
 
@@ -65,17 +67,17 @@ export async function createTestExternalOrganization(
 }
 
 /**
- * Clean up test external organizations
+ * Clean up test external organizations by organization IDs
  *
- * @param ids - Array of external organization IDs to delete
+ * @param organizationIds - Array of organization IDs whose external organizations should be deleted
  */
-export async function cleanupTestExternalOrganizations(ids: string[]): Promise<void> {
-  if (ids.length === 0) return
+export async function cleanupTestExternalOrganizations(organizationIds: string[]): Promise<void> {
+  if (organizationIds.length === 0) return
 
   await prisma.externalOrganization.deleteMany({
     where: {
-      id: {
-        in: ids,
+      organizationId: {
+        in: organizationIds,
       },
     },
   })

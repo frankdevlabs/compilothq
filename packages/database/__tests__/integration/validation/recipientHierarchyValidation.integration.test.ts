@@ -41,8 +41,9 @@ describe('Recipient Hierarchy Validation Service', () => {
     const { org } = await createTestOrganization({ slug: `validation-test-${Date.now()}` })
     testOrg = org
 
-    // Create external organization for testing
+    // Create external organization for testing (tenant-bound)
     externalOrg = await createTestExternalOrganization({
+      organizationId: testOrg.id,
       legalName: `Test External Org ${Date.now()}`,
     })
     externalOrgsToCleanup.push(externalOrg.id)
@@ -331,12 +332,19 @@ describe('Recipient Hierarchy Validation Service', () => {
         slug: `other-org-${Date.now()}`,
       })
 
+      // Create external org for other organization
+      const otherExternalOrg = await createTestExternalOrganization({
+        organizationId: otherOrg.id,
+        legalName: `Other Org External ${Date.now()}`,
+      })
+      externalOrgsToCleanup.push(otherExternalOrg.id)
+
       // Create recipient in other organization
       const otherOrgRecipient = await createRecipient({
         name: 'Other Org Processor',
         type: 'PROCESSOR',
         organizationId: otherOrg.id,
-        externalOrganizationId: externalOrg.id,
+        externalOrganizationId: otherExternalOrg.id,
       })
       recipientsToCleanup.push(otherOrgRecipient.id)
 
@@ -403,6 +411,7 @@ describe('Recipient Hierarchy Validation Service', () => {
     it('should return warning when PROCESSOR is missing required DPA', async () => {
       // Create external org without agreements
       const externalOrgNoDPA = await createTestExternalOrganization({
+        organizationId: testOrg.id,
         legalName: `Org Without DPA ${Date.now()}`,
       })
       externalOrgsToCleanup.push(externalOrgNoDPA.id)
@@ -425,11 +434,13 @@ describe('Recipient Hierarchy Validation Service', () => {
     it('should return no warning when PROCESSOR has active DPA', async () => {
       // Create external org with active DPA
       const externalOrgWithDPA = await createTestExternalOrganization({
+        organizationId: testOrg.id,
         legalName: `Org With DPA ${Date.now()}`,
       })
       externalOrgsToCleanup.push(externalOrgWithDPA.id)
 
       const agreement = await createTestAgreement({
+        organizationId: testOrg.id,
         externalOrganizationId: externalOrgWithDPA.id,
         type: 'DPA',
         status: 'ACTIVE',
@@ -454,6 +465,7 @@ describe('Recipient Hierarchy Validation Service', () => {
     it('should return warning when JOINT_CONTROLLER is missing required JCA', async () => {
       // Create external org without JCA
       const externalOrgNoJCA = await createTestExternalOrganization({
+        organizationId: testOrg.id,
         legalName: `Org Without JCA ${Date.now()}`,
       })
       externalOrgsToCleanup.push(externalOrgNoJCA.id)

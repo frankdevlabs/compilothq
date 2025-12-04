@@ -3,9 +3,11 @@
  *
  * Agreement represents legal agreements with external organizations
  * (DPAs, Joint Controller Agreements, SCCs, etc.)
+ * This is a TENANT-BOUND entity scoped to organizations.
  *
  * Usage:
  *   const agreement = await createTestAgreement({
+ *     organizationId: 'org-id',
  *     externalOrganizationId: externalOrg.id,
  *     type: 'DPA',
  *     status: 'ACTIVE',
@@ -20,10 +22,11 @@ let _sequenceNumber = 0
 /**
  * Create a test agreement with sensible defaults
  *
- * @param data - Required externalOrganizationId and optional overrides
+ * @param data - Required organizationId and externalOrganizationId with optional overrides
  * @returns Promise<Agreement>
  */
 export async function createTestAgreement(data: {
+  organizationId: string
   externalOrganizationId: string
   type?: AgreementType
   status?: AgreementStatus
@@ -41,6 +44,7 @@ export async function createTestAgreement(data: {
 
   return await prisma.agreement.create({
     data: {
+      organizationId: data.organizationId,
       externalOrganizationId: data.externalOrganizationId,
       ...defaults,
     },
@@ -48,17 +52,17 @@ export async function createTestAgreement(data: {
 }
 
 /**
- * Clean up test agreements
+ * Clean up test agreements by organization IDs
  *
- * @param ids - Array of agreement IDs to delete
+ * @param organizationIds - Array of organization IDs whose agreements should be deleted
  */
-export async function cleanupTestAgreements(ids: string[]): Promise<void> {
-  if (ids.length === 0) return
+export async function cleanupTestAgreements(organizationIds: string[]): Promise<void> {
+  if (organizationIds.length === 0) return
 
   await prisma.agreement.deleteMany({
     where: {
-      id: {
-        in: ids,
+      organizationId: {
+        in: organizationIds,
       },
     },
   })

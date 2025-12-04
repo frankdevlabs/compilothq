@@ -1,0 +1,5 @@
+-- RenameIndex
+ALTER INDEX "DataProcessingActivityDataCategory_activityId_dataCategoryId_ke" RENAME TO "DataProcessingActivityDataCategory_activityId_dataCategoryI_key";
+
+-- RenameIndex
+ALTER INDEX "DataProcessingActivityDataSubject_activityId_dataSubjectCategor" RENAME TO "DataProcessingActivityDataSubject_activityId_dataSubjectCat_key";
