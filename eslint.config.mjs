@@ -137,6 +137,17 @@ export default [
     },
   },
 
+  // Integration tests - relax unsafe type rules for Prisma client usage
+  {
+    files: ['**/__tests__/integration/**/*.test.ts', '**/__tests__/integration/**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
+
   // Scripts - disable security rules for internal build scripts
   {
     files: ['scripts/**/*.js'],

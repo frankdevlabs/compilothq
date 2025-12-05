@@ -1,9 +1,17 @@
 task_groups:
   - name: Phase 1 - Database Schema & Enums
+    claude_code_subagent: implementer-database
   - name: Phase 2 - DAL Layer - Asset Operations
+    claude_code_subagent: implementer-database
   - name: Phase 3 - DAL Layer - Location Operations
+    claude_code_subagent: implementer-database
   - name: Phase 4 - DAL Layer - Junction Operations
+    claude_code_subagent: implementer-database
   - name: Phase 5 - Validation Layer
+    claude_code_subagent: implementer-database
   - name: Phase 6 - tRPC Router
+    claude_code_subagent: implementer-trpc
   - name: Phase 7 - Integration Testing & Gap Analysis
+    claude_code_subagent: implementer
   - name: Phase 8 - Documentation & Review
+    claude_code_subagent: implementer
