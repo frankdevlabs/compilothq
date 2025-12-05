@@ -61,6 +61,8 @@ model Organization {
   dataCategories           DataCategory[]
   externalOrganizations    ExternalOrganization[]
   agreements               Agreement[]
+  digitalAssets            DigitalAsset[]
+  assetProcessingLocations AssetProcessingLocation[]
 
   @@index([deletedAt])
 }
@@ -84,6 +86,8 @@ model User {
   invitationsSent           Invitation[]             @relation("InvitationsSent")
   ownedActivitiesBusiness   DataProcessingActivity[] @relation("BusinessOwner")
   ownedActivitiesProcessing DataProcessingActivity[] @relation("ProcessingOwner")
+  technicalAssets           DigitalAsset[]           @relation("AssetTechnicalOwner")
+  businessAssets            DigitalAsset[]           @relation("AssetBusinessOwner")
 
   @@index([organizationId, primaryPersona])
   @@index([organizationId, createdAt])
@@ -231,7 +235,9 @@ model Country {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  externalOrganizations ExternalOrganization[]
+  externalOrganizations    ExternalOrganization[]
+  assetPrimaryHosting      DigitalAsset[]           @relation("AssetPrimaryHosting")
+  assetProcessingCountries AssetProcessingLocation[] @relation("AssetProcessingCountries")
 
   @@index([name])
   @@index([isoCode])
@@ -286,6 +292,9 @@ model TransferMechanism {
   isActive              Boolean                   @default(true)
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
+
+  // Relations
+  assetTransferMechanisms AssetProcessingLocation[] @relation("AssetTransferMechanisms")
 
   @@index([name])
   @@index([category])
@@ -497,13 +506,14 @@ model DataProcessingActivity {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization    Organization                         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  businessOwner   User?                                @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
-  processingOwner User?                                @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)
+  organization    Organization                          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  businessOwner   User?                                 @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
+  processingOwner User?                                 @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)
   purposes        DataProcessingActivityPurpose[]
   dataSubjects    DataProcessingActivityDataSubject[]
   dataCategories  DataProcessingActivityDataCategory[]
   recipients      DataProcessingActivityRecipient[]
+  digitalAssets   DataProcessingActivityDigitalAsset[]
 
   // Indexes
   @@index([organizationId])
@@ -762,10 +772,146 @@ model Purpose {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization Organization                    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  activities   DataProcessingActivityPurpose[]
+  organization              Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  activities                DataProcessingActivityPurpose[]
+  assetProcessingLocations  AssetProcessingLocation[]
 
   @@index([organizationId])
   @@index([organizationId, isActive])
   @@index([organizationId, category])
+}
+
+// ============================================================================
+// Digital Assets (Item 14)
+// ============================================================================
+
+// Asset type enum for categorization
+enum AssetType {
+  ANALYTICS_PLATFORM
+  API
+  APPLICATION
+  CLOUD_SERVICE
+  CRM
+  DATABASE
+  ERP
+  FILE_STORAGE
+  MARKETING_TOOL
+  ON_PREMISE_SYSTEM
+  OTHER
+}
+
+// Integration status enum for automation readiness tracking
+enum IntegrationStatus {
+  CONNECTED
+  FAILED
+  MANUAL_ONLY
+  NOT_INTEGRATED
+  PENDING
+}
+
+// Location role enum for semantic clarity
+enum LocationRole {
+  HOSTING // Servers physically here
+  PROCESSING // Data processed but not stored
+  BOTH // Both hosting and processing
+}
+
+// Digital asset model for tracking systems, tools, and platforms processing personal data
+model DigitalAsset {
+  id              String             @id @default(cuid())
+  organizationId  String
+  name            String
+  type            AssetType
+  description     String?
+
+  // Display-purpose hosting (distinct from compliance tracking)
+  primaryHostingCountryId String?
+
+  // URLs & ownership
+  url                 String?
+  technicalOwnerId    String?
+  businessOwnerId     String?
+
+  // Data classification
+  containsPersonalData Boolean           @default(false)
+  integrationStatus    IntegrationStatus @default(NOT_INTEGRATED)
+
+  // Discovery metadata
+  lastScannedAt DateTime?
+  discoveredVia String?
+
+  // Extensibility
+  metadata Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization          Organization                          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  primaryHostingCountry Country?                              @relation("AssetPrimaryHosting", fields: [primaryHostingCountryId], references: [id], onDelete: SetNull)
+  technicalOwner        User?                                 @relation("AssetTechnicalOwner", fields: [technicalOwnerId], references: [id], onDelete: SetNull)
+  businessOwner         User?                                 @relation("AssetBusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
+  activities            DataProcessingActivityDigitalAsset[]
+  processingLocations   AssetProcessingLocation[]
+
+  // Indexes for multi-tenancy and performance
+  @@index([organizationId])
+  @@index([organizationId, containsPersonalData])
+  @@index([organizationId, type])
+  @@index([organizationId, primaryHostingCountryId])
+}
+
+// Junction table linking DataProcessingActivity to DigitalAsset
+model DataProcessingActivityDigitalAsset {
+  id             String   @id @default(cuid())
+  activityId     String
+  digitalAssetId String
+  createdAt      DateTime @default(now())
+
+  // Relations
+  activity     DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  digitalAsset DigitalAsset           @relation(fields: [digitalAssetId], references: [id], onDelete: Restrict)
+
+  // Constraints
+  @@unique([activityId, digitalAssetId])
+  @@index([activityId])
+  @@index([digitalAssetId])
+}
+
+// Asset processing location model for tracking WHERE and HOW assets process data
+model AssetProcessingLocation {
+  id             String       @id @default(cuid())
+  organizationId String
+  digitalAssetId String
+
+  // Business context
+  service     String // Free text: "BigQuery analytics", "S3 backup"
+  purposeId   String? // Optional FK to Purpose
+  purposeText String? // Fallback if purpose not formalized
+
+  // Geographic + Compliance
+  countryId           String
+  locationRole        LocationRole
+  transferMechanismId String?
+
+  // Status
+  isActive Boolean @default(true)
+  metadata Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  digitalAsset      DigitalAsset       @relation(fields: [digitalAssetId], references: [id], onDelete: Cascade)
+  country           Country            @relation("AssetProcessingCountries", fields: [countryId], references: [id], onDelete: Restrict)
+  purpose           Purpose?           @relation(fields: [purposeId], references: [id], onDelete: SetNull)
+  transferMechanism TransferMechanism? @relation("AssetTransferMechanisms", fields: [transferMechanismId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([organizationId, digitalAssetId])
+  @@index([organizationId, countryId])
+  @@index([organizationId, transferMechanismId])
 }
