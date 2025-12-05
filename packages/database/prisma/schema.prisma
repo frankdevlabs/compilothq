@@ -61,6 +61,8 @@ model Organization {
   dataCategories           DataCategory[]
   externalOrganizations    ExternalOrganization[]
   agreements               Agreement[]
+  digitalAssets            DigitalAsset[]
+  assetProcessingLocations AssetProcessingLocation[]
 
   @@index([deletedAt])
 }
@@ -84,6 +86,8 @@ model User {
   invitationsSent           Invitation[]             @relation("InvitationsSent")
   ownedActivitiesBusiness   DataProcessingActivity[] @relation("BusinessOwner")
   ownedActivitiesProcessing DataProcessingActivity[] @relation("ProcessingOwner")
+  technicalAssets           DigitalAsset[]           @relation("AssetTechnicalOwner")
+  businessAssets            DigitalAsset[]           @relation("AssetBusinessOwner")
 
   @@index([organizationId, primaryPersona])
   @@index([organizationId, createdAt])
@@ -231,7 +235,9 @@ model Country {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  externalOrganizations ExternalOrganization[]
+  externalOrganizations    ExternalOrganization[]
+  assetPrimaryHosting      DigitalAsset[]           @relation("AssetPrimaryHosting")
+  assetProcessingCountries AssetProcessingLocation[] @relation("AssetProcessingCountries")
 
   @@index([name])
   @@index([isoCode])
@@ -286,6 +292,9 @@ model TransferMechanism {
   isActive              Boolean                   @default(true)
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
+
+  // Relations
+  assetTransferMechanisms AssetProcessingLocation[] @relation("AssetTransferMechanisms")
 
   @@index([name])
   @@index([category])
@@ -363,7 +372,7 @@ model DataSubjectCategory {
   updatedAt            DateTime @updatedAt
 
   // Relations
-  organization Organization?                          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization?                       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   activities   DataProcessingActivityDataSubject[]
 
   // Indexes and constraints
@@ -392,7 +401,7 @@ model DataCategory {
   updatedAt         DateTime         @updatedAt
 
   // Relations
-  organization Organization                        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization                         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   dataNatures  DataCategoryDataNature[]
   activities   DataProcessingActivityDataCategory[]
 
@@ -497,13 +506,14 @@ model DataProcessingActivity {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization    Organization                           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  businessOwner   User?                                  @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
-  processingOwner User?                                  @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)
+  organization    Organization                          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  businessOwner   User?                                 @relation("BusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
+  processingOwner User?                                 @relation("ProcessingOwner", fields: [processingOwnerId], references: [id], onDelete: SetNull)
   purposes        DataProcessingActivityPurpose[]
   dataSubjects    DataProcessingActivityDataSubject[]
   dataCategories  DataProcessingActivityDataCategory[]
   recipients      DataProcessingActivityRecipient[]
+  digitalAssets   DataProcessingActivityDigitalAsset[]
 
   // Indexes
   @@index([organizationId])
@@ -538,7 +548,7 @@ model DataProcessingActivityDataSubject {
   createdAt             DateTime @default(now())
 
   // Relations
-  activity           DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  activity            DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
   dataSubjectCategory DataSubjectCategory    @relation(fields: [dataSubjectCategoryId], references: [id], onDelete: Restrict)
 
   // Constraints
@@ -565,10 +575,10 @@ model DataProcessingActivityDataCategory {
 }
 
 // Junction table for DataProcessingActivity to Recipient many-to-many relationship
-// NOTE: This junction table may be extended in Roadmap item 15 to support third-country transfer tracking.
-// Potential future fields: involvesThirdCountryTransfer (Boolean), transferBasis (enum reference)
-// Rationale: GDPR Article 30(1)(d) requires documenting transfers to third countries or international organizations.
-// Decision deferred until DataTransfer model architecture is designed.
+// NOTE: Cross-border transfer tracking is handled via RecipientProcessingLocation model (Roadmap item 15),
+// not through fields on this junction table. Recipients can have multiple processing locations (countries),
+// and transfers are derived by comparing Organization.country with RecipientProcessingLocation.country.
+// See service layer transfer detection functions for implementation.
 model DataProcessingActivityRecipient {
   id          String   @id @default(cuid())
   activityId  String // Foreign key to DataProcessingActivity
@@ -591,54 +601,54 @@ model DataProcessingActivityRecipient {
 
 // Recipient type enum for GDPR compliance categorization
 enum RecipientType {
-  PROCESSOR           // Art. 28 - Data processor (requires DPA)
-  SUB_PROCESSOR       // Art. 28(2) - Sub-processor in chain
-  JOINT_CONTROLLER    // Art. 26 - Joint controller (requires JCA)
-  SERVICE_PROVIDER    // General service provider
+  PROCESSOR // Art. 28 - Data processor (requires DPA)
+  SUB_PROCESSOR // Art. 28(2) - Sub-processor in chain
+  JOINT_CONTROLLER // Art. 26 - Joint controller (requires JCA)
+  SERVICE_PROVIDER // General service provider
   SEPARATE_CONTROLLER // Independent controller receiving data
-  PUBLIC_AUTHORITY    // Government/regulatory body
+  PUBLIC_AUTHORITY // Government/regulatory body
   INTERNAL_DEPARTMENT // Internal recipient (no external org)
 }
 
 // Hierarchy type enum for recipient hierarchy categorization
 enum HierarchyType {
   PROCESSOR_CHAIN // For sub-processor hierarchies (Art. 28(2))
-  ORGANIZATIONAL  // For internal department hierarchies
-  GROUPING        // For logical grouping (future use)
+  ORGANIZATIONAL // For internal department hierarchies
+  GROUPING // For logical grouping (future use)
 }
 
 // External organization model for tracking external legal entities
 model ExternalOrganization {
-  id                    String   @id @default(cuid())
-  organizationId        String   // FK to Organization (tenant context)
-  legalName             String   // Official legal name (e.g., "Recruitee B.V.")
-  tradingName           String?  // Trading/brand name (e.g., "Recruitee")
+  id             String  @id @default(cuid())
+  organizationId String // FK to Organization (tenant context)
+  legalName      String // Official legal name (e.g., "Recruitee B.V.")
+  tradingName    String? // Trading/brand name (e.g., "Recruitee")
 
   // Registration details
-  jurisdiction          String?  // Country of incorporation
-  registrationNumber    String?  // Company registration number (KvK, Company House, etc.)
-  vatNumber             String?  // VAT/Tax identification number
+  jurisdiction       String? // Country of incorporation
+  registrationNumber String? // Company registration number (KvK, Company House, etc.)
+  vatNumber          String? // VAT/Tax identification number
 
   // Location tracking
-  headquartersCountryId String?  // FK to Country model
+  headquartersCountryId String? // FK to Country model
   operatingCountries    String[] @default([]) // Array of country codes
 
   // Contact information
-  website               String?
-  contactEmail          String?
-  contactPhone          String?
+  website      String?
+  contactEmail String?
+  contactPhone String?
 
   // Classification
-  isPublicAuthority     Boolean  @default(false) // For Art. 49 derogation eligibility
-  sector                String?  // Industry sector
+  isPublicAuthority Boolean @default(false) // For Art. 49 derogation eligibility
+  sector            String? // Industry sector
 
   // Additional information
-  notes                 String?  @db.Text
-  metadata              Json?    // Extensible metadata
+  notes    String? @db.Text
+  metadata Json? // Extensible metadata
 
   // Timestamps
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -654,36 +664,36 @@ model ExternalOrganization {
 
 // Recipient model for tracking all recipients of personal data
 model Recipient {
-  id                     String         @id @default(cuid())
-  name                   String         // Display name for this recipient role
-  type                   RecipientType  // Type of recipient relationship
+  id   String        @id @default(cuid())
+  name String // Display name for this recipient role
+  type RecipientType // Type of recipient relationship
 
   // Tenant context
-  organizationId         String         // FK to Organization (tenant)
+  organizationId String // FK to Organization (tenant)
 
   // External organization link (null for INTERNAL_DEPARTMENT)
-  externalOrganizationId String?        // FK to ExternalOrganization
+  externalOrganizationId String? // FK to ExternalOrganization
 
   // Purpose and description
-  purpose                String?        // Why do they receive personal data?
-  description            String?        // Description of services/role
+  purpose     String? // Why do they receive personal data?
+  description String? // Description of services/role
 
   // Hierarchy support
-  parentRecipientId      String?        // Self-referential FK for hierarchy
-  hierarchyType          HierarchyType? // Type of hierarchy relationship
+  parentRecipientId String? // Self-referential FK for hierarchy
+  hierarchyType     HierarchyType? // Type of hierarchy relationship
 
   // Status
-  isActive               Boolean        @default(true)
+  isActive Boolean @default(true)
 
   // Timestamps
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  organization         Organization                     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  externalOrganization ExternalOrganization?            @relation(fields: [externalOrganizationId], references: [id], onDelete: SetNull)
-  parentRecipient      Recipient?                       @relation("RecipientHierarchy", fields: [parentRecipientId], references: [id], onDelete: SetNull)
-  children             Recipient[]                      @relation("RecipientHierarchy")
+  organization         Organization                      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  externalOrganization ExternalOrganization?             @relation(fields: [externalOrganizationId], references: [id], onDelete: SetNull)
+  parentRecipient      Recipient?                        @relation("RecipientHierarchy", fields: [parentRecipientId], references: [id], onDelete: SetNull)
+  children             Recipient[]                       @relation("RecipientHierarchy")
   activities           DataProcessingActivityRecipient[]
 
   @@index([organizationId])
@@ -699,37 +709,37 @@ model Recipient {
 
 // Agreement type enum for contract categorization
 enum AgreementType {
-  DPA                       // Data Processing Agreement (Art. 28)
+  DPA // Data Processing Agreement (Art. 28)
   JOINT_CONTROLLER_AGREEMENT // Joint Controller Agreement (Art. 26)
-  SCC                       // Standard Contractual Clauses
-  BCR                       // Binding Corporate Rules
-  DPF                       // Data Privacy Framework
-  NDA                       // Non-Disclosure Agreement
+  SCC // Standard Contractual Clauses
+  BCR // Binding Corporate Rules
+  DPF // Data Privacy Framework
+  NDA // Non-Disclosure Agreement
 }
 
 // Agreement status enum for lifecycle tracking
 enum AgreementStatus {
-  DRAFT             // Being drafted
+  DRAFT // Being drafted
   PENDING_SIGNATURE // Sent for signature
-  ACTIVE            // Signed and active
-  EXPIRING_SOON     // Approaching expiry date
-  EXPIRED           // Past expiry date
-  TERMINATED        // Terminated early
+  ACTIVE // Signed and active
+  EXPIRING_SOON // Approaching expiry date
+  EXPIRED // Past expiry date
+  TERMINATED // Terminated early
 }
 
 // Agreement model shell for tracking legal agreements with external organizations
 model Agreement {
   id                     String          @id @default(cuid())
-  organizationId         String          // FK to Organization (tenant context)
-  externalOrganizationId String          // FK to ExternalOrganization
-  type                   AgreementType   // Type of agreement
+  organizationId         String // FK to Organization (tenant context)
+  externalOrganizationId String // FK to ExternalOrganization
+  type                   AgreementType // Type of agreement
   status                 AgreementStatus @default(DRAFT) // Lifecycle status
-  signedDate             DateTime?       // Date agreement was signed
-  expiryDate             DateTime?       // Date agreement expires
+  signedDate             DateTime? // Date agreement was signed
+  expiryDate             DateTime? // Date agreement expires
 
   // Timestamps
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   organization         Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -762,10 +772,146 @@ model Purpose {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization Organization                    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  activities   DataProcessingActivityPurpose[]
+  organization              Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  activities                DataProcessingActivityPurpose[]
+  assetProcessingLocations  AssetProcessingLocation[]
 
   @@index([organizationId])
   @@index([organizationId, isActive])
   @@index([organizationId, category])
+}
+
+// ============================================================================
+// Digital Assets (Item 14)
+// ============================================================================
+
+// Asset type enum for categorization
+enum AssetType {
+  ANALYTICS_PLATFORM
+  API
+  APPLICATION
+  CLOUD_SERVICE
+  CRM
+  DATABASE
+  ERP
+  FILE_STORAGE
+  MARKETING_TOOL
+  ON_PREMISE_SYSTEM
+  OTHER
+}
+
+// Integration status enum for automation readiness tracking
+enum IntegrationStatus {
+  CONNECTED
+  FAILED
+  MANUAL_ONLY
+  NOT_INTEGRATED
+  PENDING
+}
+
+// Location role enum for semantic clarity
+enum LocationRole {
+  HOSTING // Servers physically here
+  PROCESSING // Data processed but not stored
+  BOTH // Both hosting and processing
+}
+
+// Digital asset model for tracking systems, tools, and platforms processing personal data
+model DigitalAsset {
+  id              String             @id @default(cuid())
+  organizationId  String
+  name            String
+  type            AssetType
+  description     String?
+
+  // Display-purpose hosting (distinct from compliance tracking)
+  primaryHostingCountryId String?
+
+  // URLs & ownership
+  url                 String?
+  technicalOwnerId    String?
+  businessOwnerId     String?
+
+  // Data classification
+  containsPersonalData Boolean           @default(false)
+  integrationStatus    IntegrationStatus @default(NOT_INTEGRATED)
+
+  // Discovery metadata
+  lastScannedAt DateTime?
+  discoveredVia String?
+
+  // Extensibility
+  metadata Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization          Organization                          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  primaryHostingCountry Country?                              @relation("AssetPrimaryHosting", fields: [primaryHostingCountryId], references: [id], onDelete: SetNull)
+  technicalOwner        User?                                 @relation("AssetTechnicalOwner", fields: [technicalOwnerId], references: [id], onDelete: SetNull)
+  businessOwner         User?                                 @relation("AssetBusinessOwner", fields: [businessOwnerId], references: [id], onDelete: SetNull)
+  activities            DataProcessingActivityDigitalAsset[]
+  processingLocations   AssetProcessingLocation[]
+
+  // Indexes for multi-tenancy and performance
+  @@index([organizationId])
+  @@index([organizationId, containsPersonalData])
+  @@index([organizationId, type])
+  @@index([organizationId, primaryHostingCountryId])
+}
+
+// Junction table linking DataProcessingActivity to DigitalAsset
+model DataProcessingActivityDigitalAsset {
+  id             String   @id @default(cuid())
+  activityId     String
+  digitalAssetId String
+  createdAt      DateTime @default(now())
+
+  // Relations
+  activity     DataProcessingActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  digitalAsset DigitalAsset           @relation(fields: [digitalAssetId], references: [id], onDelete: Restrict)
+
+  // Constraints
+  @@unique([activityId, digitalAssetId])
+  @@index([activityId])
+  @@index([digitalAssetId])
+}
+
+// Asset processing location model for tracking WHERE and HOW assets process data
+model AssetProcessingLocation {
+  id             String       @id @default(cuid())
+  organizationId String
+  digitalAssetId String
+
+  // Business context
+  service     String // Free text: "BigQuery analytics", "S3 backup"
+  purposeId   String? // Optional FK to Purpose
+  purposeText String? // Fallback if purpose not formalized
+
+  // Geographic + Compliance
+  countryId           String
+  locationRole        LocationRole
+  transferMechanismId String?
+
+  // Status
+  isActive Boolean @default(true)
+  metadata Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  digitalAsset      DigitalAsset       @relation(fields: [digitalAssetId], references: [id], onDelete: Cascade)
+  country           Country            @relation("AssetProcessingCountries", fields: [countryId], references: [id], onDelete: Restrict)
+  purpose           Purpose?           @relation(fields: [purposeId], references: [id], onDelete: SetNull)
+  transferMechanism TransferMechanism? @relation("AssetTransferMechanisms", fields: [transferMechanismId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([organizationId, digitalAssetId])
+  @@index([organizationId, countryId])
+  @@index([organizationId, transferMechanismId])
 }

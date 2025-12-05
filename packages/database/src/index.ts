@@ -26,6 +26,7 @@ export default prisma
 
 // Export all DAL functions
 export * from './dal/agreements'
+export * from './dal/assetProcessingLocations'
 export * from './dal/countries'
 export * from './dal/dataCategories'
 export * from './dal/dataNatures'
@@ -33,6 +34,7 @@ export * from './dal/dataProcessingActivities'
 export * from './dal/dataProcessingActivityJunctions'
 export * from './dal/dataSubjectCategories'
 export * from './dal/devSessions'
+export * from './dal/digitalAssets'
 export * from './dal/externalOrganizations'
 export * from './dal/invitations'
 export * from './dal/legalBases'
@@ -62,12 +64,15 @@ export * from '../generated/client/client'
 export type {
   Account,
   Agreement,
+  AssetProcessingLocation,
   Country,
   DataCategory,
   DataCategoryDataNature,
   DataNature,
   DataProcessingActivity,
+  DataProcessingActivityDigitalAsset,
   DataSubjectCategory,
+  DigitalAsset,
   ExternalOrganization,
   Invitation,
   LegalBasis,
@@ -84,6 +89,7 @@ export type {
 
 // Export custom types from DAL (not in Prisma schema)
 export type { DataProcessingActivityWithComponents } from './dal/dataProcessingActivityJunctions'
+export type { AssetProcessingLocationInput } from './dal/digitalAssets'
 export type {
   CrossBorderTransferAssessment,
   DuplicateOrganizationGroup,

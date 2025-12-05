@@ -50,4 +50,20 @@ export default [
       'no-unused-vars': 'off',
     },
   },
+
+  // Integration tests - relax unsafe type rules for Prisma client usage
+  {
+    files: [
+      '__tests__/integration/**/*.test.ts',
+      '__tests__/integration/**/*.integration.test.ts',
+      '__tests__/integration/**/*.test.tsx',
+      '__tests__/integration/**/*.integration.test.tsx',
+    ],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
 ]

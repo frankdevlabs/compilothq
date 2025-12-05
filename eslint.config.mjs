@@ -131,9 +131,32 @@ export default [
 
   // Test files - allow non-null assertions for pragmatic test patterns
   {
-    files: ['**/__tests__/**/*.ts', '**/__tests__/**/*.tsx'],
+    files: [
+      '**/__tests__/**/*.ts',
+      '**/__tests__/**/*.tsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+    ],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+
+  // Integration tests - relax unsafe type rules for Prisma client usage
+  {
+    files: [
+      '**/__tests__/integration/**/*.test.ts',
+      '**/__tests__/integration/**/*.integration.test.ts',
+      '**/__tests__/integration/**/*.test.tsx',
+      '**/__tests__/integration/**/*.integration.test.tsx',
+    ],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
     },
   },
 

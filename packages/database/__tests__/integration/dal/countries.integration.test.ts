@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Type assertions needed due to Prisma JSON field type limitations in test data
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
@@ -25,6 +25,7 @@ describe('Countries DAL - Integration Tests', () => {
   beforeEach(async () => {
     // Clean database before each test for isolation
     await cleanupTestDatabase()
+    // Note: Not restoring countries here since this test suite creates its own test countries
   })
 
   afterAll(async () => {
