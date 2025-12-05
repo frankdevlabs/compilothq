@@ -101,16 +101,89 @@ Implementing the compliance domain model is the highest-risk architectural decis
 
 3. **Recipient Hierarchy (Item 12):** Self-referential `parentRecipientId` enables sub-processor chains. Critical for demonstrating GDPR Article 28(2) compliance where processors engage sub-processors.
 
+4. **Processing Locations Architecture (Items 14-15):** Uses specialized location models (`AssetProcessingLocation`, `RecipientProcessingLocation`) attached to entities rather than discriminated polymorphic `DataTransfer` model. This architectural decision is foundational for geographic compliance tracking and cross-border transfer management.
+
+**Why Processing Locations Over DataTransfer:**
+
+The architecture models what GDPR Article 30(1)(d) actually requires: WHERE data is processed (locations), WHO processes it (recipients), and UNDER WHAT mechanism (safeguards). If a location crosses borders, a transfer exists as a **derived fact**, not a stored entity.
+
+**Key Benefits:**
+
+1. **GDPR Semantic Alignment:**
+   - Article 30(1)(d) asks about processing locations and safeguards, not abstract "transfers"
+   - Processing locations model this directly: "Mailchimp processes in US-Virginia and EU-Ireland"
+   - Transfers are computed by comparing organization country with processing location countries
+
+2. **Type Safety:**
+   - No nullable FKs + discriminator enum patterns that Prisma discourages
+   - Database enforces referential integrity (can't have invalid country references)
+   - Clean type inference: `assetLocation.digitalAsset` is always `DigitalAsset`, no manual type narrowing
+
+3. **Reusability & Single Source of Truth:**
+   - Define recipient's processing locations once: `RecipientProcessingLocation(Mailchimp, US, DPF)`
+   - All activities using Mailchimp inherit these locations automatically
+   - Change location once → all affected DPIAs show "transfer section outdated" (via Item 16 change tracking)
+   - Prevents "15 versions of same processor" problem that breaks manual approaches
+
+4. **Mental Model Clarity:**
+   - Locations are **properties of entities** (intuitive): "Where does this asset/recipient process data?"
+   - Not abstract relationships: "Create transfer from Activity X to Asset Y to Recipient Z"
+   - Users think geographically, system models geographically
+
+**Service Layer Composition:**
+
+Transfers are **derived** via service layer, not stored as database entities:
+
+```typescript
+// Pseudo-code for transfer detection
+const orgCountry = await getOrganizationCountry(orgId)
+const assetLocations = await getAssetProcessingLocations(activityId)
+const recipientLocations = await getRecipientProcessingLocations(activityId)
+
+const transfers = [...assetLocations, ...recipientLocations]
+  .filter((loc) => isCrossBorder(orgCountry, loc.country))
+  .map((loc) => ({
+    type: loc.digitalAssetId ? 'ASSET' : 'RECIPIENT',
+    origin: orgCountry,
+    destination: loc.country,
+    mechanism: loc.transferMechanism,
+    requiresSafeguards: isThirdCountry(loc.country, orgCountry),
+  }))
+```
+
+This compositional approach:
+
+- Avoids data duplication (no `sourceCountry` vs `asset.hostingCountry` conflicts)
+- Automatically updates when locations change (no stale transfer records)
+- Enables complex compliance queries: "Show all third-country processing without valid mechanisms"
+- Maintains referential integrity (location changes cascade correctly)
+
+**Integration with Document Generation:**
+
+- **Item 35 (Component Snapshot):** Captures complete processing location state at DPIA generation time
+- **Item 38 (DPIA Template):** Auto-generates "Processor Locations" table from `recipient.processingLocations`
+- **Item 45 (Regeneration):** When `RecipientProcessingLocation.countryId` changes → ComponentChangeLog entry → affected DPIAs marked for regeneration
+- **Item 16 (Change Tracking):** Extended to track location changes, enabling "3 DPIAs reference Mailchimp's US location, regenerate?" workflows
+
 **Success Metrics:**
 
 - Schema supports 100% of GDPR Article 30 RoPA requirements without custom JSON fields
 - Component reuse reaches 40%+ by 3rd activity (users select existing Purpose/DataCategory vs. creating new)
 - Zero "we need to add a column to core tables" refactoring requests in first 3 months
+- **Items 14-15 specific:**
+  - 100% of cross-border transfers identified automatically via service layer composition
+  - Zero manual "create transfer record" workflows needed
+  - Location changes propagate to all affected documents within 1 regeneration cycle
+  - Query performance: "Show all third-country processing without valid mechanisms" executes <100ms
 
 **Risk Assessment:**
 
 - **Risk:** Entity model is too rigid, forces workarounds for edge cases
   - **Mitigation:** Include `metadata JSON` field on all models for organization-specific customization. Validate schema with 3-5 design partners reviewing real-world processing activities before finalization.
+- **Risk (Items 14-15):** Service layer queries more complex than direct DataTransfer lookup
+  - **Mitigation:** Create DAL helper functions encapsulating query complexity (e.g., `getActivityProcessingLocations(activityId)` returns full location graph). Optimize with compound indexes on (organizationId, digitalAssetId), (organizationId, countryId). Cache frequently-accessed location data.
+- **Risk (Items 14-15):** Users confused by "no Transfer model" in schema
+  - **Mitigation:** Documentation explicitly explains transfer derivation. UI shows computed transfers as if they were stored entities. UX terminology uses "transfers" while architecture uses "processing locations".
 - **Risk:** Junction table explosion makes queries complex
   - **Mitigation:** Use Prisma's `include` and DataLoader patterns to prevent N+1 queries. Pre-optimize dashboard queries with compound indexes on `(organizationId, status, requiresDPIA)`.
 
