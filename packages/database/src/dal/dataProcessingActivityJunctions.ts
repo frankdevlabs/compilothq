@@ -1,4 +1,4 @@
-import type { Prisma } from '../index'
+import type { DataProcessingActivity, DigitalAsset, Prisma } from '../index'
 import { prisma } from '../index'
 
 /**
@@ -551,6 +551,227 @@ export async function unlinkActivityFromRecipient(
       recipientId,
     },
   })
+}
+
+// ============================================================================
+// Digital Asset Junction Operations
+// ============================================================================
+
+/**
+ * Link digital asset to activity - creates junction record
+ * SECURITY: Enforces multi-tenancy by validating organizationId ownership
+ *
+ * Creates a junction record linking a digital asset to a processing activity.
+ * Idempotent operation - silently succeeds if link already exists.
+ *
+ * @param activityId - The activity ID to link asset to
+ * @param organizationId - The organization ID for multi-tenancy enforcement
+ * @param digitalAssetId - The digital asset ID to link
+ * @returns Promise<void>
+ *
+ * @example
+ * await linkAssetToActivity('activity-id', 'org-id', 'asset-id')
+ */
+export async function linkAssetToActivity(
+  activityId: string,
+  organizationId: string,
+  digitalAssetId: string
+): Promise<void> {
+  // Verify activity exists and belongs to organization
+  const activity = await prisma.dataProcessingActivity.findUnique({
+    where: { id: activityId, organizationId },
+  })
+
+  if (!activity) {
+    throw new Error(
+      `DataProcessingActivity with id ${activityId} not found or does not belong to organization`
+    )
+  }
+
+  // Check if junction already exists (idempotent check)
+  const existingJunction = await prisma.dataProcessingActivityDigitalAsset.findFirst({
+    where: {
+      activityId,
+      digitalAssetId,
+    },
+  })
+
+  // Only create if it doesn't exist (idempotent operation)
+  if (!existingJunction) {
+    await prisma.dataProcessingActivityDigitalAsset.create({
+      data: {
+        activityId,
+        digitalAssetId,
+      },
+    })
+  }
+}
+
+/**
+ * Unlink digital asset from activity - removes junction record
+ * SECURITY: Enforces multi-tenancy by validating organizationId ownership
+ *
+ * Removes the junction record linking an asset to an activity.
+ * Idempotent operation - no error if junction doesn't exist.
+ *
+ * @param activityId - The activity ID to unlink asset from
+ * @param organizationId - The organization ID for multi-tenancy enforcement
+ * @param digitalAssetId - The digital asset ID to unlink
+ * @returns Promise<void>
+ *
+ * @example
+ * await unlinkAssetFromActivity('activity-id', 'org-id', 'asset-id')
+ */
+export async function unlinkAssetFromActivity(
+  activityId: string,
+  organizationId: string,
+  digitalAssetId: string
+): Promise<void> {
+  // Verify activity exists and belongs to organization
+  const activity = await prisma.dataProcessingActivity.findUnique({
+    where: { id: activityId, organizationId },
+  })
+
+  if (!activity) {
+    throw new Error(
+      `DataProcessingActivity with id ${activityId} not found or does not belong to organization`
+    )
+  }
+
+  // Remove junction (deleteMany is idempotent)
+  await prisma.dataProcessingActivityDigitalAsset.deleteMany({
+    where: {
+      activityId,
+      digitalAssetId,
+    },
+  })
+}
+
+/**
+ * Sync activity digital assets - replaces all existing relationships atomically
+ * SECURITY: Enforces multi-tenancy by validating organizationId ownership
+ *
+ * Uses Prisma transaction to delete existing asset links and create new ones atomically.
+ * This ensures data consistency even if the operation fails midway.
+ * Supports empty array to remove all links.
+ *
+ * @param activityId - The activity ID to sync assets for
+ * @param organizationId - The organization ID for multi-tenancy enforcement
+ * @param digitalAssetIds - Array of digital asset IDs to link to the activity
+ * @returns Promise<void>
+ *
+ * @example
+ * await syncActivityAssets('activity-id', 'org-id', ['asset-1', 'asset-2'])
+ */
+export async function syncActivityAssets(
+  activityId: string,
+  organizationId: string,
+  digitalAssetIds: string[]
+): Promise<void> {
+  // Verify activity exists and belongs to organization
+  const activity = await prisma.dataProcessingActivity.findUnique({
+    where: { id: activityId, organizationId },
+  })
+
+  if (!activity) {
+    throw new Error(
+      `DataProcessingActivity with id ${activityId} not found or does not belong to organization`
+    )
+  }
+
+  // Use transaction to ensure atomic operation
+  await prisma.$transaction(async (tx) => {
+    // Delete existing asset links
+    await tx.dataProcessingActivityDigitalAsset.deleteMany({
+      where: { activityId },
+    })
+
+    // Create new asset links
+    if (digitalAssetIds.length > 0) {
+      await tx.dataProcessingActivityDigitalAsset.createMany({
+        data: digitalAssetIds.map((digitalAssetId) => ({
+          activityId,
+          digitalAssetId,
+        })),
+        skipDuplicates: true, // Idempotent operation
+      })
+    }
+  })
+}
+
+/**
+ * Get all digital assets linked to an activity
+ * SECURITY: Enforces multi-tenancy by validating organizationId ownership
+ *
+ * Retrieves all digital assets associated with a processing activity.
+ * Includes active processing locations with nested country and transfer mechanism data.
+ *
+ * @param activityId - The activity ID to get assets for
+ * @param organizationId - The organization ID for multi-tenancy enforcement
+ * @returns Promise<DigitalAsset[]> - Array of digital assets with processing locations
+ *
+ * @example
+ * const assets = await getAssetsForActivity('activity-id', 'org-id')
+ */
+export async function getAssetsForActivity(
+  activityId: string,
+  organizationId: string
+): Promise<DigitalAsset[]> {
+  // Verify activity belongs to organization
+  const activity = await prisma.dataProcessingActivity.findUnique({
+    where: { id: activityId, organizationId },
+  })
+
+  if (!activity) {
+    throw new Error(
+      `DataProcessingActivity with id ${activityId} not found or does not belong to organization`
+    )
+  }
+
+  // Get linked assets with active processing locations
+  const junctions = await prisma.dataProcessingActivityDigitalAsset.findMany({
+    where: { activityId },
+    include: {
+      digitalAsset: {
+        include: {
+          processingLocations: {
+            where: { isActive: true },
+            include: {
+              country: true,
+              transferMechanism: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  return junctions.map((j) => j.digitalAsset)
+}
+
+/**
+ * Get all activities using a digital asset
+ *
+ * Retrieves all processing activities that use a specific digital asset.
+ * No organizationId filtering needed - asset FK ensures correct tenancy.
+ *
+ * @param digitalAssetId - The digital asset ID to get activities for
+ * @returns Promise<DataProcessingActivity[]> - Array of processing activities
+ *
+ * @example
+ * const activities = await getActivitiesForAsset('asset-id')
+ */
+export async function getActivitiesForAsset(
+  digitalAssetId: string
+): Promise<DataProcessingActivity[]> {
+  const junctions = await prisma.dataProcessingActivityDigitalAsset.findMany({
+    where: { digitalAssetId },
+    include: {
+      activity: true,
+    },
+  })
+
+  return junctions.map((j) => j.activity)
 }
 
 // ============================================================================
