@@ -1,0 +1,9 @@
+task_groups:
+  - name: Phase 1 - Database Schema & Enums
+  - name: Phase 2 - DAL Layer - Asset Operations
+  - name: Phase 3 - DAL Layer - Location Operations
+  - name: Phase 4 - DAL Layer - Junction Operations
+  - name: Phase 5 - Validation Layer
+  - name: Phase 6 - tRPC Router
+  - name: Phase 7 - Integration Testing & Gap Analysis
+  - name: Phase 8 - Documentation & Review
