@@ -6,13 +6,14 @@ import {
   getLegalBasisByType,
   listLegalBases,
 } from '../../../src/dal/legalBases'
-import { LegalBasisType, RegulatoryFramework } from '../../../src/index'
+import { LegalBasisType, prisma, RegulatoryFramework } from '../../../src/index'
 import {
   cleanupTestDatabase,
   disconnectTestDatabase,
   LegalBasisFactory,
   setupTestDatabase,
 } from '../../../src/test-utils'
+import { seedReferenceData } from '../../../src/test-utils/seed-reference-data'
 
 describe('LegalBases DAL - Integration Tests', () => {
   beforeAll(() => {
@@ -23,6 +24,8 @@ describe('LegalBases DAL - Integration Tests', () => {
   beforeEach(async () => {
     // Clean database before each test for isolation
     await cleanupTestDatabase()
+    // Restore reference data for other tests
+    await seedReferenceData(prisma)
   })
 
   afterAll(async () => {

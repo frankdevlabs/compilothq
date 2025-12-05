@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Type assertions needed due to Prisma JSON field type limitations in test data
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
@@ -15,6 +15,7 @@ import {
   disconnectTestDatabase,
   setupTestDatabase,
 } from '../../../src/test-utils'
+import { seedReferenceData } from '../../../src/test-utils/seed-reference-data'
 
 describe('DataSubjectCategories DAL - Integration Tests', () => {
   beforeAll(() => {
@@ -25,6 +26,8 @@ describe('DataSubjectCategories DAL - Integration Tests', () => {
   beforeEach(async () => {
     // Clean database before each test for isolation
     await cleanupTestDatabase()
+    // Restore reference data for other tests
+    await seedReferenceData(prisma)
   })
 
   afterAll(async () => {
