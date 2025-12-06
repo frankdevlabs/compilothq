@@ -270,7 +270,7 @@ export function validateTransferMechanismRequirement(
  * Detect all cross-border transfers for an organization
  * Compares organization country with all recipient processing locations
  *
- * NOTE: This function requires Organization.countryId field to be present in the schema.
+ * NOTE: This function requires Organization.headquartersCountryId field to be present in the schema.
  * If the field is not present, the function will throw an error.
  *
  * Algorithm:
@@ -409,7 +409,7 @@ export async function detectCrossBorderTransfers(
  * Analyze cross-border transfers for a specific processing activity
  * Gets all recipients linked to activity and analyzes their locations
  *
- * NOTE: This function requires Organization.countryId field to be present in the schema.
+ * NOTE: This function requires Organization.headquartersCountryId field to be present in the schema.
  * If the field is not present, the function will throw an error.
  *
  * Algorithm:

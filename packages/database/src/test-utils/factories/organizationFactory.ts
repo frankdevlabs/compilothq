@@ -15,6 +15,7 @@ export interface OrganizationFactoryOptions {
   slug?: string
   status?: OrganizationStatus
   userCount?: number
+  headquartersCountryId?: string | null
 }
 
 /**
@@ -40,6 +41,7 @@ export async function createTestOrganization(
     slug = `test-org-${randomUUID().slice(0, 8)}`,
     status = 'ACTIVE',
     userCount = 0,
+    headquartersCountryId,
   } = options
 
   // Create organization
@@ -48,6 +50,7 @@ export async function createTestOrganization(
       name,
       slug,
       status,
+      headquartersCountryId,
     },
   })
 

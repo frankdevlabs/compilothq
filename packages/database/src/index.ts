@@ -43,11 +43,15 @@ export * from './dal/processingActs'
 export * from './dal/purposes'
 export * from './dal/recipientCategories'
 export * from './dal/recipients'
+export * from './dal/recipientProcessingLocations'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
 
 // Export validation functions
 export * from './validation/recipientHierarchyValidation'
+
+// Export service layer functions
+export * from './services/transferDetection'
 
 // NOTE: Server-only utilities (tokens) are NOT exported from the main index
 // to avoid bundling Node.js modules (crypto) in Edge Runtime (middleware).
@@ -81,6 +85,7 @@ export type {
   Purpose,
   Recipient,
   RecipientCategory,
+  RecipientProcessingLocation,
   Session,
   TransferMechanism,
   User,
@@ -101,3 +106,10 @@ export type {
 
 // Export validation types
 export type { HierarchyRules, ValidationResult } from './validation/recipientHierarchyValidation'
+
+// Export service layer types
+export type {
+  ActivityTransferAnalysis,
+  CrossBorderTransfer,
+  TransferRisk,
+} from './services/transferDetection'

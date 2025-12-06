@@ -110,3 +110,10 @@ export {
   createTestRecipient,
   createTestRecipientHierarchy,
 } from './recipientFactory'
+
+// RecipientProcessingLocation factories
+export {
+  createEuToUsTransferScenario,
+  createProcessorChainScenario,
+  createTestRecipientProcessingLocation,
+} from './recipientProcessingLocationFactory'

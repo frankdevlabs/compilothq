@@ -265,7 +265,7 @@ export const recipientProcessingLocationsRouter = router({
    * Includes parent chain locations for sub-processors
    * Returns transfers with risk assessment
    *
-   * NOTE: Requires Organization.countryId field in schema
+   * NOTE: Requires Organization.headquartersCountryId field in schema
    */
   detectTransfers: orgProcedure.query(async ({ ctx }) => {
     try {
@@ -283,7 +283,7 @@ export const recipientProcessingLocationsRouter = router({
    * Gets all recipients linked to activity and analyzes their locations
    * Returns structured analysis with transfer risks and summary statistics
    *
-   * NOTE: Requires Organization.countryId field in schema
+   * NOTE: Requires Organization.headquartersCountryId field in schema
    */
   analyzeActivityTransfers: protectedProcedure
     .input(

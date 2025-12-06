@@ -8,7 +8,7 @@ import { validateTransferMechanismRequirement } from '../services/transferDetect
  *
  * Validates:
  * - Recipient belongs to organization
- * - Transfer mechanism required for third countries (hard validation - when Organization.countryId exists)
+ * - Transfer mechanism required for third countries (hard validation - when Organization.headquartersCountryId is set)
  * - Purpose belongs to organization if provided
  *
  * @param data - Location data
@@ -70,7 +70,7 @@ export async function createRecipientProcessingLocation(data: {
     })
 
     if (orgCountry) {
-      const validation = await validateTransferMechanismRequirement(
+      const validation = validateTransferMechanismRequirement(
         orgCountry,
         locationCountry,
         data.transferMechanismId ?? null
@@ -195,7 +195,7 @@ export async function getAllLocationsForRecipient(
  * Supports partial updates - all fields optional
  *
  * Does NOT update organizationId or recipientId (immutable).
- * Validates transfer mechanism requirement when country changes (when Organization.countryId exists).
+ * Validates transfer mechanism requirement when country changes (when Organization.headquartersCountryId is set).
  *
  * @param id - The location ID to update
  * @param data - Partial location data to update
@@ -264,7 +264,7 @@ export async function updateRecipientProcessingLocation(
       })
 
       if (orgCountry) {
-        const validation = await validateTransferMechanismRequirement(
+        const validation = validateTransferMechanismRequirement(
           orgCountry,
           newLocationCountry,
           data.transferMechanismId ?? existing.transferMechanismId
@@ -379,7 +379,7 @@ export async function moveRecipientProcessingLocation(
         ? updates.transferMechanismId
         : existing.transferMechanismId
 
-    // Step 3: Validate transfer mechanism if country changed (when Organization.countryId exists)
+    // Step 3: Validate transfer mechanism if country changed (when Organization.headquartersCountryId is set)
     if (newCountryId !== existing.countryId) {
       const newLocationCountry = await tx.country.findUnique({
         where: { id: newCountryId },
@@ -404,7 +404,7 @@ export async function moveRecipientProcessingLocation(
         })
 
         if (orgCountry) {
-          const validation = await validateTransferMechanismRequirement(
+          const validation = validateTransferMechanismRequirement(
             orgCountry,
             newLocationCountry,
             newTransferMechanismId
