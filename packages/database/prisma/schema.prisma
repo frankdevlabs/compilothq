@@ -46,25 +46,32 @@ model Organization {
   name      String // Organization display name
   slug      String             @unique // URL-safe identifier
   settings  Json? // Nullable unstructured settings object
+
+  // Organization headquarters location for cross-border transfer detection
+  headquartersCountryId String? // Optional - allows orgs without country initially
+
   status    OrganizationStatus // Lifecycle tracking
   deletedAt DateTime? // Soft delete timestamp
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
   // Relations
-  users                    User[]
-  invitations              Invitation[]
-  dataProcessingActivities DataProcessingActivity[]
-  recipients               Recipient[]
-  purposes                 Purpose[]
-  dataSubjectCategories    DataSubjectCategory[]
-  dataCategories           DataCategory[]
-  externalOrganizations    ExternalOrganization[]
-  agreements               Agreement[]
-  digitalAssets            DigitalAsset[]
-  assetProcessingLocations AssetProcessingLocation[]
+  users                        User[]
+  invitations                  Invitation[]
+  dataProcessingActivities     DataProcessingActivity[]
+  recipients                   Recipient[]
+  purposes                     Purpose[]
+  dataSubjectCategories        DataSubjectCategory[]
+  dataCategories               DataCategory[]
+  externalOrganizations        ExternalOrganization[]
+  agreements                   Agreement[]
+  digitalAssets                DigitalAsset[]
+  assetProcessingLocations     AssetProcessingLocation[]
+  recipientProcessingLocations RecipientProcessingLocation[]
+  headquartersCountry          Country?                        @relation("OrganizationHeadquarters", fields: [headquartersCountryId], references: [id], onDelete: SetNull)
 
   @@index([deletedAt])
+  @@index([headquartersCountryId])
 }
 
 // User model with NextAuth.js v5 compatibility
@@ -235,9 +242,11 @@ model Country {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  externalOrganizations    ExternalOrganization[]
-  assetPrimaryHosting      DigitalAsset[]           @relation("AssetPrimaryHosting")
-  assetProcessingCountries AssetProcessingLocation[] @relation("AssetProcessingCountries")
+  externalOrganizations        ExternalOrganization[]
+  assetPrimaryHosting          DigitalAsset[]                    @relation("AssetPrimaryHosting")
+  assetProcessingCountries     AssetProcessingLocation[]         @relation("AssetProcessingCountries")
+  recipientProcessingLocations RecipientProcessingLocation[]     @relation("RecipientProcessingCountries")
+  organizationHeadquarters     Organization[]                    @relation("OrganizationHeadquarters")
 
   @@index([name])
   @@index([isoCode])
@@ -294,7 +303,8 @@ model TransferMechanism {
   updatedAt             DateTime                  @updatedAt
 
   // Relations
-  assetTransferMechanisms AssetProcessingLocation[] @relation("AssetTransferMechanisms")
+  assetTransferMechanisms     AssetProcessingLocation[]     @relation("AssetTransferMechanisms")
+  recipientTransferMechanisms RecipientProcessingLocation[] @relation("RecipientTransferMechanisms")
 
   @@index([name])
   @@index([category])
@@ -695,6 +705,7 @@ model Recipient {
   parentRecipient      Recipient?                        @relation("RecipientHierarchy", fields: [parentRecipientId], references: [id], onDelete: SetNull)
   children             Recipient[]                       @relation("RecipientHierarchy")
   activities           DataProcessingActivityRecipient[]
+  processingLocations  RecipientProcessingLocation[]
 
   @@index([organizationId])
   @@index([organizationId, isActive])
@@ -772,9 +783,10 @@ model Purpose {
   updatedAt DateTime @updatedAt
 
   // Relations
-  organization              Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  activities                DataProcessingActivityPurpose[]
-  assetProcessingLocations  AssetProcessingLocation[]
+  organization                 Organization                      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  activities                   DataProcessingActivityPurpose[]
+  assetProcessingLocations     AssetProcessingLocation[]
+  recipientProcessingLocations RecipientProcessingLocation[]
 
   @@index([organizationId])
   @@index([organizationId, isActive])
@@ -914,4 +926,46 @@ model AssetProcessingLocation {
   @@index([organizationId, digitalAssetId])
   @@index([organizationId, countryId])
   @@index([organizationId, transferMechanismId])
+}
+
+// ============================================================================
+// Recipient Processing Locations (Item 15)
+// ============================================================================
+
+// Recipient processing location model for tracking WHERE recipients process data
+// Parallel to AssetProcessingLocation (Item 14) - same field structure and patterns
+model RecipientProcessingLocation {
+  id             String       @id @default(cuid())
+  organizationId String
+  recipientId    String
+
+  // Business context (identical pattern to AssetProcessingLocation)
+  service     String // Free text: "Email processing", "CRM data storage", "Analytics processing"
+  purposeId   String? // Optional FK to Purpose for formalized purposes
+  purposeText String? // Fallback if purpose not yet formalized
+
+  // Geographic + Compliance
+  countryId           String // FK to Country - WHERE is data processed/hosted?
+  locationRole        LocationRole // HOSTING, PROCESSING, or BOTH
+  transferMechanismId String? // FK to TransferMechanism - required for third countries
+
+  // Status
+  isActive Boolean @default(true) // false for historical locations (preserve audit trail)
+  metadata Json? // Extensible metadata for future features
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recipient         Recipient          @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  country           Country            @relation("RecipientProcessingCountries", fields: [countryId], references: [id], onDelete: Restrict)
+  purpose           Purpose?           @relation(fields: [purposeId], references: [id], onDelete: SetNull)
+  transferMechanism TransferMechanism? @relation("RecipientTransferMechanisms", fields: [transferMechanismId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([organizationId, recipientId]) // Get all locations for a recipient
+  @@index([organizationId, countryId]) // Geographic compliance queries
+  @@index([organizationId, transferMechanismId]) // Mechanism auditing
 }

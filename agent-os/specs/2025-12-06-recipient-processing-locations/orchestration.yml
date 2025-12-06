@@ -1,0 +1,11 @@
+task_groups:
+  - name: Group 1: Database Schema & Migration
+    claude_code_subagent: implementer-database
+  - name: Group 2: Data Access Layer (DAL)
+    claude_code_subagent: implementer-database
+  - name: Group 3: Service Layer - Transfer Detection
+    claude_code_subagent: implementer-database
+  - name: Group 4: tRPC API Layer
+    claude_code_subagent: implementer-trpc
+  - name: Group 5: Testing & Documentation
+    claude_code_subagent: implementer

@@ -8,6 +8,7 @@ import { digitalAssetRouter } from './digitalAssetRouter'
 import { invitationRouter } from './invitation'
 import { organizationRouter } from './organization'
 import { processorRouter } from './processor'
+import { recipientProcessingLocationsRouter } from './recipientProcessingLocations'
 import { riskRouter } from './risk'
 import { userRouter } from './user'
 
@@ -23,6 +24,7 @@ export const appRouter = router({
   digitalAsset: digitalAssetRouter,
   assetProcessingLocation: assetProcessingLocationRouter,
   activityAssetJunction: activityAssetJunctionRouter,
+  recipientProcessingLocations: recipientProcessingLocationsRouter,
 })
 
 export type AppRouter = typeof appRouter
