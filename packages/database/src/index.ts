@@ -1,6 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg'
 
 import { PrismaClient } from '../generated/client/client'
+import { createPrismaWithTracking } from './middleware/changeTracking'
 
 // Create PostgreSQL adapter with connection string
 // Prisma 7 requires explicit driver adapters for all databases
@@ -18,6 +19,9 @@ const globalForPrisma = globalThis as unknown as {
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
 
+// Extended client with automatic change tracking for Tier 1 & Tier 2 models
+export const prismaWithTracking = createPrismaWithTracking(prisma)
+
 if (process.env['NODE_ENV'] !== 'production') {
   globalForPrisma.prisma = prisma
 }
@@ -27,6 +31,7 @@ export default prisma
 // Export all DAL functions
 export * from './dal/agreements'
 export * from './dal/assetProcessingLocations'
+export * from './dal/componentChangeLogs'
 export * from './dal/countries'
 export * from './dal/dataCategories'
 export * from './dal/dataNatures'
@@ -42,8 +47,8 @@ export * from './dal/organizations'
 export * from './dal/processingActs'
 export * from './dal/purposes'
 export * from './dal/recipientCategories'
-export * from './dal/recipients'
 export * from './dal/recipientProcessingLocations'
+export * from './dal/recipients'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
 
@@ -52,6 +57,9 @@ export * from './validation/recipientHierarchyValidation'
 
 // Export service layer functions
 export * from './services/transferDetection'
+
+// Export change tracking middleware
+export * from './middleware/changeTracking'
 
 // NOTE: Server-only utilities (tokens) are NOT exported from the main index
 // to avoid bundling Node.js modules (crypto) in Edge Runtime (middleware).
@@ -67,8 +75,11 @@ export * from '../generated/client/client'
 // Explicit type exports for documentation
 export type {
   Account,
+  AffectedDocument,
   Agreement,
   AssetProcessingLocation,
+  // Component Change Tracking (Item 16)
+  ComponentChangeLog,
   Country,
   DataCategory,
   DataCategoryDataNature,
@@ -78,6 +89,7 @@ export type {
   DataSubjectCategory,
   DigitalAsset,
   ExternalOrganization,
+  GeneratedDocument,
   Invitation,
   LegalBasis,
   Organization,
@@ -113,3 +125,6 @@ export type {
   CrossBorderTransfer,
   TransferRisk,
 } from './services/transferDetection'
+
+// Export change tracking types
+export type { ChangeTrackingContext, PrismaWithTracking } from './middleware/changeTracking'

@@ -1,0 +1,13 @@
+task_groups:
+  - name: "Database Layer: Schema & Models"
+    claude_code_subagent: implementer-database
+  - name: "Change Tracking Infrastructure"
+    claude_code_subagent: implementer-database
+  - name: "Tier 1 Implementation (MUST)"
+    claude_code_subagent: implementer-database
+  - name: "Tier 2 Implementation (SHOULD)"
+    claude_code_subagent: implementer-database
+  - name: "Database Package Integration"
+    claude_code_subagent: implementer-database
+  - name: "Testing & Documentation"
+    claude_code_subagent: implementation-verifier
