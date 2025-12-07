@@ -18,6 +18,7 @@
  */
 
 import { Prisma, type PrismaClient } from '../../generated/client/client'
+import type { PrismaClientOrTransaction } from '../types/prisma'
 
 /**
  * Configuration defining which fields are tracked for each model
@@ -132,7 +133,7 @@ function detectChangedFields(
  * Create snapshot for DigitalAsset
  * Includes tracked compliance and hosting fields
  */
-function createDigitalAssetSnapshot(asset: Record<string, unknown>): Prisma.InputJsonValue {
+export function createDigitalAssetSnapshot(asset: Record<string, unknown>): Prisma.InputJsonValue {
   return {
     name: asset['name'],
     description: asset['description'],
@@ -157,7 +158,7 @@ function createDigitalAssetSnapshot(asset: Record<string, unknown>): Prisma.Inpu
  * @param location - AssetProcessingLocation or RecipientProcessingLocation with includes
  * @returns Flattened snapshot object
  */
-function createLocationSnapshot(
+export function createLocationSnapshot(
   location: Record<string, unknown> & {
     country?: { id: string; name: string; isoCode: string; gdprStatus: unknown }
     transferMechanism?: { id: string; name: string; code: string; gdprArticle: string } | null
@@ -1014,6 +1015,46 @@ export function createPrismaWithTracking(
           return result
         },
       },
+    },
+  })
+}
+
+/**
+ * Manually track changes inside a transaction where $extends() is not available.
+ * Use this when you need change tracking within a $transaction callback.
+ * Also works with regular PrismaClient for non-transaction contexts.
+ *
+ * @param tx - Prisma client or transaction client (from $transaction callback)
+ * @param params - Tracking parameters
+ */
+export async function trackChangeManually(
+  tx: PrismaClientOrTransaction,
+  params: {
+    componentType: string
+    componentId: string
+    organizationId: string
+    changeType: 'CREATED' | 'UPDATED' | 'RESTORED'
+    fieldChanged: string | null
+    oldValue: Prisma.InputJsonValue | null
+    newValue: Prisma.InputJsonValue
+    context?: ChangeTrackingContext
+  }
+): Promise<void> {
+  if (isChangeTrackingDisabled()) {
+    return
+  }
+
+  await tx.componentChangeLog.create({
+    data: {
+      organizationId: params.organizationId,
+      componentType: params.componentType,
+      componentId: params.componentId,
+      changeType: params.changeType,
+      fieldChanged: params.fieldChanged,
+      oldValue: params.oldValue ?? Prisma.JsonNull,
+      newValue: params.newValue,
+      changedByUserId: params.context?.userId ?? null,
+      changeReason: params.context?.changeReason ?? null,
     },
   })
 }

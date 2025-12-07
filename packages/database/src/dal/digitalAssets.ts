@@ -4,9 +4,15 @@ import type {
   IntegrationStatus,
   LocationRole,
   Prisma,
-  PrismaClient,
+  PrismaClientOrTransaction,
 } from '../index'
-import { createPrismaWithTracking, prisma } from '../index'
+import {
+  createDigitalAssetSnapshot,
+  createLocationSnapshot,
+  createPrismaWithTracking,
+  prisma,
+  trackChangeManually,
+} from '../index'
 
 /**
  * Input type for creating asset processing locations
@@ -84,17 +90,13 @@ export async function createDigitalAsset(data: {
   locations?: AssetProcessingLocationInput[]
 }): Promise<CreateDigitalAssetResult> {
   const createLocationsWithTracking = async (
-    tx: PrismaClient,
+    tx: PrismaClientOrTransaction,
     assetId: string,
     locationsToCreate: AssetProcessingLocationInput[]
   ) => {
-    const trackedTx = createPrismaWithTracking(tx)
-
     for (const loc of locationsToCreate) {
-      // Using per-row create to ensure change tracking entries are recorded
-      // for every processing location.
-
-      await trackedTx.assetProcessingLocation.create({
+      // Create the location with includes for snapshot generation
+      const location = await tx.assetProcessingLocation.create({
         data: {
           organizationId: data.organizationId,
           digitalAssetId: assetId,
@@ -107,6 +109,25 @@ export async function createDigitalAsset(data: {
           isActive: loc.isActive ?? true,
           metadata: loc.metadata ?? undefined,
         },
+        include: {
+          country: {
+            select: { id: true, name: true, isoCode: true, gdprStatus: true },
+          },
+          transferMechanism: {
+            select: { id: true, name: true, code: true, gdprArticle: true },
+          },
+        },
+      })
+
+      // Manually track the creation
+      await trackChangeManually(tx, {
+        componentType: 'AssetProcessingLocation',
+        componentId: location.id,
+        organizationId: data.organizationId,
+        changeType: 'CREATED',
+        fieldChanged: null,
+        oldValue: null,
+        newValue: createLocationSnapshot(location as never),
       })
     }
   }
@@ -117,10 +138,8 @@ export async function createDigitalAsset(data: {
     const locationsToCreate = data.locations
 
     return await prisma.$transaction(async (tx) => {
-      const trackedTx = createPrismaWithTracking(tx)
-
       // Create the asset
-      const asset = await trackedTx.digitalAsset.create({
+      const asset = await tx.digitalAsset.create({
         data: {
           organizationId: data.organizationId,
           name: data.name,
@@ -137,6 +156,17 @@ export async function createDigitalAsset(data: {
           discoveredVia: data.discoveredVia ?? undefined,
           metadata: data.metadata ?? undefined,
         },
+      })
+
+      // Manually track asset creation
+      await trackChangeManually(tx, {
+        componentType: 'DigitalAsset',
+        componentId: asset.id,
+        organizationId: data.organizationId,
+        changeType: 'CREATED',
+        fieldChanged: null,
+        oldValue: null,
+        newValue: createDigitalAssetSnapshot(asset),
       })
 
       // Create all locations with tracking

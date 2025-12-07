@@ -128,3 +128,6 @@ export type {
 
 // Export change tracking types
 export type { ChangeTrackingContext, PrismaWithTracking } from './middleware/changeTracking'
+
+// Export Prisma client type utilities
+export type { PrismaClientOrTransaction, PrismaTransactionClient } from './types/prisma'
