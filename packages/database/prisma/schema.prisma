@@ -69,6 +69,9 @@ model Organization {
   assetProcessingLocations     AssetProcessingLocation[]
   recipientProcessingLocations RecipientProcessingLocation[]
   headquartersCountry          Country?                        @relation("OrganizationHeadquarters", fields: [headquartersCountryId], references: [id], onDelete: SetNull)
+  componentChangeLogs          ComponentChangeLog[]
+  generatedDocuments           GeneratedDocument[]
+  affectedDocuments            AffectedDocument[]
 
   @@index([deletedAt])
   @@index([headquartersCountryId])
@@ -95,6 +98,9 @@ model User {
   ownedActivitiesProcessing DataProcessingActivity[] @relation("ProcessingOwner")
   technicalAssets           DigitalAsset[]           @relation("AssetTechnicalOwner")
   businessAssets            DigitalAsset[]           @relation("AssetBusinessOwner")
+  componentChanges          ComponentChangeLog[]     @relation("ChangeAuthor")
+  generatedDocuments        GeneratedDocument[]      @relation("DocumentGenerator")
+  reviewedAffectedDocuments AffectedDocument[]       @relation("DocumentReviewer")
 
   @@index([organizationId, primaryPersona])
   @@index([organizationId, createdAt])
@@ -968,4 +974,153 @@ model RecipientProcessingLocation {
   @@index([organizationId, recipientId]) // Get all locations for a recipient
   @@index([organizationId, countryId]) // Geographic compliance queries
   @@index([organizationId, transferMechanismId]) // Mechanism auditing
+}
+
+// ============================================================================
+// Component Change Tracking (Item 16)
+// ============================================================================
+
+// Change type enum for component modification tracking
+enum ChangeType {
+  CREATED // New component created
+  UPDATED // Existing component modified
+  DELETED // Component soft-deleted (isActive=false)
+}
+
+// Generated document type enum for compliance documentation
+enum GeneratedDocumentType {
+  ROPA // Record of Processing Activities (Article 30)
+  DPIA // Data Protection Impact Assessment (Article 35)
+  LIA // Legitimate Interest Assessment (Article 6(1)(f))
+  DPA // Data Processing Agreement (Article 28)
+  PRIVACY_STATEMENT // Privacy notice/statement for data subjects
+  DTIA // Data Transfer Impact Assessment
+}
+
+// Document status enum for document lifecycle tracking
+enum DocumentStatus {
+  DRAFT // Being generated/edited
+  FINAL // Finalized and published
+  SUPERSEDED // Replaced by newer version
+  ARCHIVED // Historical record
+}
+
+// Impact type enum for categorizing how component changes affect documents
+enum ImpactType {
+  // Transfer-related impacts
+  TRANSFER_SECTION_OUTDATED // Cross-border transfer section needs update
+  MECHANISM_SECTION_OUTDATED // Transfer mechanism section needs update
+  LOCATION_CHANGED // Processing location modified
+  LOCATION_ADDED // New processing location added
+  LOCATION_REMOVED // Processing location removed
+  THIRD_COUNTRY_ADDED // New third country transfer detected
+  SAFEGUARD_REMOVED // Transfer safeguard removed
+
+  // Taxonomy impacts
+  PURPOSE_SECTION_OUTDATED // Purpose section needs update
+  LEGAL_BASIS_SECTION_OUTDATED // Legal basis section needs update
+  DATA_CATEGORY_SECTION_OUTDATED // Data category section needs update
+  DATA_SUBJECT_SECTION_OUTDATED // Data subject section needs update
+  RECIPIENT_SECTION_OUTDATED // Recipient section needs update
+
+  // Activity impacts
+  ACTIVITY_RISK_LEVEL_CHANGED // Risk assessment changed
+  ACTIVITY_DPIA_REQUIREMENT_CHANGED // DPIA requirement changed
+  RETENTION_SECTION_OUTDATED // Retention policy section needs update
+
+  // Generic
+  OTHER_COMPONENT_CHANGED // Other component change not categorized above
+}
+
+// Component change log model for tracking all modifications to compliance-critical components
+model ComponentChangeLog {
+  id             String     @id @default(cuid())
+  organizationId String // Multi-tenancy enforcement
+  componentType  String // Model name: "AssetProcessingLocation", "RecipientProcessingLocation", etc.
+  componentId    String // CUID of the changed component
+  changeType     ChangeType // CREATED, UPDATED, DELETED
+  fieldChanged   String? // Specific field that triggered the log (null for CREATED)
+  oldValue       Json? // Flattened snapshot before change (null for CREATED)
+  newValue       Json? // Flattened snapshot after change (null for hard DELETE)
+
+  // Change context
+  changedByUserId String? // FK to User (null for system-initiated changes)
+  changeReason    String? // Optional context from UI
+
+  // Timestamps
+  changedAt DateTime @default(now())
+
+  // Relations
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  changedBy        User?              @relation("ChangeAuthor", fields: [changedByUserId], references: [id], onDelete: SetNull)
+  affectedDocuments AffectedDocument[]
+
+  // Indexes for efficient queries
+  @@index([organizationId, componentType, componentId, changedAt]) // Component history
+  @@index([changedAt]) // Timeline queries
+  @@index([organizationId, changedAt]) // Org-scoped audit logs
+}
+
+// Generated document model (minimal schema for future document generation features)
+model GeneratedDocument {
+  id             String                 @id @default(cuid())
+  organizationId String // Multi-tenancy enforcement
+  documentType   GeneratedDocumentType // ROPA, DPIA, LIA, etc.
+  version        String // Document version identifier
+
+  // Document source links (optional - depends on document type)
+  assessmentId              String? // FK to Assessment (future)
+  dataProcessingActivityId  String? // FK to DataProcessingActivity (future)
+
+  // Frozen data snapshot
+  dataSnapshot Json // Frozen component state at generation time
+
+  // File storage (future)
+  wordFileUrl     String? // URL to generated Word document
+  pdfFileUrl      String? // URL to generated PDF
+  markdownContent String? @db.Text // Markdown content for preview
+
+  // Generation metadata
+  generatedAt DateTime  @default(now())
+  generatedBy String? // FK to User who generated the document
+  status      DocumentStatus @default(DRAFT)
+
+  // Relations
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  generatedByUser  User?              @relation("DocumentGenerator", fields: [generatedBy], references: [id], onDelete: SetNull)
+  affectedDocuments AffectedDocument[]
+
+  // Indexes
+  @@index([organizationId, documentType, status]) // Document queries
+  @@index([generatedAt]) // Timeline queries
+}
+
+// Affected document model for linking component changes to impacted generated documents
+model AffectedDocument {
+  id                     String     @id @default(cuid())
+  organizationId         String // Multi-tenancy enforcement
+  generatedDocumentId    String // FK to GeneratedDocument
+  componentChangeLogId   String // FK to ComponentChangeLog
+  impactType             ImpactType // Category of impact
+  impactDescription      String // Human-readable explanation
+
+  // Detection metadata
+  detectedAt DateTime @default(now())
+
+  // Review workflow (future)
+  reviewedAt DateTime? // When the impact was reviewed
+  reviewedBy String? // FK to User who reviewed
+
+  // Relations
+  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  generatedDocument  GeneratedDocument    @relation(fields: [generatedDocumentId], references: [id], onDelete: Cascade)
+  componentChangeLog ComponentChangeLog   @relation(fields: [componentChangeLogId], references: [id], onDelete: Cascade)
+  reviewedByUser     User?                @relation("DocumentReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  // Constraints
+  @@unique([generatedDocumentId, componentChangeLogId]) // Prevent duplicate impact records
+
+  // Indexes
+  @@index([organizationId, generatedDocumentId]) // Get all impacts for a document
+  @@index([organizationId, detectedAt]) // Timeline queries
 }

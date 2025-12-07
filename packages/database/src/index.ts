@@ -42,8 +42,8 @@ export * from './dal/organizations'
 export * from './dal/processingActs'
 export * from './dal/purposes'
 export * from './dal/recipientCategories'
-export * from './dal/recipients'
 export * from './dal/recipientProcessingLocations'
+export * from './dal/recipients'
 export * from './dal/transferMechanisms'
 export * from './dal/users'
 
@@ -67,8 +67,11 @@ export * from '../generated/client/client'
 // Explicit type exports for documentation
 export type {
   Account,
+  AffectedDocument,
   Agreement,
   AssetProcessingLocation,
+  // Component Change Tracking (Item 16)
+  ComponentChangeLog,
   Country,
   DataCategory,
   DataCategoryDataNature,
@@ -78,6 +81,7 @@ export type {
   DataSubjectCategory,
   DigitalAsset,
   ExternalOrganization,
+  GeneratedDocument,
   Invitation,
   LegalBasis,
   Organization,
