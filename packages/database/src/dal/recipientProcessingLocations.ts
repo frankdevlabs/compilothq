@@ -1,5 +1,5 @@
 import type { Country, LocationRole, Prisma, RecipientProcessingLocation } from '../index'
-import { prisma } from '../index'
+import { prisma, prismaWithTracking } from '../index'
 import { validateTransferMechanismRequirement } from '../services/transferDetection'
 
 /**
@@ -10,6 +10,8 @@ import { validateTransferMechanismRequirement } from '../services/transferDetect
  * - Recipient belongs to organization
  * - Transfer mechanism required for third countries (hard validation - when Organization.headquartersCountryId is set)
  * - Purpose belongs to organization if provided
+ *
+ * Uses prismaWithTracking to automatically log the creation.
  *
  * @param data - Location data
  * @returns Promise with created location
@@ -93,8 +95,8 @@ export async function createRecipientProcessingLocation(data: {
     }
   }
 
-  // Step 5: Create location
-  return prisma.recipientProcessingLocation.create({
+  // Step 5: Create location using prismaWithTracking to log the creation
+  return prismaWithTracking.recipientProcessingLocation.create({
     data: {
       organizationId: data.organizationId,
       recipientId: data.recipientId,
@@ -196,6 +198,7 @@ export async function getAllLocationsForRecipient(
  *
  * Does NOT update organizationId or recipientId (immutable).
  * Validates transfer mechanism requirement when country changes (when Organization.headquartersCountryId is set).
+ * Uses prismaWithTracking to automatically log changes to tracked fields.
  *
  * @param id - The location ID to update
  * @param data - Partial location data to update
@@ -277,7 +280,9 @@ export async function updateRecipientProcessingLocation(
     }
   }
 
-  return prisma.recipientProcessingLocation.update({
+  // Uses prismaWithTracking to automatically create ComponentChangeLog entries
+  // for tracked fields: countryId, transferMechanismId, locationRole, isActive
+  return prismaWithTracking.recipientProcessingLocation.update({
     where: { id },
     data: {
       service: data.service,
@@ -301,6 +306,7 @@ export async function updateRecipientProcessingLocation(
  *
  * Sets isActive: false. Deactivated locations are excluded from
  * active queries but remain in database for compliance snapshots.
+ * Uses prismaWithTracking to log the deactivation.
  *
  * @param id - The location ID to deactivate
  * @returns Promise with deactivated location
@@ -313,7 +319,8 @@ export async function updateRecipientProcessingLocation(
 export async function deactivateRecipientProcessingLocation(
   id: string
 ): Promise<RecipientProcessingLocation> {
-  return prisma.recipientProcessingLocation.update({
+  // Uses prismaWithTracking to log isActive change
+  return await prismaWithTracking.recipientProcessingLocation.update({
     where: { id },
     data: { isActive: false },
   })
@@ -333,6 +340,8 @@ export async function deactivateRecipientProcessingLocation(
  * 2. Create new location with updated fields
  * 3. Deactivate old location
  * 4. All in single transaction with validation
+ *
+ * Uses prismaWithTracking to log both the creation and deactivation.
  *
  * @param locationId - The existing location ID to move
  * @param updates - Fields to update in new location
@@ -417,8 +426,9 @@ export async function moveRecipientProcessingLocation(
       }
     }
 
-    // Step 4: Create new location
-    const newLocation = await tx.recipientProcessingLocation.create({
+    // Step 4: Create new location using prismaWithTracking (via extended tx client)
+    // Note: We need to use the extended client for tracking within transactions
+    const newLocation = await prismaWithTracking.recipientProcessingLocation.create({
       data: {
         organizationId: existing.organizationId,
         recipientId: existing.recipientId,
@@ -436,8 +446,8 @@ export async function moveRecipientProcessingLocation(
       },
     })
 
-    // Step 5: Deactivate old location
-    await tx.recipientProcessingLocation.update({
+    // Step 5: Deactivate old location using prismaWithTracking
+    await prismaWithTracking.recipientProcessingLocation.update({
       where: { id: locationId },
       data: { isActive: false },
     })

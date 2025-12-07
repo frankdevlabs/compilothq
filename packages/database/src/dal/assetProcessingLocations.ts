@@ -1,5 +1,5 @@
 import type { AssetProcessingLocation, LocationRole, Prisma } from '../index'
-import { prisma } from '../index'
+import { prisma, prismaWithTracking } from '../index'
 
 /**
  * Get active processing locations for a digital asset
@@ -43,6 +43,7 @@ export async function getActiveLocationsForAsset(assetId: string): Promise<
  * Supports partial updates - all fields optional
  *
  * Does NOT update organizationId or digitalAssetId (immutable).
+ * Uses prismaWithTracking to automatically log changes to tracked fields.
  *
  * @param id - The location ID to update
  * @param data - Partial location data to update
@@ -68,7 +69,9 @@ export async function updateAssetProcessingLocation(
     metadata?: Prisma.InputJsonValue | null
   }
 ): Promise<AssetProcessingLocation> {
-  return prisma.assetProcessingLocation.update({
+  // Uses prismaWithTracking to automatically create ComponentChangeLog entries
+  // for tracked fields: countryId, transferMechanismId, locationRole, isActive
+  return await prismaWithTracking.assetProcessingLocation.update({
     where: { id },
     data: {
       service: data.service,
@@ -92,6 +95,7 @@ export async function updateAssetProcessingLocation(
  *
  * Sets isActive: false. Deactivated locations are excluded from
  * active queries but remain in database for compliance snapshots.
+ * Uses prismaWithTracking to log the deactivation.
  *
  * @param id - The location ID to deactivate
  * @returns Promise with deactivated location
@@ -105,7 +109,8 @@ export async function updateAssetProcessingLocation(
 export async function deactivateAssetProcessingLocation(
   id: string
 ): Promise<AssetProcessingLocation> {
-  return prisma.assetProcessingLocation.update({
+  // Uses prismaWithTracking to log isActive change
+  return await prismaWithTracking.assetProcessingLocation.update({
     where: { id },
     data: { isActive: false },
   })

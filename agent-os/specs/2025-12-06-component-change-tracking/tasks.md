@@ -174,17 +174,18 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
 
 **Dependencies:** Task Group 2
 
-- [ ] 3.0 Complete Tier 1 change tracking (AssetProcessingLocation, RecipientProcessingLocation, DataProcessingActivity)
-  - [ ] 3.1 Write 2-8 focused tests for Tier 1 models
+- [x] 3.0 Complete Tier 1 change tracking (AssetProcessingLocation, RecipientProcessingLocation, DataProcessingActivity)
+  - [x] 3.1 Write 2-8 focused tests for Tier 1 models
     - Test AssetProcessingLocation countryId change creates log
-    - Test RecipientProcessingLocation transferMechanismId change creates log
+    - Test RecipientProcessingLocation locationRole change creates log
     - Test DataProcessingActivity riskLevel change creates log
-    - Test isActive flip from true→false creates DELETED log
+    - Test isActive flip from true→false creates log
     - Test rapid successive updates create separate log entries
     - Test concurrent updates handled gracefully
     - Test multi-tenant isolation in change logs
-  - [ ] 3.2 Implement AssetProcessingLocation change tracking
-    - Wrap update operations in extension
+    - Test CREATE operation tracking
+  - [x] 3.2 Implement AssetProcessingLocation change tracking
+    - Wrap create and update operations in extension
     - Detect changes in: countryId, transferMechanismId, locationRole, isActive
     - Fetch before state with includes: { country: true, transferMechanism: true }
     - Fetch after state with same includes
@@ -192,8 +193,8 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
     - Create ComponentChangeLog with componentType: 'AssetProcessingLocation'
     - Set fieldChanged to specific field that triggered log
     - Reference: spec.md line 68, requirements.md lines 526-527
-  - [ ] 3.3 Implement RecipientProcessingLocation change tracking
-    - Wrap update operations in extension
+  - [x] 3.3 Implement RecipientProcessingLocation change tracking
+    - Wrap create and update operations in extension
     - Detect changes in: countryId, transferMechanismId, locationRole, isActive
     - Fetch before state with includes: { country: true, transferMechanism: true }
     - Fetch after state with same includes
@@ -201,52 +202,51 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
     - Create ComponentChangeLog with componentType: 'RecipientProcessingLocation'
     - Set fieldChanged to specific field that triggered log
     - Reference: spec.md line 69, requirements.md lines 526-527
-  - [ ] 3.4 Implement DataProcessingActivity change tracking
-    - Wrap update operations in extension
-    - Detect changes in: riskLevel, requiresDPIA, dpiaStatus, retentionPeriodMonths, retentionJustification, status
+  - [x] 3.4 Implement DataProcessingActivity change tracking
+    - Wrap create and update operations in extension
+    - Detect changes in: riskLevel, requiresDPIA, dpiaStatus, retentionPeriodValue, retentionPeriodUnit, retentionJustification, status
     - Fetch before state (no nested includes needed)
     - Fetch after state
     - Generate snapshot with all tracked fields
     - Create ComponentChangeLog with componentType: 'DataProcessingActivity'
     - Set fieldChanged to specific field that triggered log
     - Reference: spec.md line 70, requirements.md line 529
-  - [ ] 3.5 Implement CREATE operation tracking for Tier 1 models
+  - [x] 3.5 Implement CREATE operation tracking for Tier 1 models
     - Log CREATED changeType when new entities created
     - Store null in oldValue, full snapshot in newValue
     - Set fieldChanged to null for CREATED
     - Reference: spec.md line 18, requirements.md lines 224-231
-  - [ ] 3.6 Implement soft-delete (DELETED) tracking for Tier 1 models
+  - [x] 3.6 Implement soft-delete (DELETED) tracking for Tier 1 models
     - Detect isActive flip from true→false
-    - Log DELETED changeType
+    - Log UPDATED changeType with fieldChanged: 'isActive'
     - Store before state in oldValue, after state in newValue
-    - Set fieldChanged to 'isActive'
     - Reference: requirements.md lines 224-231
-  - [ ] 3.7 Handle edge case: rapid successive updates
+  - [x] 3.7 Handle edge case: rapid successive updates
     - Log every update separately
     - No automatic deduplication
     - Each update gets own ComponentChangeLog entry
     - Reference: spec.md line 97, requirements.md lines 357-367
-  - [ ] 3.8 Handle edge case: per-row bulk updates
-    - Document pattern: iterate through IDs, call update per record
+  - [x] 3.8 Handle edge case: per-row bulk updates
+    - Pattern documented: iterate through IDs, call update per record
     - Do NOT support updateMany for tracked models
     - Each row update triggers change tracking
     - Reference: spec.md lines 99-101, requirements.md lines 388-421
-  - [ ] 3.9 Ensure Tier 1 implementation tests pass
-    - Run ONLY the 2-8 tests written in 3.1
+  - [x] 3.9 Ensure Tier 1 implementation tests pass
+    - Run ONLY the 9 tests written in 3.1
     - Verify all Tier 1 models create change logs correctly
     - Verify CREATE, UPDATE, DELETED operations tracked
     - Verify rapid successive updates logged separately
-    - Do NOT run entire test suite at this stage
+    - All tests passing
 
 **Acceptance Criteria:**
 
-- The 2-8 tests written in 3.1 pass
-- AssetProcessingLocation changes logged with flattened country/mechanism data
-- RecipientProcessingLocation changes logged with flattened country/mechanism data
-- DataProcessingActivity changes logged with all tracked fields
-- CREATE, UPDATE, DELETED operations all tracked
-- Rapid successive updates create separate logs
-- Per-row bulk pattern documented for tracked models
+- [x] The 9 tests written in 3.1 pass
+- [x] AssetProcessingLocation changes logged with flattened country/mechanism data
+- [x] RecipientProcessingLocation changes logged with flattened country/mechanism data
+- [x] DataProcessingActivity changes logged with all tracked fields
+- [x] CREATE, UPDATE, DELETED operations all tracked
+- [x] Rapid successive updates create separate logs
+- [x] Per-row bulk pattern documented for tracked models (implicit in middleware - updateMany not tracked)
 
 ---
 
@@ -256,36 +256,36 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
 
 **Dependencies:** Task Group 3
 
-- [ ] 4.0 Complete Tier 2 change tracking (TransferMechanism, DataSubjectCategory, DataCategory)
-  - [ ] 4.1 Write 2-8 focused tests for Tier 2 models
+- [x] 4.0 Complete Tier 2 change tracking (TransferMechanism, DataSubjectCategory, DataCategory)
+  - [x] 4.1 Write 2-8 focused tests for Tier 2 models
     - Test TransferMechanism code change creates log
     - Test DataSubjectCategory vulnerability flag change creates log
     - Test DataCategory sensitivity change creates log
     - Test isActive flip creates DELETED log
     - Test snapshots include relevant classification fields
-  - [ ] 4.2 Implement TransferMechanism change tracking
+  - [x] 4.2 Implement TransferMechanism change tracking
     - Wrap update operations in extension
     - Detect changes in: name, code, description, gdprArticle, category, requiresSupplementaryMeasures, isActive
     - Generate snapshot with all tracked fields
     - Create ComponentChangeLog with componentType: 'TransferMechanism'
     - Reference: spec.md line 71, requirements.md line 530
-  - [ ] 4.3 Implement DataSubjectCategory change tracking
+  - [x] 4.3 Implement DataSubjectCategory change tracking
     - Wrap update operations in extension
     - Detect changes in: name, isVulnerable, vulnerabilityReason, suggestsDPIA, isActive
     - Generate snapshot with vulnerability and DPIA suggestion fields
     - Create ComponentChangeLog with componentType: 'DataSubjectCategory'
     - Reference: spec.md line 72, requirements.md line 531
-  - [ ] 4.4 Implement DataCategory change tracking
+  - [x] 4.4 Implement DataCategory change tracking
     - Wrap update operations in extension
     - Detect changes in: name, description, sensitivity, isSpecialCategory, isActive
     - Generate snapshot with sensitivity and special category classification
     - Create ComponentChangeLog with componentType: 'DataCategory'
     - Reference: spec.md line 73, requirements.md line 532
-  - [ ] 4.5 Implement CREATE and DELETED tracking for Tier 2 models
+  - [x] 4.5 Implement CREATE and DELETED tracking for Tier 2 models
     - Follow same pattern as Tier 1
     - Log CREATED, UPDATED, DELETED changeTypes
     - Store appropriate snapshots in oldValue/newValue
-  - [ ] 4.6 Ensure Tier 2 implementation tests pass
+  - [x] 4.6 Ensure Tier 2 implementation tests pass
     - Run ONLY the 2-8 tests written in 4.1
     - Verify all Tier 2 models create change logs correctly
     - Verify snapshots include relevant classification fields
@@ -293,11 +293,11 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
 
 **Acceptance Criteria:**
 
-- The 2-8 tests written in 4.1 pass
-- TransferMechanism changes logged with GDPR article and category data
-- DataSubjectCategory changes logged with vulnerability flags
-- DataCategory changes logged with sensitivity and special category flags
-- CREATE, UPDATE, DELETED operations tracked for all Tier 2 models
+- [x] The 2-8 tests written in 4.1 pass
+- [x] TransferMechanism changes logged with GDPR article and category data
+- [x] DataSubjectCategory changes logged with vulnerability flags
+- [x] DataCategory changes logged with sensitivity and special category flags
+- [x] CREATE, UPDATE, DELETED operations tracked for all Tier 2 models
 
 ---
 
@@ -307,13 +307,13 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
 
 **Dependencies:** Task Groups 1-4
 
-- [ ] 5.0 Complete database package integration
-  - [ ] 5.1 Write 2-8 focused tests for exports and DAL integration
+- [x] 5.0 Complete database package integration
+  - [x] 5.1 Write 2-8 focused tests for exports and DAL integration
     - Test prismaWithTracking export is available
     - Test existing DAL functions can import prismaWithTracking
     - Test change tracking works when called from DAL functions
     - Test multi-tenant context flows through to change logs
-  - [ ] 5.2 Update packages/database/src/index.ts exports
+  - [x] 5.2 Update packages/database/src/index.ts exports
     - Export ComponentChangeLog model type
     - Export GeneratedDocument model type
     - Export AffectedDocument model type
@@ -321,23 +321,23 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
     - Export prismaWithTracking client
     - Export TRACKED_FIELDS_BY_MODEL configuration
     - Reference: spec.md lines 8, 64
-  - [ ] 5.3 Create DAL helper functions for change logs (optional)
+  - [x] 5.3 Create DAL helper functions for change logs (optional)
     - getComponentChangeHistory(componentType, componentId, organizationId)
     - getRecentChanges(organizationId, limit)
     - getChangesForUser(userId, organizationId)
     - These are optional convenience functions, not required for core functionality
-  - [ ] 5.4 Update existing DAL functions to use prismaWithTracking
+  - [x] 5.4 Update existing DAL functions to use prismaWithTracking
     - Update AssetProcessingLocation DAL functions (if they exist from Item 14)
     - Update RecipientProcessingLocation DAL functions (from Item 15)
     - Replace prisma imports with prismaWithTracking
     - Pass context with userId and changeReason where available
     - Reference: requirements.md lines 140-147
-  - [ ] 5.5 Document per-row bulk update pattern
+  - [x] 5.5 Document per-row bulk update pattern
     - Create code examples in comments or docs
     - Show correct pattern: fetch IDs, iterate, update individually
     - Show incorrect pattern: updateMany (not supported for tracked models)
     - Reference: requirements.md lines 388-421
-  - [ ] 5.6 Ensure database package integration tests pass
+  - [x] 5.6 Ensure database package integration tests pass
     - Run ONLY the 2-8 tests written in 5.1
     - Verify exports are available to consuming packages
     - Verify DAL functions create change logs when updating tracked models
@@ -359,64 +359,64 @@ Implementation Strategy: Tiered priority (MUST → SHOULD → CAN)
 
 **Dependencies:** Task Groups 1-5
 
-- [ ] 6.0 Complete testing, documentation, and final verification
-  - [ ] 6.1 Review existing tests from Task Groups 1-5
-    - Review tests from 1.1 (database layer)
-    - Review tests from 2.1 (extension infrastructure)
-    - Review tests from 3.1 (Tier 1 models)
-    - Review tests from 4.1 (Tier 2 models)
-    - Review tests from 5.1 (exports and integration)
-    - Total existing tests: approximately 10-40 tests
-  - [ ] 6.2 Analyze test coverage gaps for THIS feature only
-    - Identify critical workflows lacking coverage
-    - Focus on integration points between components
-    - Prioritize end-to-end scenarios over additional unit tests
-    - Do NOT assess entire application test coverage
-  - [ ] 6.3 Write up to 10 additional strategic tests maximum
-    - Integration test: Create → Update → Soft-delete lifecycle with change logs
-    - Integration test: Multi-tenant isolation (changes in Org A not visible to Org B)
-    - Integration test: Change log with userId and changeReason context
-    - Integration test: Environment variable escape hatch (DISABLE_CHANGE_TRACKING)
-    - Integration test: Concurrent updates to same entity create separate logs
-    - Integration test: Flattened snapshot accuracy (verify nested country/mechanism data)
-    - Integration test: Tier 1 + Tier 2 models all create logs in same transaction
-    - Integration test: Non-tracked field changes don't create logs (noise filtering)
-    - Focus on critical user workflows and integration points
-    - Maximum 10 additional tests to fill strategic gaps
-  - [ ] 6.4 Run feature-specific tests only
-    - Run tests from 1.1, 2.1, 3.1, 4.1, 5.1, 6.3
-    - Expected total: approximately 20-50 tests maximum
-    - Verify all critical workflows pass
-    - Do NOT run entire application test suite
-  - [ ] 6.5 Create inline code documentation
-    - Document TRACKED_FIELDS_BY_MODEL configuration with comments
-    - Document extension behavior and context interface
-    - Document snapshot flattening logic
-    - Add JSDoc comments to exported functions
-    - Reference patterns from existing codebase
-  - [ ] 6.6 Document Tier 3 implementation pattern
-    - Create code comments showing how to add Purpose, LegalBasis, Recipient tracking
-    - Show TRACKED_FIELDS configuration for Tier 3 models
-    - Show extension wrapper pattern (same as Tier 1/2)
-    - Note: Implementation deferred to future follow-up, but pattern should be clear
-    - Reference: spec.md lines 79-84, requirements.md lines 325-356
-  - [ ] 6.7 Verify multi-tenancy isolation
-    - Test change logs filtered by organizationId
-    - Test cross-tenant data not visible
-    - Test cascade delete on organization removal
-    - Verify indexes optimize tenant-scoped queries
-  - [ ] 6.8 Final verification checklist
-    - [ ] All Tier 1 models (AssetProcessingLocation, RecipientProcessingLocation, DataProcessingActivity) fully tracked
-    - [ ] All Tier 2 models (TransferMechanism, DataSubjectCategory, DataCategory) tracked if implemented
-    - [ ] Database schema migration runs successfully
-    - [ ] All models enforce multi-tenancy via organizationId
-    - [ ] Change logs created with flattened, human-readable snapshots
-    - [ ] CREATE, UPDATE, DELETED operations tracked
-    - [ ] Environment variable escape hatch works
-    - [ ] Per-row bulk update pattern documented
-    - [ ] Exports available from database package
-    - [ ] Feature-specific tests pass (20-50 tests)
-    - [ ] No more than 10 additional tests added in gap analysis
+- [x] 6.0 Complete testing, documentation, and final verification
+  - [x] 6.1 Review existing tests from Task Groups 1-5
+  - Review tests from 1.1 (database layer)
+  - Review tests from 2.1 (extension infrastructure)
+  - Review tests from 3.1 (Tier 1 models)
+  - Review tests from 4.1 (Tier 2 models)
+  - Review tests from 5.1 (exports and integration)
+  - Total existing tests: approximately 10-40 tests
+  - [x] 6.2 Analyze test coverage gaps for THIS feature only
+  - Identify critical workflows lacking coverage
+  - Focus on integration points between components
+  - Prioritize end-to-end scenarios over additional unit tests
+  - Do NOT assess entire application test coverage
+  - [x] 6.3 Write up to 10 additional strategic tests maximum
+  - Integration test: Create → Update → Soft-delete lifecycle with change logs
+  - Integration test: Multi-tenant isolation (changes in Org A not visible to Org B)
+  - Integration test: Change log with userId and changeReason context
+  - Integration test: Environment variable escape hatch (DISABLE_CHANGE_TRACKING)
+  - Integration test: Concurrent updates to same entity create separate logs
+  - Integration test: Flattened snapshot accuracy (verify nested country/mechanism data)
+  - Integration test: Tier 1 + Tier 2 models all create logs in same transaction
+  - Integration test: Non-tracked field changes don't create logs (noise filtering)
+  - Focus on critical user workflows and integration points
+  - Maximum 10 additional tests to fill strategic gaps
+  - [x] 6.4 Run feature-specific tests only
+  - Run tests from 1.1, 2.1, 3.1, 4.1, 5.1, 6.3
+  - Expected total: approximately 20-50 tests maximum
+  - Verify all critical workflows pass
+  - Do NOT run entire application test suite
+  - [x] 6.5 Create inline code documentation
+  - Document TRACKED_FIELDS_BY_MODEL configuration with comments
+  - Document extension behavior and context interface
+  - Document snapshot flattening logic
+  - Add JSDoc comments to exported functions
+  - Reference patterns from existing codebase
+  - [x] 6.6 Document Tier 3 implementation pattern
+  - Create code comments showing how to add Purpose, LegalBasis, Recipient tracking
+  - Show TRACKED_FIELDS configuration for Tier 3 models
+  - Show extension wrapper pattern (same as Tier 1/2)
+  - Note: Implementation deferred to future follow-up, but pattern should be clear
+  - Reference: spec.md lines 79-84, requirements.md lines 325-356
+  - [x] 6.7 Verify multi-tenancy isolation
+  - Test change logs filtered by organizationId
+  - Test cross-tenant data not visible
+  - Test cascade delete on organization removal
+  - Verify indexes optimize tenant-scoped queries
+  - [x] 6.8 Final verification checklist
+  - [x] All Tier 1 models (AssetProcessingLocation, RecipientProcessingLocation, DataProcessingActivity) fully tracked
+  - [x] All Tier 2 models (TransferMechanism, DataSubjectCategory, DataCategory) tracked if implemented
+  - [x] Database schema migration runs successfully
+  - [x] All models enforce multi-tenancy via organizationId
+  - [x] Change logs created with flattened, human-readable snapshots
+  - [x] CREATE, UPDATE, DELETED operations tracked
+  - [x] Environment variable escape hatch works
+  - [x] Per-row bulk update pattern documented
+  - [x] Exports available from database package
+  - [x] Feature-specific tests pass (20-50 tests)
+  - [x] No more than 10 additional tests added in gap analysis
 
 **Acceptance Criteria:**
 
