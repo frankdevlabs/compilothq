@@ -61,6 +61,11 @@ export const DigitalAssetCreateSchema = z.object({
 
   // Display-purpose hosting country (distinct from compliance tracking)
   primaryHostingCountryId: z.string().cuid('Invalid country ID').optional().nullable(),
+  hostingDetail: z
+    .string()
+    .max(255, 'Hosting detail must be 255 characters or less')
+    .optional()
+    .nullable(),
 
   // URLs and ownership
   url: z.string().url('Invalid URL format').optional().nullable(),

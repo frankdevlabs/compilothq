@@ -83,6 +83,39 @@ describe('Change Tracking Extension', () => {
     expect(lastChangeLog.newValue).toBeDefined()
   })
 
+  it('should track DigitalAsset changes for tracked fields', async () => {
+    const trackedClient = createPrismaWithTracking(prisma)
+
+    const asset = await trackedClient.digitalAsset.create({
+      data: {
+        organizationId: testOrg.id,
+        name: 'Tracked Asset',
+        type: 'DATABASE',
+        containsPersonalData: true,
+      },
+    })
+
+    await trackedClient.digitalAsset.update({
+      where: { id: asset.id },
+      data: {
+        containsPersonalData: false,
+        primaryHostingCountryId: null,
+      },
+    })
+
+    const changeLogs = await prisma.componentChangeLog.findMany({
+      where: {
+        organizationId: testOrg.id,
+        componentType: 'DigitalAsset',
+        componentId: asset.id,
+      },
+    })
+
+    expect(changeLogs.length).toBeGreaterThan(0)
+    const fields = changeLogs.map((log) => log.fieldChanged)
+    expect(fields).toContain('containsPersonalData')
+  })
+
   it('should ignore non-tracked field changes', async () => {
     // Create a digital asset
     const digitalAsset = await prisma.digitalAsset.create({
@@ -399,5 +432,112 @@ describe('Change Tracking Extension', () => {
     const newValue = riskLevelLog!.newValue as Record<string, unknown>
     expect(oldValue.riskLevel).toBe('LOW')
     expect(newValue.riskLevel).toBe('HIGH')
+  })
+
+  it('should track hostingDetail field changes in DigitalAsset', async () => {
+    const trackedClient = createPrismaWithTracking(prisma, {
+      userId: testUser.id,
+      changeReason: 'Test: hostingDetail tracking',
+    })
+
+    const asset = await trackedClient.digitalAsset.create({
+      data: {
+        organizationId: testOrg.id,
+        name: 'Cloud Asset',
+        type: 'CLOUD_SERVICE',
+        containsPersonalData: true,
+        hostingDetail: 'us-east-1',
+      },
+    })
+
+    await trackedClient.digitalAsset.update({
+      where: { id: asset.id },
+      data: { hostingDetail: 'eu-west-1' },
+    })
+
+    const changeLogs = await prisma.componentChangeLog.findMany({
+      where: {
+        componentType: 'DigitalAsset',
+        componentId: asset.id,
+        fieldChanged: 'hostingDetail',
+      },
+    })
+
+    expect(changeLogs).toHaveLength(1)
+    expect(changeLogs[0]?.changeType).toBe('UPDATED')
+
+    const oldSnapshot = changeLogs[0]?.oldValue as Record<string, unknown>
+    const newSnapshot = changeLogs[0]?.newValue as Record<string, unknown>
+    expect(oldSnapshot.hostingDetail).toBe('us-east-1')
+    expect(newSnapshot.hostingDetail).toBe('eu-west-1')
+  })
+
+  it('should detect RESTORED changeType when isActive flips from false to true', async () => {
+    const trackedClient = createPrismaWithTracking(prisma, {
+      userId: testUser.id,
+      changeReason: 'Test: restoration detection',
+    })
+
+    const digitalAsset = await prisma.digitalAsset.create({
+      data: {
+        organizationId: testOrg.id,
+        name: 'Test Asset for Restoration',
+        type: 'DATABASE',
+        containsPersonalData: true,
+      },
+    })
+
+    const country = await prisma.country.findFirst({ where: { isoCode: 'US' } })
+    expect(country).toBeDefined()
+
+    const location = await trackedClient.assetProcessingLocation.create({
+      data: {
+        organizationId: testOrg.id,
+        digitalAssetId: digitalAsset.id,
+        service: 'Test Service',
+        countryId: country!.id,
+        locationRole: 'HOSTING',
+        isActive: true,
+      },
+    })
+
+    // Soft-delete
+    await trackedClient.assetProcessingLocation.update({
+      where: { id: location.id },
+      data: { isActive: false },
+    })
+
+    // Restore - should log RESTORED, not UPDATED
+    await trackedClient.assetProcessingLocation.update({
+      where: { id: location.id },
+      data: { isActive: true },
+    })
+
+    const restoredLog = await prisma.componentChangeLog.findFirst({
+      where: {
+        componentType: 'AssetProcessingLocation',
+        componentId: location.id,
+        changeType: 'RESTORED',
+      },
+    })
+
+    expect(restoredLog).toBeDefined()
+    expect(restoredLog?.fieldChanged).toBe('isActive')
+
+    const oldSnapshot = restoredLog?.oldValue as Record<string, unknown>
+    const newSnapshot = restoredLog?.newValue as Record<string, unknown>
+    expect(oldSnapshot.isActive).toBe(false)
+    expect(newSnapshot.isActive).toBe(true)
+
+    // Verify no duplicate UPDATED log for the restoration
+    const updatedLogs = await prisma.componentChangeLog.findMany({
+      where: {
+        componentType: 'AssetProcessingLocation',
+        componentId: location.id,
+        changeType: 'UPDATED',
+        fieldChanged: 'isActive',
+      },
+    })
+    expect(updatedLogs).toHaveLength(1) // Only the soft-delete, not the restore
   })
 })
