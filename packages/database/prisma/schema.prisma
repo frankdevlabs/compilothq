@@ -844,6 +844,7 @@ model DigitalAsset {
 
   // Display-purpose hosting (distinct from compliance tracking)
   primaryHostingCountryId String?
+  hostingDetail           String? // Region/zone info (e.g., "eu-west-1")
 
   // URLs & ownership
   url                 String?
@@ -985,6 +986,7 @@ enum ChangeType {
   CREATED // New component created
   UPDATED // Existing component modified
   DELETED // Component soft-deleted (isActive=false)
+  RESTORED // Component restored from deleted state
 }
 
 // Generated document type enum for compliance documentation

@@ -1,4 +1,9 @@
-import type { Country, RecipientProcessingLocation, TransferMechanism } from '../index'
+import type {
+  AssetProcessingLocation,
+  Country,
+  RecipientProcessingLocation,
+  TransferMechanism,
+} from '../index'
 
 /**
  * Cross-border transfer detected by service layer composition
@@ -40,6 +45,44 @@ export interface ActivityTransferAnalysis {
   summary: {
     totalRecipients: number
     recipientsWithTransfers: number
+    riskDistribution: {
+      none: number
+      low: number
+      medium: number
+      high: number
+      critical: number
+    }
+    countriesInvolved: Array<{ country: Country; locationCount: number }>
+  }
+}
+
+/**
+ * Cross-border transfer detected for assets
+ * Represents derived relationship between organization and asset processing location
+ */
+export interface AssetCrossBorderTransfer {
+  organizationCountry: Country
+  digitalAssetId: string
+  digitalAssetName: string
+  processingLocation: AssetProcessingLocation & {
+    country: Country
+    transferMechanism: TransferMechanism | null
+  }
+  transferRisk: TransferRisk
+}
+
+/**
+ * Activity-level asset transfer analysis
+ * Aggregates transfers for assets linked to a processing activity
+ */
+export interface ActivityAssetTransferAnalysis {
+  activityId: string
+  activityName: string
+  organizationCountry: Country
+  transfers: AssetCrossBorderTransfer[]
+  summary: {
+    totalAssets: number
+    assetsWithTransfers: number
     riskDistribution: {
       none: number
       low: number
@@ -406,6 +449,70 @@ export async function detectCrossBorderTransfers(
 }
 
 /**
+ * Detect cross-border transfers for DigitalAssets (asset processing locations).
+ * Leaves existing recipient-based detection untouched to avoid breaking callers.
+ *
+ * @param organizationId - The organization ID to analyze
+ * @returns Promise with detected asset transfers (empty if HQ country missing)
+ */
+export async function detectAssetCrossBorderTransfers(
+  organizationId: string
+): Promise<AssetCrossBorderTransfer[]> {
+  const { prisma } = await import('../index')
+
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: {
+      headquartersCountry: true,
+    },
+  })
+
+  if (!org) {
+    throw new Error('Organization not found')
+  }
+
+  // Without an origin country we cannot derive cross-border logic; return empty
+  if (!org.headquartersCountry) {
+    return []
+  }
+
+  const orgCountry = org.headquartersCountry
+
+  const assets = await prisma.digitalAsset.findMany({
+    where: { organizationId },
+    include: {
+      processingLocations: {
+        where: { isActive: true },
+        include: {
+          country: true,
+          transferMechanism: true,
+        },
+      },
+    },
+  })
+
+  const transfers: AssetCrossBorderTransfer[] = []
+
+  for (const asset of assets) {
+    for (const location of asset.processingLocations) {
+      const risk = deriveTransferRisk(orgCountry, location.country, location.transferMechanism)
+
+      if (risk.level !== 'NONE') {
+        transfers.push({
+          organizationCountry: orgCountry,
+          digitalAssetId: asset.id,
+          digitalAssetName: asset.name,
+          processingLocation: location,
+          transferRisk: risk,
+        })
+      }
+    }
+  }
+
+  return transfers
+}
+
+/**
  * Analyze cross-border transfers for a specific processing activity
  * Gets all recipients linked to activity and analyzes their locations
  *
@@ -616,6 +723,143 @@ export async function getActivityTransferAnalysis(
     summary: {
       totalRecipients: activityRecipients.length,
       recipientsWithTransfers: recipientsWithTransfers.size,
+      riskDistribution,
+      countriesInvolved,
+    },
+  }
+}
+
+/**
+ * Analyze asset-based cross-border transfers for a specific processing activity.
+ *
+ * @param activityId - Activity ID
+ * @returns ActivityAssetTransferAnalysis with per-asset locations
+ */
+export async function getActivityAssetTransferAnalysis(
+  activityId: string
+): Promise<ActivityAssetTransferAnalysis> {
+  const { prisma } = await import('../index')
+
+  // Step 1: Get activity
+  const activity = await prisma.dataProcessingActivity.findUnique({
+    where: { id: activityId },
+  })
+
+  if (!activity) {
+    throw new Error('Activity not found')
+  }
+
+  // Get organization with headquarters country
+  const org = await prisma.organization.findUnique({
+    where: { id: activity.organizationId },
+    include: {
+      headquartersCountry: true,
+    },
+  })
+
+  if (!org) {
+    throw new Error('Organization not found')
+  }
+
+  // Require headquarters country for analysis (cannot analyze without it)
+  if (!org.headquartersCountry) {
+    throw new Error(
+      `Organization ${activity.organizationId} has no headquartersCountryId set. Please set the organization's headquarters country to enable cross-border transfer analysis.`
+    )
+  }
+
+  const orgCountry = org.headquartersCountry
+
+  // Get activity assets with locations
+  const activityAssets = await prisma.dataProcessingActivityDigitalAsset.findMany({
+    where: { activityId },
+    include: {
+      digitalAsset: {
+        include: {
+          processingLocations: {
+            where: { isActive: true },
+            include: {
+              country: true,
+              transferMechanism: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  const transfers: AssetCrossBorderTransfer[] = []
+  const assetsWithTransfers = new Set<string>()
+  const countriesMap = new Map<string, { country: Country; count: number }>()
+
+  for (const assetLink of activityAssets) {
+    const asset = assetLink.digitalAsset
+
+    for (const location of asset.processingLocations) {
+      const risk = deriveTransferRisk(orgCountry, location.country, location.transferMechanism)
+
+      if (risk.level !== 'NONE') {
+        transfers.push({
+          organizationCountry: orgCountry,
+          digitalAssetId: asset.id,
+          digitalAssetName: asset.name,
+          processingLocation: location,
+          transferRisk: risk,
+        })
+
+        assetsWithTransfers.add(asset.id)
+
+        const existing = countriesMap.get(location.countryId)
+        if (existing) {
+          existing.count++
+        } else {
+          countriesMap.set(location.countryId, { country: location.country, count: 1 })
+        }
+      }
+    }
+  }
+
+  // Summary stats
+  const riskDistribution = {
+    none: 0,
+    low: 0,
+    medium: 0,
+    high: 0,
+    critical: 0,
+  }
+
+  for (const transfer of transfers) {
+    switch (transfer.transferRisk.level) {
+      case 'NONE':
+        riskDistribution.none++
+        break
+      case 'LOW':
+        riskDistribution.low++
+        break
+      case 'MEDIUM':
+        riskDistribution.medium++
+        break
+      case 'HIGH':
+        riskDistribution.high++
+        break
+      case 'CRITICAL':
+        riskDistribution.critical++
+        break
+    }
+  }
+
+  const countriesInvolved = Array.from(countriesMap.values())
+    .map((v) => ({ country: v.country, locationCount: v.count }))
+    .sort((a, b) => b.locationCount - a.locationCount)
+
+  return {
+    activityId: activity.id,
+    activityName: activity.name,
+    organizationCountry: orgCountry,
+    transfers,
+    summary: {
+      totalAssets: activityAssets.length,
+      assetsWithTransfers: assetsWithTransfers.size,
       riskDistribution,
       countriesInvolved,
     },

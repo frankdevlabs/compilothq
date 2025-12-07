@@ -1,5 +1,12 @@
-import type { AssetType, DigitalAsset, IntegrationStatus, LocationRole, Prisma } from '../index'
-import { prisma } from '../index'
+import type {
+  AssetType,
+  DigitalAsset,
+  IntegrationStatus,
+  LocationRole,
+  Prisma,
+  PrismaClient,
+} from '../index'
+import { createPrismaWithTracking, prisma } from '../index'
 
 /**
  * Input type for creating asset processing locations
@@ -65,6 +72,7 @@ export async function createDigitalAsset(data: {
   type: AssetType
   description?: string | null
   primaryHostingCountryId?: string | null
+  hostingDetail?: string | null
   url?: string | null
   technicalOwnerId?: string | null
   businessOwnerId?: string | null
@@ -75,20 +83,51 @@ export async function createDigitalAsset(data: {
   metadata?: Prisma.InputJsonValue | null
   locations?: AssetProcessingLocationInput[]
 }): Promise<CreateDigitalAssetResult> {
+  const createLocationsWithTracking = async (
+    tx: PrismaClient,
+    assetId: string,
+    locationsToCreate: AssetProcessingLocationInput[]
+  ) => {
+    const trackedTx = createPrismaWithTracking(tx)
+
+    for (const loc of locationsToCreate) {
+      // Using per-row create to ensure change tracking entries are recorded
+      // for every processing location.
+
+      await trackedTx.assetProcessingLocation.create({
+        data: {
+          organizationId: data.organizationId,
+          digitalAssetId: assetId,
+          service: loc.service,
+          countryId: loc.countryId,
+          locationRole: loc.locationRole,
+          purposeId: loc.purposeId ?? undefined,
+          purposeText: loc.purposeText ?? undefined,
+          transferMechanismId: loc.transferMechanismId ?? undefined,
+          isActive: loc.isActive ?? true,
+          metadata: loc.metadata ?? undefined,
+        },
+      })
+    }
+  }
+
   // If locations provided, use transaction for atomicity
   if (data.locations && data.locations.length > 0) {
     // Capture locations to preserve type narrowing across async boundary
     const locationsToCreate = data.locations
 
     return await prisma.$transaction(async (tx) => {
+      const trackedTx = createPrismaWithTracking(tx)
+
       // Create the asset
-      const asset = await tx.digitalAsset.create({
+      const asset = await trackedTx.digitalAsset.create({
         data: {
           organizationId: data.organizationId,
           name: data.name,
           type: data.type,
           description: data.description ?? undefined,
           primaryHostingCountryId: data.primaryHostingCountryId ?? undefined,
+          hostingDetail: data.hostingDetail ?? undefined,
           url: data.url ?? undefined,
           technicalOwnerId: data.technicalOwnerId ?? undefined,
           businessOwnerId: data.businessOwnerId ?? undefined,
@@ -100,22 +139,8 @@ export async function createDigitalAsset(data: {
         },
       })
 
-      // Create all locations
-      await tx.assetProcessingLocation.createMany({
-        data: locationsToCreate.map((loc) => ({
-          organizationId: data.organizationId,
-          digitalAssetId: asset.id,
-          service: loc.service,
-          countryId: loc.countryId,
-          locationRole: loc.locationRole,
-          purposeId: loc.purposeId ?? undefined,
-          purposeText: loc.purposeText ?? undefined,
-          transferMechanismId: loc.transferMechanismId ?? undefined,
-          isActive: loc.isActive ?? true,
-          metadata: loc.metadata ?? undefined,
-        })),
-        skipDuplicates: true,
-      })
+      // Create all locations with tracking
+      await createLocationsWithTracking(tx, asset.id, locationsToCreate)
 
       // Fetch created locations to return
       const locations = await tx.assetProcessingLocation.findMany({
@@ -127,13 +152,14 @@ export async function createDigitalAsset(data: {
   }
 
   // Asset-only creation (no transaction needed)
-  const asset = await prisma.digitalAsset.create({
+  const asset = await createPrismaWithTracking(prisma).digitalAsset.create({
     data: {
       organizationId: data.organizationId,
       name: data.name,
       type: data.type,
       description: data.description ?? undefined,
       primaryHostingCountryId: data.primaryHostingCountryId ?? undefined,
+      hostingDetail: data.hostingDetail ?? undefined,
       url: data.url ?? undefined,
       technicalOwnerId: data.technicalOwnerId ?? undefined,
       businessOwnerId: data.businessOwnerId ?? undefined,
@@ -179,22 +205,25 @@ export async function addAssetProcessingLocations(
     throw new Error(`DigitalAsset with id ${assetId} not found`)
   }
 
-  // Create locations
-  await prisma.assetProcessingLocation.createMany({
-    data: locations.map((loc) => ({
-      organizationId: asset.organizationId,
-      digitalAssetId: assetId,
-      service: loc.service,
-      countryId: loc.countryId,
-      locationRole: loc.locationRole,
-      purposeId: loc.purposeId ?? undefined,
-      purposeText: loc.purposeText ?? undefined,
-      transferMechanismId: loc.transferMechanismId ?? undefined,
-      isActive: loc.isActive ?? true,
-      metadata: loc.metadata ?? undefined,
-    })),
-    skipDuplicates: true,
-  })
+  const trackedPrisma = createPrismaWithTracking(prisma)
+
+  // Create locations one-by-one to ensure change logs are recorded
+  for (const loc of locations) {
+    await trackedPrisma.assetProcessingLocation.create({
+      data: {
+        organizationId: asset.organizationId,
+        digitalAssetId: assetId,
+        service: loc.service,
+        countryId: loc.countryId,
+        locationRole: loc.locationRole,
+        purposeId: loc.purposeId ?? undefined,
+        purposeText: loc.purposeText ?? undefined,
+        transferMechanismId: loc.transferMechanismId ?? undefined,
+        isActive: loc.isActive ?? true,
+        metadata: loc.metadata ?? undefined,
+      },
+    })
+  }
 
   // Return all locations for asset
   return prisma.assetProcessingLocation.findMany({
@@ -303,6 +332,7 @@ export async function updateDigitalAsset(
     description?: string | null
     type?: AssetType
     primaryHostingCountryId?: string | null
+    hostingDetail?: string | null
     url?: string | null
     technicalOwnerId?: string | null
     businessOwnerId?: string | null
@@ -313,7 +343,7 @@ export async function updateDigitalAsset(
     metadata?: Prisma.InputJsonValue | null
   }
 ): Promise<DigitalAsset> {
-  return prisma.digitalAsset.update({
+  return createPrismaWithTracking(prisma).digitalAsset.update({
     where: { id },
     data: {
       name: data.name,
@@ -323,6 +353,8 @@ export async function updateDigitalAsset(
         data.primaryHostingCountryId !== undefined
           ? (data.primaryHostingCountryId ?? undefined)
           : undefined,
+      hostingDetail:
+        data.hostingDetail !== undefined ? (data.hostingDetail ?? undefined) : undefined,
       url: data.url !== undefined ? (data.url ?? undefined) : undefined,
       technicalOwnerId:
         data.technicalOwnerId !== undefined ? (data.technicalOwnerId ?? undefined) : undefined,
@@ -373,4 +405,42 @@ export async function deleteDigitalAsset(id: string): Promise<DigitalAsset> {
   return prisma.digitalAsset.delete({
     where: { id },
   })
+}
+
+/**
+ * Warning type for non-blocking validations
+ */
+export type ValidationWarning = {
+  field: string
+  code: string
+  message: string
+  severity: 'info' | 'warning' | 'error'
+}
+
+/**
+ * Validate digital asset completeness without blocking persistence.
+ * Returns warnings (no exceptions) so callers can surface UI hints.
+ *
+ * Currently checks:
+ * - containsPersonalData && no processingLocations -> warning
+ */
+export function validateDigitalAssetWarnings(
+  asset: DigitalAsset & {
+    processingLocations?: Array<unknown>
+  }
+): ValidationWarning[] {
+  const warnings: ValidationWarning[] = []
+
+  const processingLocationsCount = asset.processingLocations?.length ?? 0
+  if (asset.containsPersonalData && processingLocationsCount === 0) {
+    warnings.push({
+      field: 'processingLocations',
+      code: 'MISSING_LOCATIONS_FOR_PERSONAL_DATA',
+      message:
+        'This asset contains personal data but has no processing locations defined yet. Consider adding locations for GDPR Article 30 completeness.',
+      severity: 'warning',
+    })
+  }
+
+  return warnings
 }
