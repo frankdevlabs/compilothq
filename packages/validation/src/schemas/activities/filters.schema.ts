@@ -16,10 +16,8 @@ export const DataProcessingActivityStatusEnum = z.enum(
     'ARCHIVED',
   ],
   {
-    errorMap: () => ({
-      message:
-        'Status must be one of: DRAFT, UNDER_REVIEW, UNDER_REVISION, REJECTED, APPROVED, ACTIVE, SUSPENDED, ARCHIVED',
-    }),
+    message:
+      'Status must be one of: DRAFT, UNDER_REVIEW, UNDER_REVISION, REJECTED, APPROVED, ACTIVE, SUSPENDED, ARCHIVED',
   }
 )
 

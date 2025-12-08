@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
-import { DigitalAssetCreateSchema, LocationRoleSchema } from './create.schema'
+import { LocationRoleSchema } from '../shared/locationRole.schema'
+import { DigitalAssetCreateSchema } from './create.schema'
 
 /**
  * Validation schema for updating a Digital Asset
@@ -32,7 +33,7 @@ export const AssetProcessingLocationUpdateSchema = z.object({
   locationRole: LocationRoleSchema.optional(),
   transferMechanismId: z.string().cuid('Invalid transfer mechanism ID').optional().nullable(),
   isActive: z.boolean().optional(),
-  metadata: z.record(z.unknown()).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 })
 
 /**

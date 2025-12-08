@@ -5,8 +5,8 @@ import {
   AssetTypeSchema,
   DigitalAssetCreateSchema,
   IntegrationStatusSchema,
-  LocationRoleSchema,
 } from '../../src/schemas/digitalAssets'
+import { LocationRoleSchema } from '../../src/schemas/shared'
 
 describe('Digital Asset Validation Schemas', () => {
   describe('DigitalAssetCreateSchema - Valid Data', () => {

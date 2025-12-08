@@ -8,9 +8,7 @@ import { z } from 'zod'
 export const RecipientTypeEnum = z.enum(
   ['PROCESSOR', 'SUB_PROCESSOR', 'JOINT_CONTROLLER', 'SERVICE_PROVIDER'],
   {
-    errorMap: () => ({
-      message: 'Type must be one of: PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER',
-    }),
+    message: 'Type must be one of: PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER',
   }
 )
 

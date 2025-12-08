@@ -169,4 +169,7 @@ describe('Transfer Detection Helper Functions', () => {
       expect(result.required).toBe(false)
     })
   })
+
+  // Note: getActivityTransfersComplete() is tested via integration tests
+  // See: apps/web/__tests__/integration/server/routers/recipientProcessingLocations.test.ts
 })

@@ -16,8 +16,19 @@ export const ProcessingActCreateSchema = z.object({
 
 /**
  * Validation schema for updating a ProcessingAct
+ * All fields optional for partial updates
+ *
+ * IMPORTANT: Inline definition to avoid inheriting .default() from create schema
  */
-export const ProcessingActUpdateSchema = ProcessingActCreateSchema.partial()
+export const ProcessingActUpdateSchema = z.object({
+  name: z.string().min(1, 'Processing act name is required').optional(),
+  description: z.string().min(1, 'Description is required').optional(),
+  examples: z.array(z.string()).min(1, 'At least one example is required').optional(),
+  requiresDPA: z.boolean().optional(),
+  triggersDPIA: z.boolean().optional(),
+  gdprArticle: z.string().min(1, 'GDPR article reference is required').optional(),
+  isActive: z.boolean().optional(),
+})
 
 /**
  * Inferred TypeScript types

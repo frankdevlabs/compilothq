@@ -121,10 +121,16 @@ export type { HierarchyRules, ValidationResult } from './validation/recipientHie
 
 // Export service layer types
 export type {
+  ActivityAssetTransferAnalysis,
   ActivityTransferAnalysis,
+  ActivityTransferAnalysisComplete,
+  AssetCrossBorderTransfer,
   CrossBorderTransfer,
   TransferRisk,
 } from './services/transferDetection'
 
 // Export change tracking types
 export type { ChangeTrackingContext, PrismaWithTracking } from './middleware/changeTracking'
+
+// Export Prisma client type utilities
+export type { PrismaClientOrTransaction, PrismaTransactionClient } from './types/prisma'

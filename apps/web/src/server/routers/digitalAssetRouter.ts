@@ -6,7 +6,12 @@ import {
   getDigitalAssetById,
   listDigitalAssets,
   updateDigitalAsset,
+  validateDigitalAssetWarnings,
 } from '@compilothq/database'
+import {
+  detectAssetCrossBorderTransfers,
+  getActivityAssetTransferAnalysis,
+} from '@compilothq/database/services/transferDetection'
 import {
   AssetTypeSchema,
   DigitalAssetUpdateSchema,
@@ -51,6 +56,11 @@ export const digitalAssetRouter = router({
         type: AssetTypeSchema,
         description: z.string().max(2000).optional().nullable(),
         primaryHostingCountryId: z.string().cuid('Invalid country ID').optional().nullable(),
+        hostingDetail: z
+          .string()
+          .max(255, 'Hosting detail must be 255 characters or less')
+          .optional()
+          .nullable(),
         url: z.string().url('Invalid URL format').optional().nullable(),
         technicalOwnerId: z.string().cuid('Invalid technical owner ID').optional().nullable(),
         businessOwnerId: z.string().cuid('Invalid business owner ID').optional().nullable(),
@@ -71,6 +81,7 @@ export const digitalAssetRouter = router({
           type: input.type as AssetType,
           description: input.description,
           primaryHostingCountryId: input.primaryHostingCountryId,
+          hostingDetail: input.hostingDetail,
           url: input.url,
           technicalOwnerId: input.technicalOwnerId,
           businessOwnerId: input.businessOwnerId,
@@ -170,6 +181,7 @@ export const digitalAssetRouter = router({
         description?: string | null
         type?: AssetType
         primaryHostingCountryId?: string | null
+        hostingDetail?: string | null
         url?: string | null
         technicalOwnerId?: string | null
         businessOwnerId?: string | null
@@ -186,6 +198,7 @@ export const digitalAssetRouter = router({
           description: data.description,
           type: data.type,
           primaryHostingCountryId: data.primaryHostingCountryId,
+          hostingDetail: data.hostingDetail,
           url: data.url,
           technicalOwnerId: data.technicalOwnerId,
           businessOwnerId: data.businessOwnerId,
@@ -254,5 +267,45 @@ export const digitalAssetRouter = router({
       }))
 
       return await handlePrismaError(addAssetProcessingLocations(input.assetId, typedLocations))
+    }),
+
+  /**
+   * Validate digital asset and return non-blocking warnings
+   * Used to surface configuration hints without blocking persistence
+   * Returns array of warnings for missing country, duplicate locations, etc.
+   */
+  validateWarnings: orgProcedure
+    .input(z.object({ assetId: z.string().cuid('Invalid asset ID') }))
+    .query(async ({ ctx, input }) => {
+      const asset = await getDigitalAssetById(input.assetId)
+
+      if (!asset || asset.organizationId !== ctx.organizationId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Asset not found',
+        })
+      }
+
+      return validateDigitalAssetWarnings(asset)
+    }),
+
+  /**
+   * Detect cross-border transfers for all digital assets in organization
+   * Analyzes asset processing locations against organization headquarters
+   * Returns transfers requiring safeguards per GDPR Chapter V
+   */
+  detectAssetTransfers: orgProcedure.query(async ({ ctx }) => {
+    return await detectAssetCrossBorderTransfers(ctx.organizationId)
+  }),
+
+  /**
+   * Analyze cross-border transfers for digital assets linked to a specific activity
+   * Combines activity-level and asset-level transfer detection
+   * Returns comprehensive transfer analysis for compliance documentation
+   */
+  analyzeActivityAssetTransfers: orgProcedure
+    .input(z.object({ activityId: z.string().cuid('Invalid activity ID') }))
+    .query(async ({ input }) => {
+      return await getActivityAssetTransferAnalysis(input.activityId)
     }),
 })

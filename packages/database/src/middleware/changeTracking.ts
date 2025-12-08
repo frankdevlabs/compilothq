@@ -18,12 +18,28 @@
  */
 
 import { Prisma, type PrismaClient } from '../../generated/client/client'
+import type { PrismaClientOrTransaction } from '../types/prisma'
 
 /**
  * Configuration defining which fields are tracked for each model
  * Only changes to these fields will trigger ComponentChangeLog creation
  */
 export const TRACKED_FIELDS_BY_MODEL: Record<string, string[]> = {
+  DigitalAsset: [
+    'name',
+    'description',
+    'type',
+    'primaryHostingCountryId',
+    'hostingDetail',
+    'url',
+    'technicalOwnerId',
+    'businessOwnerId',
+    'containsPersonalData',
+    'integrationStatus',
+    'lastScannedAt',
+    'discoveredVia',
+    'metadata',
+  ],
   AssetProcessingLocation: ['countryId', 'transferMechanismId', 'locationRole', 'isActive'],
   RecipientProcessingLocation: ['countryId', 'transferMechanismId', 'locationRole', 'isActive'],
   DataProcessingActivity: [
@@ -114,13 +130,35 @@ function detectChangedFields(
 }
 
 /**
+ * Create snapshot for DigitalAsset
+ * Includes tracked compliance and hosting fields
+ */
+export function createDigitalAssetSnapshot(asset: Record<string, unknown>): Prisma.InputJsonValue {
+  return {
+    name: asset['name'],
+    description: asset['description'],
+    type: asset['type'],
+    primaryHostingCountryId: asset['primaryHostingCountryId'],
+    hostingDetail: asset['hostingDetail'],
+    url: asset['url'],
+    technicalOwnerId: asset['technicalOwnerId'],
+    businessOwnerId: asset['businessOwnerId'],
+    containsPersonalData: asset['containsPersonalData'],
+    integrationStatus: asset['integrationStatus'],
+    lastScannedAt: asset['lastScannedAt'],
+    discoveredVia: asset['discoveredVia'],
+    metadata: asset['metadata'],
+  } as Prisma.InputJsonValue
+}
+
+/**
  * Create flattened snapshot for location models
  * Includes nested country and transferMechanism data for human readability
  *
  * @param location - AssetProcessingLocation or RecipientProcessingLocation with includes
  * @returns Flattened snapshot object
  */
-function createLocationSnapshot(
+export function createLocationSnapshot(
   location: Record<string, unknown> & {
     country?: { id: string; name: string; isoCode: string; gdprStatus: unknown }
     transferMechanism?: { id: string; name: string; code: string; gdprArticle: string } | null
@@ -265,6 +303,92 @@ export function createPrismaWithTracking(
   return basePrisma.$extends({
     name: 'changeTracking',
     query: {
+      digitalAsset: {
+        /**
+         * Track DigitalAsset creation
+         * Logs CREATED changeType with null oldValue and full snapshot in newValue
+         */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        async create({ args, query }: any) {
+          if (isChangeTrackingDisabled()) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+            return query(args)
+          }
+
+          const result = await basePrisma.digitalAsset.create({
+            ...args,
+          })
+
+          await basePrisma.componentChangeLog.create({
+            data: {
+              organizationId:
+                (result as { organizationId?: string }).organizationId ??
+                context?.organizationId ??
+                '',
+              componentType: 'DigitalAsset',
+              componentId: result.id,
+              changeType: 'CREATED',
+              fieldChanged: null,
+              oldValue: Prisma.JsonNull,
+              newValue: createDigitalAssetSnapshot(result),
+              changedByUserId: context?.userId ?? null,
+              changeReason: context?.changeReason ?? null,
+            },
+          })
+
+          return result
+        },
+
+        /**
+         * Track DigitalAsset updates
+         * Logs UPDATED changeType for each tracked field that changed
+         */
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        async update({ args, query }: any) {
+          if (isChangeTrackingDisabled()) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+            return query(args)
+          }
+
+          const before = await basePrisma.digitalAsset.findUnique({
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+            where: args.where,
+          })
+
+          if (!before) {
+            throw new Error('DigitalAsset not found')
+          }
+
+          const result = await basePrisma.digitalAsset.update({
+            ...args,
+          })
+
+          const changedFields = detectChangedFields('DigitalAsset', before, result)
+
+          if (changedFields.length > 0) {
+            for (const field of changedFields) {
+              await basePrisma.componentChangeLog.create({
+                data: {
+                  organizationId:
+                    (result as { organizationId?: string }).organizationId ??
+                    context?.organizationId ??
+                    '',
+                  componentType: 'DigitalAsset',
+                  componentId: result.id,
+                  changeType: 'UPDATED',
+                  fieldChanged: field,
+                  oldValue: createDigitalAssetSnapshot(before),
+                  newValue: createDigitalAssetSnapshot(result),
+                  changedByUserId: context?.userId ?? null,
+                  changeReason: context?.changeReason ?? null,
+                },
+              })
+            }
+          }
+
+          return result
+        },
+      },
       assetProcessingLocation: {
         /**
          * Track AssetProcessingLocation creation
@@ -344,6 +468,28 @@ export function createPrismaWithTracking(
               },
             },
           })
+
+          // Detect restoration (soft-delete → active)
+          if (before.isActive === false && result.isActive === true) {
+            await basePrisma.componentChangeLog.create({
+              data: {
+                organizationId:
+                  (result as { organizationId?: string }).organizationId ??
+                  context?.organizationId ??
+                  '',
+                componentType: 'AssetProcessingLocation',
+                componentId: result.id,
+                changeType: 'RESTORED',
+                fieldChanged: 'isActive',
+                oldValue: createLocationSnapshot(before as never),
+                newValue: createLocationSnapshot(result as never),
+                changedByUserId: context?.userId ?? null,
+                changeReason: context?.changeReason ?? null,
+              },
+            })
+
+            return result // Exit early - prevents double-logging as UPDATED
+          }
 
           const changedFields = detectChangedFields('AssetProcessingLocation', before, result)
 
@@ -448,6 +594,28 @@ export function createPrismaWithTracking(
               },
             },
           })
+
+          // Detect restoration (soft-delete → active)
+          if (before.isActive === false && result.isActive === true) {
+            await basePrisma.componentChangeLog.create({
+              data: {
+                organizationId:
+                  (result as { organizationId?: string }).organizationId ??
+                  context?.organizationId ??
+                  '',
+                componentType: 'RecipientProcessingLocation',
+                componentId: result.id,
+                changeType: 'RESTORED',
+                fieldChanged: 'isActive',
+                oldValue: createLocationSnapshot(before as never),
+                newValue: createLocationSnapshot(result as never),
+                changedByUserId: context?.userId ?? null,
+                changeReason: context?.changeReason ?? null,
+              },
+            })
+
+            return result // Exit early - prevents double-logging as UPDATED
+          }
 
           const changedFields = detectChangedFields('RecipientProcessingLocation', before, result)
 
@@ -695,6 +863,28 @@ export function createPrismaWithTracking(
 
           const result = await basePrisma.dataSubjectCategory.update(args)
 
+          // Detect restoration (soft-delete → active)
+          if (before.isActive === false && result.isActive === true) {
+            await basePrisma.componentChangeLog.create({
+              data: {
+                organizationId:
+                  (result as { organizationId?: string }).organizationId ??
+                  context?.organizationId ??
+                  '',
+                componentType: 'DataSubjectCategory',
+                componentId: result.id,
+                changeType: 'RESTORED',
+                fieldChanged: 'isActive',
+                oldValue: createDataSubjectCategorySnapshot(before),
+                newValue: createDataSubjectCategorySnapshot(result),
+                changedByUserId: context?.userId ?? null,
+                changeReason: context?.changeReason ?? null,
+              },
+            })
+
+            return result // Exit early - prevents double-logging as UPDATED
+          }
+
           const changedFields = detectChangedFields('DataSubjectCategory', before, result)
 
           if (changedFields.length > 0) {
@@ -777,6 +967,28 @@ export function createPrismaWithTracking(
 
           const result = await basePrisma.dataCategory.update(args)
 
+          // Detect restoration (soft-delete → active)
+          if (before.isActive === false && result.isActive === true) {
+            await basePrisma.componentChangeLog.create({
+              data: {
+                organizationId:
+                  (result as { organizationId?: string }).organizationId ??
+                  context?.organizationId ??
+                  '',
+                componentType: 'DataCategory',
+                componentId: result.id,
+                changeType: 'RESTORED',
+                fieldChanged: 'isActive',
+                oldValue: createDataCategorySnapshot(before),
+                newValue: createDataCategorySnapshot(result),
+                changedByUserId: context?.userId ?? null,
+                changeReason: context?.changeReason ?? null,
+              },
+            })
+
+            return result // Exit early - prevents double-logging as UPDATED
+          }
+
           const changedFields = detectChangedFields('DataCategory', before, result)
 
           if (changedFields.length > 0) {
@@ -803,6 +1015,46 @@ export function createPrismaWithTracking(
           return result
         },
       },
+    },
+  })
+}
+
+/**
+ * Manually track changes inside a transaction where $extends() is not available.
+ * Use this when you need change tracking within a $transaction callback.
+ * Also works with regular PrismaClient for non-transaction contexts.
+ *
+ * @param tx - Prisma client or transaction client (from $transaction callback)
+ * @param params - Tracking parameters
+ */
+export async function trackChangeManually(
+  tx: PrismaClientOrTransaction,
+  params: {
+    componentType: string
+    componentId: string
+    organizationId: string
+    changeType: 'CREATED' | 'UPDATED' | 'RESTORED'
+    fieldChanged: string | null
+    oldValue: Prisma.InputJsonValue | null
+    newValue: Prisma.InputJsonValue
+    context?: ChangeTrackingContext
+  }
+): Promise<void> {
+  if (isChangeTrackingDisabled()) {
+    return
+  }
+
+  await tx.componentChangeLog.create({
+    data: {
+      organizationId: params.organizationId,
+      componentType: params.componentType,
+      componentId: params.componentId,
+      changeType: params.changeType,
+      fieldChanged: params.fieldChanged,
+      oldValue: params.oldValue ?? Prisma.JsonNull,
+      newValue: params.newValue,
+      changedByUserId: params.context?.userId ?? null,
+      changeReason: params.context?.changeReason ?? null,
     },
   })
 }

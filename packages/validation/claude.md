@@ -226,6 +226,64 @@ When encountering build or type errors:
 4. **Version schemas carefully** - Breaking changes require coordinated updates across packages
 5. **Test validation rules** - Write tests for edge cases and error messages
 
+## Update Schema Pattern (CRITICAL RULE)
+
+### ❌ NEVER Use `.partial()` to Derive Update Schemas
+
+**Problem:**
+
+```typescript
+// ❌ WRONG - Inherits .default() values
+export const EntityUpdateSchema = EntityCreateSchema.partial()
+// Result: {} → { isActive: true } (unwanted default applied)
+```
+
+When you use `.partial()`, Zod makes fields optional BUT preserves `.default()` values. This causes:
+
+- Empty updates `{}` return objects with defaults
+- Violates REST PATCH semantics
+- Unintended database writes
+
+### ✅ ALWAYS Use Inline Field Definitions
+
+**Solution:**
+
+```typescript
+// ✅ CORRECT - Explicit inline definition
+export const EntityUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  status: StatusEnum.optional(), // NO .default()
+  isActive: z.boolean().optional(), // NO .default()
+})
+// Result: {} → {} (stays empty as expected)
+```
+
+### Field Conversion Rules
+
+| Create Schema                      | Update Schema                                  |
+| ---------------------------------- | ---------------------------------------------- |
+| `z.string().min(1)`                | `z.string().min(1).optional()`                 |
+| `Enum.default('VALUE')`            | `Enum.optional()`                              |
+| `z.boolean().default(true)`        | `z.boolean().optional()`                       |
+| `z.array(...).default([])`         | `z.array(...).optional()`                      |
+| `z.string().optional().nullable()` | `z.string().optional().nullable()` (unchanged) |
+
+### Why This Matters
+
+**REST PATCH Semantics:**
+
+- Empty update `{}` means "change nothing"
+- NOT "apply creation defaults"
+
+**Database Safety:**
+
+- Only provided fields should be written
+- Prevents unintended column updates
+
+### Reference Implementation
+
+See `packages/validation/src/schemas/recipients/update.schema.ts` for the gold standard pattern.
+
 ## Related Documentation
 
 - [TypeScript Project References](https://www.typescriptlang.org/docs/handbook/project-references.html)
