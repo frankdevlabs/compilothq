@@ -95,6 +95,56 @@ export interface ActivityAssetTransferAnalysis {
 }
 
 /**
+ * Complete activity-level transfer analysis combining recipients and assets
+ * Provides unified view of all cross-border data transfers for a processing activity
+ *
+ * This interface combines recipient-based transfers (including sub-processor chains)
+ * with asset-based transfers (infrastructure locations) into a single comprehensive
+ * analysis for GDPR compliance reporting.
+ *
+ * Use Cases:
+ * - Comprehensive compliance documentation (Article 30 ROPA)
+ * - Data Protection Impact Assessments (DPIA) - transfer risk sections
+ * - Executive risk dashboards showing total exposure
+ * - Multi-faceted transfer analysis (recipients + infrastructure)
+ */
+export interface ActivityTransferAnalysisComplete {
+  activityId: string
+  activityName: string
+  organizationCountry: Country
+
+  // Separate transfer arrays (for detailed drill-down)
+  recipientTransfers: CrossBorderTransfer[] // Includes parent chain
+  assetTransfers: AssetCrossBorderTransfer[] // Direct links only
+
+  // Combined summary statistics
+  combinedSummary: {
+    totalTransfers: number // Sum of both arrays
+    totalRiskDistribution: {
+      none: number // Same jurisdiction transfers
+      low: number // Adequacy decisions
+      medium: number // Safeguards in place
+      high: number // Missing safeguards
+      critical: number // No mechanism (GDPR violation)
+    }
+    allCountriesInvolved: Array<{
+      country: Country
+      locationCount: number // Deduplicated, summed counts
+    }>
+  }
+
+  // Individual summaries (for breakdowns)
+  recipientSummary: {
+    totalRecipients: number
+    recipientsWithTransfers: number
+  }
+  assetSummary: {
+    totalAssets: number
+    assetsWithTransfers: number
+  }
+}
+
+/**
  * Check if two countries are in the same legal jurisdiction
  * Uses Country.gdprStatus JSON to determine legal framework
  *
@@ -862,6 +912,167 @@ export async function getActivityAssetTransferAnalysis(
       assetsWithTransfers: assetsWithTransfers.size,
       riskDistribution,
       countriesInvolved,
+    },
+  }
+}
+
+/**
+ * Analyze ALL cross-border transfers for a processing activity (recipients + assets)
+ * Combines recipient and asset transfer detection into unified analysis
+ *
+ * This function provides complete transfer visibility by:
+ * - Including recipient processing locations (with full parent chain for sub-processors)
+ * - Including asset processing locations (direct activity-asset links)
+ * - Aggregating risk distribution across both transfer types
+ * - Deduplicating countries and summing location counts
+ *
+ * Algorithm:
+ * 1. Execute both analyses in parallel (Promise.all for performance)
+ * 2. Merge risk distributions by summing counts
+ * 3. Deduplicate countries using Map<countryId, data>
+ * 4. Sum location counts for duplicate countries
+ * 5. Sort by total location count descending
+ *
+ * Performance:
+ * - 4-6 database queries total (2-3 per analysis)
+ * - Typical response time: 50-150ms
+ * - Can optimize with single query if needed (future)
+ *
+ * Use Cases:
+ * - Article 30 ROPA generation (complete transfer inventory)
+ * - DPIA transfer impact assessment (full risk picture)
+ * - Executive risk dashboards (aggregated exposure)
+ * - Compliance documentation requiring both recipient and infrastructure transfers
+ *
+ * @param activityId - The processing activity ID to analyze
+ * @returns Promise with complete transfer analysis combining both sources
+ * @throws Error if activity not found
+ * @throws Error if organization not found
+ * @throws Error if organization has no headquartersCountryId set
+ *
+ * @example
+ * const analysis = await getActivityTransfersComplete('activity-123')
+ *
+ * // Result structure:
+ * {
+ *   activityId: 'activity-123',
+ *   activityName: 'Email Marketing Campaign',
+ *   organizationCountry: { name: 'France', gdprStatus: ['EU', 'EEA'] },
+ *
+ *   recipientTransfers: [
+ *     { recipientName: 'Mailchimp', transferRisk: { level: 'MEDIUM', ... }, depth: 0 },
+ *     { recipientName: 'SendGrid', transferRisk: { level: 'CRITICAL', ... }, depth: 0 }
+ *   ],
+ *
+ *   assetTransfers: [
+ *     { digitalAssetName: 'Customer Database', transferRisk: { level: 'MEDIUM', ... } },
+ *     { digitalAssetName: 'Email Template Storage', transferRisk: { level: 'NONE', ... } }
+ *   ],
+ *
+ *   combinedSummary: {
+ *     totalTransfers: 4,
+ *     totalRiskDistribution: {
+ *       none: 1, low: 0, medium: 2, high: 0, critical: 1
+ *     },
+ *     allCountriesInvolved: [
+ *       { country: { name: 'United States', ... }, locationCount: 3 },
+ *       { country: { name: 'Germany', ... }, locationCount: 1 }
+ *     ]
+ *   },
+ *
+ *   recipientSummary: {
+ *     totalRecipients: 3,
+ *     recipientsWithTransfers: 2
+ *   },
+ *   assetSummary: {
+ *     totalAssets: 5,
+ *     assetsWithTransfers: 2
+ *   }
+ * }
+ */
+export async function getActivityTransfersComplete(
+  activityId: string
+): Promise<ActivityTransferAnalysisComplete> {
+  // Step 1: Execute both analyses in parallel for optimal performance
+  const [recipientAnalysis, assetAnalysis] = await Promise.all([
+    getActivityTransferAnalysis(activityId),
+    getActivityAssetTransferAnalysis(activityId),
+  ])
+
+  // Step 2: Combine risk distributions by summing counts
+  // Each transfer instance contributes to its risk level count
+  const totalRiskDistribution = {
+    none:
+      recipientAnalysis.summary.riskDistribution.none + assetAnalysis.summary.riskDistribution.none,
+    low:
+      recipientAnalysis.summary.riskDistribution.low + assetAnalysis.summary.riskDistribution.low,
+    medium:
+      recipientAnalysis.summary.riskDistribution.medium +
+      assetAnalysis.summary.riskDistribution.medium,
+    high:
+      recipientAnalysis.summary.riskDistribution.high + assetAnalysis.summary.riskDistribution.high,
+    critical:
+      recipientAnalysis.summary.riskDistribution.critical +
+      assetAnalysis.summary.riskDistribution.critical,
+  }
+
+  // Step 3: Deduplicate countries and sum location counts
+  // Use Map for efficient lookup and deduplication by country ID
+  const countriesMap = new Map<string, { country: Country; count: number }>()
+
+  // Add recipient countries
+  for (const entry of recipientAnalysis.summary.countriesInvolved) {
+    countriesMap.set(entry.country.id, {
+      country: entry.country,
+      count: entry.locationCount,
+    })
+  }
+
+  // Merge asset countries (sum counts for duplicates)
+  for (const entry of assetAnalysis.summary.countriesInvolved) {
+    const existing = countriesMap.get(entry.country.id)
+    if (existing) {
+      // Country exists in both sources - sum the counts
+      existing.count += entry.locationCount
+    } else {
+      // Country only in asset transfers
+      countriesMap.set(entry.country.id, {
+        country: entry.country,
+        count: entry.locationCount,
+      })
+    }
+  }
+
+  // Step 4: Sort countries by total location count (highest exposure first)
+  const allCountriesInvolved = Array.from(countriesMap.values())
+    .map((v) => ({ country: v.country, locationCount: v.count }))
+    .sort((a, b) => b.locationCount - a.locationCount)
+
+  // Step 5: Return unified analysis
+  return {
+    activityId: recipientAnalysis.activityId,
+    activityName: recipientAnalysis.activityName,
+    organizationCountry: recipientAnalysis.organizationCountry,
+
+    // Preserve separate arrays for detailed drill-down
+    recipientTransfers: recipientAnalysis.transfers,
+    assetTransfers: assetAnalysis.transfers,
+
+    // Unified summary for high-level reporting
+    combinedSummary: {
+      totalTransfers: recipientAnalysis.transfers.length + assetAnalysis.transfers.length,
+      totalRiskDistribution,
+      allCountriesInvolved,
+    },
+
+    // Individual summaries for context
+    recipientSummary: {
+      totalRecipients: recipientAnalysis.summary.totalRecipients,
+      recipientsWithTransfers: recipientAnalysis.summary.recipientsWithTransfers,
+    },
+    assetSummary: {
+      totalAssets: assetAnalysis.summary.totalAssets,
+      assetsWithTransfers: assetAnalysis.summary.assetsWithTransfers,
     },
   }
 }

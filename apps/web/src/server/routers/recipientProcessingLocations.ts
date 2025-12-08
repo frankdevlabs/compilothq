@@ -12,6 +12,7 @@ import {
 import {
   detectCrossBorderTransfers,
   getActivityTransferAnalysis,
+  getActivityTransfersComplete,
 } from '@compilothq/database/services/transferDetection'
 import {
   RecipientProcessingLocationCreateSchema,
@@ -246,6 +247,18 @@ export const recipientProcessingLocationsRouter = router({
    * Gets all recipients linked to activity and analyzes their locations
    * Returns structured analysis with transfer risks and summary statistics
    *
+   * @deprecated Use analyzeActivityTransfersComplete for comprehensive analysis
+   *
+   * IMPORTANT: This endpoint returns RECIPIENT TRANSFERS ONLY. It does not include
+   * asset processing locations (digital infrastructure). For a complete view of all
+   * cross-border transfers including both recipients and assets, use the
+   * analyzeActivityTransfersComplete endpoint instead.
+   *
+   * This endpoint remains available for:
+   * - Recipient-specific troubleshooting
+   * - Legacy integrations during migration period
+   * - Isolated recipient transfer analysis
+   *
    * NOTE: Requires Organization.headquartersCountryId field in schema
    */
   analyzeActivityTransfers: protectedProcedure
@@ -261,6 +274,58 @@ export const recipientProcessingLocationsRouter = router({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: error instanceof Error ? error.message : 'Failed to analyze activity transfers',
+        })
+      }
+    }),
+
+  /**
+   * Analyze ALL cross-border transfers for an activity (recipients + assets)
+   * Returns unified transfer analysis for comprehensive compliance reporting
+   *
+   * This endpoint provides complete transfer visibility by combining:
+   * - Recipient processing locations (with parent chain for sub-processors)
+   * - Asset processing locations (digital infrastructure)
+   *
+   * Use this endpoint for:
+   * - Complete compliance documentation (Article 30 ROPA)
+   * - DPIA transfer impact assessment sections
+   * - Executive risk dashboards (aggregated view)
+   * - Comprehensive transfer inventory
+   *
+   * Response includes:
+   * - Separate arrays for recipient and asset transfers (detailed drill-down)
+   * - Combined risk distribution across both types
+   * - Deduplicated country list with total location counts
+   * - Individual summaries for recipients and assets
+   *
+   * NOTE: Requires Organization.headquartersCountryId field in schema
+   *
+   * @example
+   * // tRPC client usage:
+   * const analysis = await trpc.recipientProcessingLocations.analyzeActivityTransfersComplete.query({
+   *   activityId: 'activity-123'
+   * })
+   *
+   * console.log(`Total transfers: ${analysis.combinedSummary.totalTransfers}`)
+   * console.log(`Critical risks: ${analysis.combinedSummary.totalRiskDistribution.critical}`)
+   * console.log(`Countries involved: ${analysis.combinedSummary.allCountriesInvolved.length}`)
+   */
+  analyzeActivityTransfersComplete: protectedProcedure
+    .input(
+      z.object({
+        activityId: z.string().cuid('Invalid activity ID'),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        return await getActivityTransfersComplete(input.activityId)
+      } catch (error) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to analyze complete activity transfers',
         })
       }
     }),

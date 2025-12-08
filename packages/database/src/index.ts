@@ -121,7 +121,10 @@ export type { HierarchyRules, ValidationResult } from './validation/recipientHie
 
 // Export service layer types
 export type {
+  ActivityAssetTransferAnalysis,
   ActivityTransferAnalysis,
+  ActivityTransferAnalysisComplete,
+  AssetCrossBorderTransfer,
   CrossBorderTransfer,
   TransferRisk,
 } from './services/transferDetection'

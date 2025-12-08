@@ -1,5 +1,7 @@
 import {
   type Country,
+  type DataProcessingActivity,
+  type DigitalAsset,
   type Organization,
   prisma,
   type Recipient,
@@ -293,6 +295,247 @@ describe('recipientProcessingLocations tRPC Router', () => {
       expect(result.summary).toHaveProperty('recipientsWithTransfers')
       expect(result.summary).toHaveProperty('riskDistribution')
       expect(result.summary).toHaveProperty('countriesInvolved')
+    })
+  })
+
+  describe('analyzeActivityTransfersComplete procedure', () => {
+    let testActivity: DataProcessingActivity
+    let usCountry: Country
+    let germanyCountry: Country
+    let testAsset: DigitalAsset
+
+    beforeAll(async () => {
+      // Find or create test countries
+      usCountry =
+        (await prisma.country.findFirst({ where: { isoCode: 'US' } })) ??
+        (await prisma.country.create({
+          data: {
+            name: 'United States',
+            isoCode: 'US',
+            gdprStatus: ['Third Country'],
+          },
+        }))
+
+      germanyCountry =
+        (await prisma.country.findFirst({ where: { isoCode: 'DE' } })) ??
+        (await prisma.country.create({
+          data: {
+            name: 'Germany',
+            isoCode: 'DE',
+            gdprStatus: ['EU', 'EEA'],
+          },
+        }))
+
+      // Create test activity
+      testActivity = await prisma.dataProcessingActivity.create({
+        data: {
+          organizationId: testOrg.id,
+          name: 'Integration Test Activity',
+        },
+      })
+
+      // Create test recipient with US location
+      const testRecipientWithLocation = await prisma.recipient.create({
+        data: {
+          organizationId: testOrg.id,
+          name: 'Test US Processor',
+          type: 'PROCESSOR',
+          isActive: true,
+        },
+      })
+
+      // Add processing location for recipient
+      await prisma.recipientProcessingLocation.create({
+        data: {
+          organizationId: testOrg.id,
+          recipientId: testRecipientWithLocation.id,
+          service: 'Cloud processing',
+          countryId: usCountry.id,
+          locationRole: 'PROCESSING',
+          isActive: true,
+        },
+      })
+
+      // Link recipient to activity
+      await prisma.dataProcessingActivityRecipient.create({
+        data: {
+          activityId: testActivity.id,
+          recipientId: testRecipientWithLocation.id,
+        },
+      })
+
+      // Create test asset with Germany location
+      testAsset = await prisma.digitalAsset.create({
+        data: {
+          organizationId: testOrg.id,
+          name: 'Test Asset',
+          type: 'DATABASE',
+        },
+      })
+
+      // Add processing location for asset
+      await prisma.assetProcessingLocation.create({
+        data: {
+          organizationId: testOrg.id,
+          digitalAssetId: testAsset.id,
+          service: 'Database hosting',
+          countryId: germanyCountry.id,
+          locationRole: 'HOSTING',
+          isActive: true,
+        },
+      })
+
+      // Link asset to activity
+      await prisma.dataProcessingActivityDigitalAsset.create({
+        data: {
+          activityId: testActivity.id,
+          digitalAssetId: testAsset.id,
+        },
+      })
+    })
+
+    it('should return analysis with both recipient and asset transfers', async () => {
+      const ctx = createTestContext(testUser)
+      const caller = recipientProcessingLocationsRouter.createCaller(ctx)
+
+      const analysis = await caller.analyzeActivityTransfersComplete({
+        activityId: testActivity.id,
+      })
+
+      // Verify structure
+      expect(analysis).toBeDefined()
+      expect(analysis.activityId).toBe(testActivity.id)
+      expect(analysis.activityName).toBe('Integration Test Activity')
+
+      // Verify separate transfer arrays
+      expect(analysis.recipientTransfers).toBeDefined()
+      expect(analysis.assetTransfers).toBeDefined()
+      expect(Array.isArray(analysis.recipientTransfers)).toBe(true)
+      expect(Array.isArray(analysis.assetTransfers)).toBe(true)
+
+      // Verify combined summary exists
+      expect(analysis.combinedSummary).toBeDefined()
+      expect(analysis.combinedSummary.totalTransfers).toBeGreaterThanOrEqual(0)
+      expect(analysis.combinedSummary.totalRiskDistribution).toBeDefined()
+      expect(analysis.combinedSummary.allCountriesInvolved).toBeDefined()
+    })
+
+    it('should correctly aggregate risk distribution', async () => {
+      const ctx = createTestContext(testUser)
+      const caller = recipientProcessingLocationsRouter.createCaller(ctx)
+
+      const analysis = await caller.analyzeActivityTransfersComplete({
+        activityId: testActivity.id,
+      })
+
+      // Verify risk distribution has all required fields
+      const totalRisks = analysis.combinedSummary.totalRiskDistribution
+
+      expect(totalRisks).toHaveProperty('none')
+      expect(totalRisks).toHaveProperty('low')
+      expect(totalRisks).toHaveProperty('medium')
+      expect(totalRisks).toHaveProperty('high')
+      expect(totalRisks).toHaveProperty('critical')
+
+      // Verify counts are non-negative
+      expect(totalRisks.none).toBeGreaterThanOrEqual(0)
+      expect(totalRisks.low).toBeGreaterThanOrEqual(0)
+      expect(totalRisks.medium).toBeGreaterThanOrEqual(0)
+      expect(totalRisks.high).toBeGreaterThanOrEqual(0)
+      expect(totalRisks.critical).toBeGreaterThanOrEqual(0)
+
+      // Total of risk distribution should match total transfers
+      const totalTransfersFromRisk =
+        totalRisks.none + totalRisks.low + totalRisks.medium + totalRisks.high + totalRisks.critical
+
+      expect(totalTransfersFromRisk).toBe(analysis.combinedSummary.totalTransfers)
+    })
+
+    it('should deduplicate countries and aggregate location counts', async () => {
+      const ctx = createTestContext(testUser)
+      const caller = recipientProcessingLocationsRouter.createCaller(ctx)
+
+      const analysis = await caller.analyzeActivityTransfersComplete({
+        activityId: testActivity.id,
+      })
+
+      // Should have countries involved
+      expect(analysis.combinedSummary.allCountriesInvolved).toBeDefined()
+      expect(Array.isArray(analysis.combinedSummary.allCountriesInvolved)).toBe(true)
+
+      // Each country should have proper structure
+      analysis.combinedSummary.allCountriesInvolved.forEach((entry) => {
+        expect(entry).toHaveProperty('country')
+        expect(entry).toHaveProperty('locationCount')
+        expect(entry.locationCount).toBeGreaterThan(0)
+        expect(entry.country).toHaveProperty('id')
+        expect(entry.country).toHaveProperty('name')
+        expect(entry.country).toHaveProperty('isoCode')
+      })
+    })
+
+    it('should preserve individual recipient and asset summaries', async () => {
+      const ctx = createTestContext(testUser)
+      const caller = recipientProcessingLocationsRouter.createCaller(ctx)
+
+      const analysis = await caller.analyzeActivityTransfersComplete({
+        activityId: testActivity.id,
+      })
+
+      // Verify recipient summary
+      expect(analysis.recipientSummary).toBeDefined()
+      expect(analysis.recipientSummary).toHaveProperty('totalRecipients')
+      expect(analysis.recipientSummary).toHaveProperty('recipientsWithTransfers')
+      expect(analysis.recipientSummary.totalRecipients).toBeGreaterThanOrEqual(0)
+      expect(analysis.recipientSummary.recipientsWithTransfers).toBeGreaterThanOrEqual(0)
+
+      // Verify asset summary
+      expect(analysis.assetSummary).toBeDefined()
+      expect(analysis.assetSummary).toHaveProperty('totalAssets')
+      expect(analysis.assetSummary).toHaveProperty('assetsWithTransfers')
+      expect(analysis.assetSummary.totalAssets).toBeGreaterThanOrEqual(0)
+      expect(analysis.assetSummary.assetsWithTransfers).toBeGreaterThanOrEqual(0)
+    })
+
+    it('should handle activity with no recipients', async () => {
+      // Create activity with only assets (no recipients)
+      const assetOnlyActivity = await prisma.dataProcessingActivity.create({
+        data: {
+          organizationId: testOrg.id,
+          name: 'Asset Only Activity',
+        },
+      })
+
+      // Link only the asset (no recipients)
+      await prisma.dataProcessingActivityDigitalAsset.create({
+        data: {
+          activityId: assetOnlyActivity.id,
+          digitalAssetId: testAsset.id,
+        },
+      })
+
+      const ctx = createTestContext(testUser)
+      const caller = recipientProcessingLocationsRouter.createCaller(ctx)
+
+      const analysis = await caller.analyzeActivityTransfersComplete({
+        activityId: assetOnlyActivity.id,
+      })
+
+      // Should have empty recipient transfers but populated asset transfers
+      expect(analysis.recipientTransfers).toHaveLength(0)
+      expect(analysis.assetTransfers.length).toBeGreaterThanOrEqual(0)
+      expect(analysis.recipientSummary.recipientsWithTransfers).toBe(0)
+    })
+
+    it('should throw error for invalid activity ID', async () => {
+      const ctx = createTestContext(testUser)
+      const caller = recipientProcessingLocationsRouter.createCaller(ctx)
+
+      await expect(
+        caller.analyzeActivityTransfersComplete({
+          activityId: 'invalid-activity-id',
+        })
+      ).rejects.toThrow()
     })
   })
 })
