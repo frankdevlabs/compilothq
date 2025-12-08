@@ -13,6 +13,11 @@ import {
   detectCrossBorderTransfers,
   getActivityTransferAnalysis,
 } from '@compilothq/database/services/transferDetection'
+import {
+  RecipientProcessingLocationCreateSchema,
+  RecipientProcessingLocationMoveSchema,
+  RecipientProcessingLocationUpdateSchema,
+} from '@compilothq/validation'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 
@@ -42,18 +47,7 @@ export const recipientProcessingLocationsRouter = router({
    * Enforces multi-tenancy by requiring organizationId from context
    */
   create: orgProcedure
-    .input(
-      z.object({
-        recipientId: z.string().cuid('Invalid recipient ID'),
-        service: z.string().min(3, 'Service must be at least 3 characters').max(500),
-        countryId: z.string().cuid('Invalid country ID'),
-        locationRole: z.enum(['HOSTING', 'PROCESSING', 'BOTH']),
-        purposeId: z.string().cuid('Invalid purpose ID').optional().nullable(),
-        purposeText: z.string().max(500).optional().nullable(),
-        transferMechanismId: z.string().cuid('Invalid transfer mechanism ID').optional().nullable(),
-        metadata: z.record(z.string(), z.unknown()).optional().nullable(),
-      })
-    )
+    .input(RecipientProcessingLocationCreateSchema.omit({ organizationId: true }))
     .mutation(async ({ ctx, input }) => {
       try {
         return await handlePrismaError(
@@ -150,28 +144,16 @@ export const recipientProcessingLocationsRouter = router({
    */
   update: orgProcedure
     .input(
-      z.object({
+      RecipientProcessingLocationUpdateSchema.extend({
         id: z.string().cuid('Invalid location ID'),
-        data: z.object({
-          service: z.string().min(3).max(500).optional(),
-          countryId: z.string().cuid('Invalid country ID').optional(),
-          locationRole: z.enum(['HOSTING', 'PROCESSING', 'BOTH']).optional(),
-          purposeId: z.string().cuid('Invalid purpose ID').optional().nullable(),
-          purposeText: z.string().max(500).optional().nullable(),
-          transferMechanismId: z
-            .string()
-            .cuid('Invalid transfer mechanism ID')
-            .optional()
-            .nullable(),
-          isActive: z.boolean().optional(),
-          metadata: z.record(z.string(), z.unknown()).optional().nullable(),
-        }),
       })
     )
     .mutation(async ({ input }) => {
       try {
+        const { id, ...updateData } = input
+
         // Type assertion for Zod -> Prisma compatibility
-        const updateData = input.data as {
+        const data = updateData as {
           service?: string
           countryId?: string
           locationRole?: 'HOSTING' | 'PROCESSING' | 'BOTH'
@@ -182,7 +164,7 @@ export const recipientProcessingLocationsRouter = router({
           metadata?: Prisma.InputJsonValue | null
         }
 
-        return await handlePrismaError(updateRecipientProcessingLocation(input.id, updateData))
+        return await handlePrismaError(updateRecipientProcessingLocation(id, data))
       } catch (error) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -218,46 +200,27 @@ export const recipientProcessingLocationsRouter = router({
    * Creates new location with updated fields and deactivates old location
    * All operations in single transaction for data consistency
    */
-  move: orgProcedure
-    .input(
-      z.object({
-        locationId: z.string().cuid('Invalid location ID'),
-        updates: z.object({
-          countryId: z.string().cuid('Invalid country ID').optional(),
-          service: z.string().min(3).max(500).optional(),
-          transferMechanismId: z
-            .string()
-            .cuid('Invalid transfer mechanism ID')
-            .optional()
-            .nullable(),
-          locationRole: z.enum(['HOSTING', 'PROCESSING', 'BOTH']).optional(),
-          purposeId: z.string().cuid('Invalid purpose ID').optional().nullable(),
-          purposeText: z.string().max(500).optional().nullable(),
-          metadata: z.record(z.string(), z.unknown()).optional().nullable(),
-        }),
-      })
-    )
-    .mutation(async ({ input }) => {
-      try {
-        // Type assertion for Zod -> Prisma compatibility
-        const updates = input.updates as {
-          countryId?: string
-          service?: string
-          transferMechanismId?: string | null
-          locationRole?: 'HOSTING' | 'PROCESSING' | 'BOTH'
-          purposeId?: string | null
-          purposeText?: string | null
-          metadata?: Prisma.InputJsonValue | null
-        }
-
-        return await handlePrismaError(moveRecipientProcessingLocation(input.locationId, updates))
-      } catch (error) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: error instanceof Error ? error.message : 'Failed to move location',
-        })
+  move: orgProcedure.input(RecipientProcessingLocationMoveSchema).mutation(async ({ input }) => {
+    try {
+      // Type assertion for Zod -> Prisma compatibility
+      const updates = input.updates as {
+        countryId?: string
+        service?: string
+        transferMechanismId?: string | null
+        locationRole?: 'HOSTING' | 'PROCESSING' | 'BOTH'
+        purposeId?: string | null
+        purposeText?: string | null
+        metadata?: Prisma.InputJsonValue | null
       }
-    }),
+
+      return await handlePrismaError(moveRecipientProcessingLocation(input.locationId, updates))
+    } catch (error) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: error instanceof Error ? error.message : 'Failed to move location',
+      })
+    }
+  }),
 
   /**
    * Detect cross-border transfers organization-wide

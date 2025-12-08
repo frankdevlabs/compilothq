@@ -52,9 +52,11 @@ describe('DataProcessingActivity Validation Schemas - Integration Tests', () => 
       } catch (error) {
         expect(error).toBeInstanceOf(ZodError)
         const zodError = error as ZodError
-        expect(zodError.errors).toHaveLength(1)
-        expect(zodError.errors[0]?.path).toEqual(['name'])
-        expect(zodError.errors[0]?.message).toBe('Required')
+        expect(zodError.issues).toHaveLength(1)
+        expect(zodError.issues[0]?.path).toEqual(['name'])
+        expect(zodError.issues[0]?.message).toBe(
+          'Invalid input: expected string, received undefined'
+        )
       }
     })
 
@@ -72,8 +74,8 @@ describe('DataProcessingActivity Validation Schemas - Integration Tests', () => 
         DataProcessingActivityCreateSchema.parse(invalidData)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['name'])
-        expect(zodError.errors[0]?.message).toBe('Data processing activity name is required')
+        expect(zodError.issues[0]?.path).toEqual(['name'])
+        expect(zodError.issues[0]?.message).toBe('Data processing activity name is required')
       }
     })
 
@@ -279,8 +281,8 @@ describe('DataProcessingActivity Validation Schemas - Integration Tests', () => 
         DataProcessingActivityUpdateSchema.parse(invalidUpdate)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['name'])
-        expect(zodError.errors[0]?.message).toBe('Data processing activity name is required')
+        expect(zodError.issues[0]?.path).toEqual(['name'])
+        expect(zodError.issues[0]?.message).toBe('Data processing activity name is required')
       }
     })
   })
@@ -344,8 +346,8 @@ describe('DataProcessingActivity Validation Schemas - Integration Tests', () => 
         DataProcessingActivityFiltersSchema.parse(invalidFilters)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['status'])
-        expect(zodError.errors[0]?.message).toBe(
+        expect(zodError.issues[0]?.path).toEqual(['status'])
+        expect(zodError.issues[0]?.message).toBe(
           'Status must be one of: DRAFT, UNDER_REVIEW, UNDER_REVISION, REJECTED, APPROVED, ACTIVE, SUSPENDED, ARCHIVED'
         )
       }

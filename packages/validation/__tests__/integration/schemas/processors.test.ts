@@ -60,8 +60,10 @@ describe('Processor Validation Schemas - Integration Tests', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ZodError)
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['name'])
-        expect(zodError.errors[0]?.message).toBe('Required')
+        expect(zodError.issues[0]?.path).toEqual(['name'])
+        expect(zodError.issues[0]?.message).toBe(
+          'Invalid input: expected string, received undefined'
+        )
       }
     })
 
@@ -79,8 +81,8 @@ describe('Processor Validation Schemas - Integration Tests', () => {
         ProcessorCreateSchema.parse(invalidData)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['type'])
-        expect(zodError.errors[0]?.message).toBe(
+        expect(zodError.issues[0]?.path).toEqual(['type'])
+        expect(zodError.issues[0]?.message).toBe(
           'Type must be one of: DATA_PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER'
         )
       }
@@ -101,8 +103,8 @@ describe('Processor Validation Schemas - Integration Tests', () => {
         ProcessorCreateSchema.parse(invalidData)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['type'])
-        expect(zodError.errors[0]?.message).toBe(
+        expect(zodError.issues[0]?.path).toEqual(['type'])
+        expect(zodError.issues[0]?.message).toBe(
           'Type must be one of: DATA_PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER'
         )
       }
@@ -226,8 +228,8 @@ describe('Processor Validation Schemas - Integration Tests', () => {
         ProcessorUpdateSchema.parse(invalidUpdate)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['type'])
-        expect(zodError.errors[0]?.message).toBe(
+        expect(zodError.issues[0]?.path).toEqual(['type'])
+        expect(zodError.issues[0]?.message).toBe(
           'Type must be one of: DATA_PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER'
         )
       }
@@ -295,8 +297,8 @@ describe('Processor Validation Schemas - Integration Tests', () => {
         ProcessorFiltersSchema.parse(invalidFilters)
       } catch (error) {
         const zodError = error as ZodError
-        expect(zodError.errors[0]?.path).toEqual(['type'])
-        expect(zodError.errors[0]?.message).toBe(
+        expect(zodError.issues[0]?.path).toEqual(['type'])
+        expect(zodError.issues[0]?.message).toBe(
           'Type must be one of: DATA_PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER'
         )
       }

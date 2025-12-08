@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { LocationRoleSchema } from '../shared/locationRole.schema'
+
 /**
  * Asset type enum matching Prisma AssetType
  * Comprehensive coverage of common digital asset categories
@@ -19,10 +21,8 @@ export const AssetTypeSchema = z.enum(
     'OTHER',
   ],
   {
-    errorMap: () => ({
-      message:
-        'Invalid asset type. Must be one of: ANALYTICS_PLATFORM, API, APPLICATION, CLOUD_SERVICE, CRM, DATABASE, ERP, FILE_STORAGE, MARKETING_TOOL, ON_PREMISE_SYSTEM, OTHER',
-    }),
+    message:
+      'Invalid asset type. Must be one of: ANALYTICS_PLATFORM, API, APPLICATION, CLOUD_SERVICE, CRM, DATABASE, ERP, FILE_STORAGE, MARKETING_TOOL, ON_PREMISE_SYSTEM, OTHER',
   }
 )
 
@@ -32,22 +32,10 @@ export const AssetTypeSchema = z.enum(
 export const IntegrationStatusSchema = z.enum(
   ['CONNECTED', 'FAILED', 'MANUAL_ONLY', 'NOT_INTEGRATED', 'PENDING'],
   {
-    errorMap: () => ({
-      message:
-        'Invalid integration status. Must be one of: CONNECTED, FAILED, MANUAL_ONLY, NOT_INTEGRATED, PENDING',
-    }),
+    message:
+      'Invalid integration status. Must be one of: CONNECTED, FAILED, MANUAL_ONLY, NOT_INTEGRATED, PENDING',
   }
 )
-
-/**
- * Location role enum for semantic clarity
- * Distinguishes between hosting (physical location) and processing (data operations)
- */
-export const LocationRoleSchema = z.enum(['HOSTING', 'PROCESSING', 'BOTH'], {
-  errorMap: () => ({
-    message: 'Invalid location role. Must be one of: HOSTING, PROCESSING, BOTH',
-  }),
-})
 
 /**
  * Validation schema for creating a Digital Asset
@@ -81,7 +69,7 @@ export const DigitalAssetCreateSchema = z.object({
   discoveredVia: z.string().max(100).optional().nullable(),
 
   // Extensibility
-  metadata: z.record(z.unknown()).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional().nullable(),
 })
 
 /**
@@ -112,7 +100,7 @@ export const AssetProcessingLocationCreateSchema = z
 
     // Status
     isActive: z.boolean().default(true),
-    metadata: z.record(z.unknown()).optional().nullable(),
+    metadata: z.record(z.string(), z.unknown()).optional().nullable(),
   })
   .refine((data) => data.purposeId !== null || data.purposeText !== null, {
     message: 'Either purposeId or purposeText must be provided',

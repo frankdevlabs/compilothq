@@ -195,9 +195,7 @@ describe('recipientProcessingLocations tRPC Router', () => {
       // Update only service
       const updated = await caller.update({
         id: location.id,
-        data: {
-          service: 'Updated service',
-        },
+        service: 'Updated service',
       })
 
       expect(updated.service).toBe('Updated service')

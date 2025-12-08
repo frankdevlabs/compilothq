@@ -6,9 +6,7 @@ import { z } from 'zod'
 export const TransferMechanismCategorySchema = z.enum(
   ['ADEQUACY', 'SAFEGUARD', 'DEROGATION', 'NONE'],
   {
-    errorMap: () => ({
-      message: 'Transfer mechanism category must be one of: ADEQUACY, SAFEGUARD, DEROGATION, NONE',
-    }),
+    message: 'Transfer mechanism category must be one of: ADEQUACY, SAFEGUARD, DEROGATION, NONE',
   }
 )
 
@@ -31,8 +29,22 @@ export const TransferMechanismCreateSchema = z.object({
 
 /**
  * Validation schema for updating a TransferMechanism
+ * All fields optional for partial updates
+ *
+ * IMPORTANT: Inline definition to avoid inheriting .default() from create schema
  */
-export const TransferMechanismUpdateSchema = TransferMechanismCreateSchema.partial()
+export const TransferMechanismUpdateSchema = z.object({
+  code: z.string().min(1, 'Transfer mechanism code is required').optional(),
+  name: z.string().min(1, 'Transfer mechanism name is required').optional(),
+  description: z.string().min(1, 'Description is required').optional(),
+  typicalUseCase: z.string().min(1, 'Typical use case is required').optional(),
+  gdprArticle: z.string().min(1, 'GDPR article reference is required').optional(),
+  category: TransferMechanismCategorySchema.optional(),
+  isDerogation: z.boolean().optional(),
+  requiresAdequacy: z.boolean().optional(),
+  requiresDocumentation: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+})
 
 /**
  * Inferred TypeScript types

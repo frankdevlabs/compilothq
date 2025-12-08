@@ -6,10 +6,8 @@ import { z } from 'zod'
 export const ProcessorTypeEnum = z.enum(
   ['DATA_PROCESSOR', 'SUB_PROCESSOR', 'JOINT_CONTROLLER', 'SERVICE_PROVIDER'],
   {
-    errorMap: () => ({
-      message:
-        'Type must be one of: DATA_PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER',
-    }),
+    message:
+      'Type must be one of: DATA_PROCESSOR, SUB_PROCESSOR, JOINT_CONTROLLER, SERVICE_PROVIDER',
   }
 )
 
